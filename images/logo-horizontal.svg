@@ -1,0 +1,23 @@
+<svg viewBox="0 0 520 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="North Columbus Cleaning Company">
+  <!-- Logo mark -->
+  <rect width="200" height="200" rx="32" fill="#1a4d2e"/>
+  <rect x="94" y="30" width="12" height="95" fill="#c9e265" rx="3"/>
+  <rect x="90" y="28" width="20" height="6" fill="#c9e265" rx="2"/>
+  <rect x="80" y="122" width="40" height="12" fill="#c9e265"/>
+  <rect x="80" y="122" width="40" height="12" fill="none" stroke="#1a4d2e" stroke-width="2"/>
+  <path d="M 60 134 L 140 134 L 150 175 L 50 175 Z" fill="#c9e265"/>
+  <line x1="72" y1="137" x2="62" y2="172" stroke="#1a4d2e" stroke-width="2.5"/>
+  <line x1="86" y1="137" x2="80" y2="172" stroke="#1a4d2e" stroke-width="2.5"/>
+  <line x1="100" y1="137" x2="100" y2="172" stroke="#1a4d2e" stroke-width="2.5"/>
+  <line x1="114" y1="137" x2="120" y2="172" stroke="#1a4d2e" stroke-width="2.5"/>
+  <line x1="128" y1="137" x2="138" y2="172" stroke="#1a4d2e" stroke-width="2.5"/>
+
+  <!-- Wordmark -->
+  <g font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-weight="900">
+    <text x="232" y="68" font-size="48" fill="#1a4d2e" letter-spacing="-1">NORTH</text>
+    <text x="232" y="118" font-size="48" fill="#1a4d2e" letter-spacing="-1">COLUMBUS</text>
+    <!-- 5px Lime bar full width of wordmark -->
+    <rect x="232" y="132" width="255" height="5" fill="#c9e265"/>
+    <text x="232" y="166" font-size="16" fill="#2d7a4a" letter-spacing="2">CLEANING COMPANY</text>
+  </g>
+</svg>
