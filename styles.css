@@ -428,19 +428,25 @@ a:hover { color: var(--forest); text-decoration: underline; }
   background: #fff;
   border: 1px solid var(--light-gray);
   border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-3);
   text-align: center;
+  transition: background 0.15s ease;
+}
+.areas-list li:hover { background: var(--forest); }
+.areas-list li:hover a { color: var(--lime); }
+.areas-list a,
+.areas-list li {
   font-weight: 900;
   color: var(--forest);
   font-size: 14px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  transition: background 0.15s ease, color 0.15s ease;
 }
-.areas-list li:hover {
-  background: var(--forest);
-  color: var(--lime);
+.areas-list a {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  text-decoration: none;
 }
+.areas-list a:hover { text-decoration: none; color: var(--lime); }
 
 /* ============ QUOTE / CTA ============ */
 .section-cta {
@@ -599,21 +605,133 @@ a:hover { color: var(--forest); text-decoration: underline; }
   opacity: 0.6;
 }
 
+/* ============ COMPACT HERO (location/service pages) ============ */
+.hero-compact { padding: var(--space-8) 0; }
+.hero-compact h1 { font-size: 52px; }
+.section-head-hero { padding-bottom: 0; }
+
+/* ============ INLINE CTA ROW ============ */
+.cta-inline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+.cta-inline h2 { margin-bottom: var(--space-1); }
+.cta-inline p { margin-bottom: 0; font-size: 18px; }
+.cta-buttons { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.btn-outline-light {
+  background: transparent;
+  color: var(--off-white);
+  border-color: var(--lime);
+}
+.btn-outline-light:hover { background: var(--lime); color: var(--forest); }
+
+/* ============ SERVICE CARD AS LINK ============ */
+.service-card-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+.service-card-link:hover { text-decoration: none; }
+.services-grid-3 { grid-template-columns: repeat(3, 1fr); }
+
+/* ============ INCLUDED LIST (service page) ============ */
+.included-list {
+  max-width: 820px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+.included-list li {
+  position: relative;
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  background: var(--off-white);
+  border: 1px solid var(--light-gray);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.included-list li::before {
+  content: "";
+  position: absolute;
+  left: var(--space-2);
+  top: 22px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--lime);
+}
+
+/* ============ LOCATIONS HUB GRID ============ */
+.areas-grid {
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+.area-card {
+  display: block;
+  background: var(--off-white);
+  border: 1px solid var(--light-gray);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease;
+}
+.area-card:hover {
+  border-color: var(--forest);
+  text-decoration: none;
+  color: inherit;
+}
+.area-card h3 {
+  font-size: 24px;
+  margin-bottom: var(--space-1);
+  color: var(--forest);
+}
+.area-card .area-meta {
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--sage);
+  font-weight: 900;
+  margin-bottom: var(--space-2);
+}
+.area-card p {
+  color: var(--charcoal);
+  opacity: 0.85;
+  font-size: 15px;
+  margin-bottom: var(--space-2);
+}
+.area-link {
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--sage);
+}
+
 /* ============ RESPONSIVE ============ */
 @media (max-width: 960px) {
   h1 { font-size: 48px; }
   h2 { font-size: 36px; }
   h3 { font-size: 24px; }
+  .hero-compact h1 { font-size: 40px; }
   .section { padding: var(--space-8) 0; }
   .hero { padding: var(--space-8) 0; }
   .hero-inner { grid-template-columns: 1fr; gap: var(--space-4); }
   .hero-visual { aspect-ratio: 4 / 3; max-width: 560px; margin: 0 auto; }
   .services-grid,
+  .services-grid-3,
   .benefits-grid,
   .process-grid,
-  .testimonials-grid { grid-template-columns: repeat(2, 1fr); }
+  .testimonials-grid,
+  .areas-grid { grid-template-columns: repeat(2, 1fr); }
   .gallery-grid { grid-template-columns: repeat(3, 1fr); }
   .areas-list { grid-template-columns: repeat(3, 1fr); }
+  .included-list { grid-template-columns: 1fr; }
+  .cta-inline { flex-direction: column; align-items: flex-start; }
   .quote-inner { grid-template-columns: 1fr; gap: var(--space-4); }
   .footer-inner { grid-template-columns: 1fr 1fr; gap: var(--space-4); }
 }
@@ -649,9 +767,11 @@ a:hover { color: var(--forest); text-decoration: underline; }
     text-align: center;
   }
   .services-grid,
+  .services-grid-3,
   .benefits-grid,
   .process-grid,
-  .testimonials-grid { grid-template-columns: 1fr; }
+  .testimonials-grid,
+  .areas-grid { grid-template-columns: 1fr; }
   .gallery-grid { grid-template-columns: repeat(2, 1fr); }
   .gallery-item.tall { grid-row: span 1; aspect-ratio: 1 / 1; }
   .areas-list { grid-template-columns: repeat(2, 1fr); }
