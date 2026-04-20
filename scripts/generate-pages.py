@@ -187,7 +187,7 @@ SERVICES = [
         "slug": "commercial-cleaning",
         "name": "Commercial cleaning",
         "kw": "commercial cleaning",
-        "short": "Offices, retail, salons, and medical spaces.",
+        "short": "Offices, salons, retail, and medical.",
         "hero_img": "/images/commercial.jpg",
         "intro": (
             "Your space is the first thing clients notice. We clean offices, retail shops, "
@@ -336,7 +336,30 @@ SERVICES = [
 
 # ============ SHARED HTML PIECES ============
 
-def head(title, description, canonical_path):
+def local_business_jsonld(canonical_path, area_served=None, service_name=None):
+    """LocalBusiness schema. area_served: None (all 12), a city name str, or list."""
+    canonical = f"https://northcolumbuscleaning.com{canonical_path}"
+    if area_served is None:
+        area_served_json = "[" + ",".join(
+            f'{{"@type":"City","name":"{x["name"]}, OH"}}' for x in NEIGHBORHOODS
+        ) + "]"
+    elif isinstance(area_served, str):
+        area_served_json = f'{{"@type":"City","name":"{area_served}"}}'
+    else:
+        area_served_json = "[" + ",".join(
+            f'{{"@type":"City","name":"{x}"}}' for x in area_served
+        ) + "]"
+    offer_block = ""
+    if service_name:
+        offer_block = f""","makesOffer":{{"@type":"Offer","itemOffered":{{"@type":"Service","name":"{service_name}"}}}}"""
+    return f"""  <script type="application/ld+json">
+  {{"@context":"https://schema.org","@type":"HouseholdCleaningService","name":"North Columbus Cleaning Company","image":"https://northcolumbuscleaning.com/images/logo.svg","url":"{canonical}","telephone":"+1-614-555-0100","email":"hello@northcolumbuscleaning.com","priceRange":"$$","address":{{"@type":"PostalAddress","addressLocality":"Columbus","addressRegion":"OH","addressCountry":"US"}},"areaServed":{area_served_json},"openingHours":"Mo-Sa 07:00-19:00"{offer_block}}}
+  </script>"""
+
+
+def head(title, description, canonical_path, og_image="/images/hero.jpg"):
+    canonical = f"https://northcolumbuscleaning.com{canonical_path}"
+    og_img_full = f"https://northcolumbuscleaning.com{og_image}"
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -344,9 +367,20 @@ def head(title, description, canonical_path):
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{title}</title>
   <meta name="description" content="{description}" />
-  <link rel="canonical" href="https://northcolumbuscleaning.com{canonical_path}" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="{canonical}" />
   <meta name="theme-color" content="#1a4d2e" />
   <link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{canonical}" />
+  <meta property="og:title" content="{title}" />
+  <meta property="og:description" content="{description}" />
+  <meta property="og:image" content="{og_img_full}" />
+  <meta property="og:site_name" content="North Columbus Cleaning Company" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{title}" />
+  <meta name="twitter:description" content="{description}" />
+  <meta name="twitter:image" content="{og_img_full}" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap" rel="stylesheet" />
@@ -460,10 +494,13 @@ TRUST_LIST = """      <ul class="hero-trust">
 # ============ COMBO PAGE (service × location) ============
 
 def combo_page(s, n):
-    title = f"{s['name']} in {n['name']}, OH | North Columbus Cleaning Company"
+    # Smart title: include brand only if total stays <= 60 chars
+    base = f"{s['name']} in {n['name']}, OH"
+    brand = " | North Columbus Cleaning"
+    title = base + brand if len(base + brand) <= 60 else base
     desc = (
-        f"Looking for {s['kw']} in {n['name']}, OH? Local, insured, background-checked crews. "
-        f"Flat-rate quotes. Call (614) 555-0100 or request a quote online."
+        f"{s['name']} in {n['name']}, OH by a local, insured, bonded crew. Flat-rate quotes, "
+        f"satisfaction guarantee. Call (614) 555-0100."
     )
     canonical = f"/services/{s['slug']}/{n['slug']}"
 
@@ -521,7 +558,7 @@ def combo_page(s, n):
   }}
   </script>"""
 
-    return f"""{head(title, desc, canonical)}
+    return f"""{head(title, desc, canonical, og_image=s['hero_img'])}
 {jsonld}
 {TOPBAR}
 {HEADER}
@@ -557,8 +594,8 @@ def combo_page(s, n):
   <section class="section section-alt">
     <div class="container">
       <div class="section-head">
-        <span class="eyebrow">What's included</span>
-        <h2>Every {s['name'].lower()} in {n['name']} covers</h2>
+        <span class="eyebrow">What&rsquo;s included</span>
+        <h2>What&rsquo;s included in our {s['name'].lower()} in {n['name']}</h2>
         <p class="section-sub">{s['intro']}</p>
       </div>
       <ul class="included-list">
@@ -571,7 +608,7 @@ def combo_page(s, n):
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">Why {n['name']} picks us</span>
-        <h2>Local, insured, accountable</h2>
+        <h2>Why {n['name']} homes and businesses choose us for {s['name'].lower()}</h2>
       </div>
       <div class="grid benefits-grid">
         <div class="benefit"><h4>We clean here weekly</h4><p>Our crews are in {n['name']} regularly &mdash; we know the area, the home styles, and the traffic patterns.</p></div>
@@ -590,7 +627,7 @@ def combo_page(s, n):
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">Other services in {n['name']}</span>
-        <h2>More ways we help {n['name']} homes and businesses</h2>
+        <h2>Other cleaning services in {n['name']}, OH</h2>
       </div>
       <div class="grid services-grid">
 {others_here_cards}
@@ -602,7 +639,7 @@ def combo_page(s, n):
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">{s['name']} elsewhere</span>
-        <h2>Same service in nearby neighborhoods</h2>
+        <h2>{s['name']} in nearby neighborhoods</h2>
       </div>
       <ul class="areas-list areas-list-wide">
 {other_area_links}
@@ -616,8 +653,13 @@ def combo_page(s, n):
 # ============ LOCATION PAGE ============
 
 def location_page(n):
-    title = f"House Cleaning in {n['name']}, OH | North Columbus Cleaning Company"
-    desc = f"Residential and commercial cleaning services in {n['name']}, Ohio. Insured, bonded, background-checked crews. Get a free quote."
+    base = f"House Cleaning in {n['name']}, OH"
+    brand = " | North Columbus Cleaning"
+    title = base + brand if len(base + brand) <= 60 else base
+    desc = (
+        f"Residential and commercial cleaning in {n['name']}, OH by a local, insured, bonded crew. "
+        f"Flat-rate quotes, satisfaction guarantee. Call (614) 555-0100."
+    )
     zips_line = ", ".join(n['zips'])
 
     service_cards = "\n".join(f"""        <a class="service-card service-card-link" href="/services/{s['slug']}/{n['slug']}">
@@ -635,6 +677,7 @@ def location_page(n):
     )
 
     return f"""{head(title, desc, f"/locations/{n['slug']}")}
+{local_business_jsonld(f"/locations/{n['slug']}", area_served=f"{n['name']}, OH")}
 {TOPBAR}
 {HEADER}
 
@@ -660,7 +703,7 @@ def location_page(n):
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">What we clean in {n['name']}</span>
-        <h2>Services available here</h2>
+        <h2>Cleaning services in {n['name']}, OH</h2>
         <p class="section-sub">Every service below is available to homes and businesses in {n['name']} and the surrounding area.</p>
       </div>
       <div class="grid services-grid">
@@ -673,7 +716,7 @@ def location_page(n):
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">Local crews</span>
-        <h2>Why {n['name']} neighbors choose us</h2>
+        <h2>Why {n['name']} homes and businesses choose us</h2>
       </div>
       <div class="grid benefits-grid">
         <div class="benefit"><h4>We know the area</h4><p>From older homes with original woodwork to newer builds with modern finishes, our crews clean across {n['name']} every week.</p></div>
@@ -692,7 +735,7 @@ def location_page(n):
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">Other areas we serve</span>
-        <h2>Nearby neighborhoods</h2>
+        <h2>Cleaning services in nearby neighborhoods</h2>
       </div>
       <ul class="areas-list">
 {other_links}
@@ -706,8 +749,13 @@ def location_page(n):
 # ============ SERVICE PAGE ============
 
 def service_page(s):
-    title = f"{s['name']} in Columbus, OH | North Columbus Cleaning Company"
-    desc = f"{s['name']} by a local, insured, background-checked crew. {s['short']} Get a free quote."
+    base = f"{s['name']} in Columbus, OH"
+    brand = " | North Columbus Cleaning"
+    title = base + brand if len(base + brand) <= 60 else base
+    desc = (
+        f"{s['name']} services in Columbus, OH by a local, insured, bonded crew. {s['short']} "
+        f"Flat-rate quotes. Call (614) 555-0100."
+    )
 
     included_items = "\n".join(f"        <li>{item}</li>" for item in s['included'])
     area_links = "\n".join(
@@ -723,7 +771,8 @@ def service_page(s):
           </div>
         </a>""" for x in other_services[:3])
 
-    return f"""{head(title, desc, f"/services/{s['slug']}")}
+    return f"""{head(title, desc, f"/services/{s['slug']}", og_image=s['hero_img'])}
+{local_business_jsonld(f"/services/{s['slug']}", service_name=s['name'])}
 {TOPBAR}
 {HEADER}
 
@@ -731,7 +780,7 @@ def service_page(s):
     <div class="container hero-inner">
       <div class="hero-text">
         <span class="eyebrow">Our services</span>
-        <h1>{s['name']}</h1>
+        <h1>{s['name']} in Columbus, OH</h1>
         <p class="lead">{s['intro']}</p>
         <div class="hero-cta">
           <a href="/#quote" class="btn btn-primary">Get a quote</a>
@@ -749,7 +798,7 @@ def service_page(s):
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">What's included</span>
-        <h2>Every {s['name'].lower()} covers</h2>
+        <h2>What&rsquo;s included in our {s['name'].lower()}</h2>
       </div>
       <ul class="included-list">
 {included_items}
@@ -760,8 +809,8 @@ def service_page(s):
   <section class="section">
     <div class="container">
       <div class="section-head">
-        <span class="eyebrow">Who it's for</span>
-        <h2>Good fit</h2>
+        <span class="eyebrow">Who it&rsquo;s for</span>
+        <h2>Who {s['name'].lower()} is right for</h2>
         <p class="section-sub">{s['good_fit']}</p>
       </div>
     </div>
@@ -773,8 +822,8 @@ def service_page(s):
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">Service area</span>
-        <h2>We serve these neighborhoods</h2>
-        <p class="section-sub">All across North Columbus and the surrounding suburbs.</p>
+        <h2>{s['name']} service areas in North Columbus</h2>
+        <p class="section-sub">All across Franklin and Delaware counties and the surrounding neighborhoods.</p>
       </div>
       <ul class="areas-list">
 {area_links}
@@ -786,7 +835,7 @@ def service_page(s):
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">Other services</span>
-        <h2>See what else we do</h2>
+        <h2>Other cleaning services we offer</h2>
       </div>
       <div class="grid services-grid services-grid-3">
 {other_service_cards}
@@ -800,8 +849,11 @@ def service_page(s):
 # ============ HUB PAGES ============
 
 def locations_hub():
-    title = "Service Areas | North Columbus Cleaning Company"
-    desc = "Cleaning services across North Columbus, Ohio. See every neighborhood we serve."
+    title = "Cleaning Service Areas in North Columbus, OH"
+    desc = (
+        "Cleaning services across 12 North Columbus, OH neighborhoods &mdash; Worthington, "
+        "Dublin, Westerville, New Albany, Powell, and more. Call (614) 555-0100."
+    )
     cards = "\n".join(f"""        <a class="area-card" href="/locations/{n['slug']}">
           <h3>{n['name']}</h3>
           <p class="area-meta">{n['county']}</p>
@@ -810,6 +862,7 @@ def locations_hub():
         </a>""" for n in NEIGHBORHOODS)
 
     return f"""{head(title, desc, "/locations")}
+{local_business_jsonld("/locations")}
 {TOPBAR}
 {HEADER}
 
@@ -817,8 +870,8 @@ def locations_hub():
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">Where we work</span>
-        <h1>Serving North Columbus and beyond</h1>
-        <p class="section-sub">Twelve neighborhoods across Franklin and Delaware counties. Don't see yours? Give us a call &mdash; we're expanding every month.</p>
+        <h1>Cleaning service areas in North Columbus, OH</h1>
+        <p class="section-sub">Twelve neighborhoods across Franklin and Delaware counties. Don&rsquo;t see yours? Give us a call &mdash; we&rsquo;re expanding every month.</p>
       </div>
     </div>
   </section>
@@ -837,8 +890,11 @@ def locations_hub():
 
 
 def services_hub():
-    title = "Cleaning Services in Columbus, OH | North Columbus Cleaning Company"
-    desc = "Residential, commercial, deep, recurring, move-in/out, and short-term rental cleaning across North Columbus."
+    title = "Cleaning Services in Columbus, OH | North Columbus Cleaning"
+    desc = (
+        "Residential, commercial, deep, recurring, move-in/out, and Airbnb cleaning "
+        "services in North Columbus, OH. Flat-rate quotes. Call (614) 555-0100."
+    )
     cards = "\n".join(f"""        <a class="service-card service-card-link" href="/services/{s['slug']}">
           <div class="service-img"><img src="{s['hero_img']}" alt="{s['name']}" loading="lazy" /></div>
           <div class="service-body">
@@ -849,6 +905,7 @@ def services_hub():
         </a>""" for s in SERVICES)
 
     return f"""{head(title, desc, "/services")}
+{local_business_jsonld("/services")}
 {TOPBAR}
 {HEADER}
 
