@@ -605,6 +605,27 @@ a:hover { color: var(--forest); text-decoration: underline; }
   opacity: 0.6;
 }
 
+/* ============ BREADCRUMB ============ */
+.breadcrumb {
+  background: #fff;
+  border-bottom: 1px solid var(--light-gray);
+  padding: var(--space-2) 0;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 900;
+  color: var(--charcoal);
+}
+.breadcrumb a { color: var(--sage); }
+.breadcrumb a:hover { color: var(--forest); text-decoration: none; }
+.breadcrumb span { color: var(--forest); }
+
+/* wide variant of areas-list for sibling-combo link grids */
+.areas-list-wide { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 720px) {
+  .areas-list-wide { grid-template-columns: 1fr; }
+}
+
 /* ============ COMPACT HERO (location/service pages) ============ */
 .hero-compact { padding: var(--space-8) 0; }
 .hero-compact h1 { font-size: 52px; }

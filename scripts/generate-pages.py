@@ -156,12 +156,19 @@ SERVICES = [
     {
         "slug": "residential-cleaning",
         "name": "Residential cleaning",
+        "kw": "house cleaning",
         "short": "Standard house cleans for occupied homes.",
         "hero_img": "/images/residential.jpg",
         "intro": (
             "Reliable, consistent house cleaning so you get your weekends back. We follow a "
             "room-by-room checklist that leaves kitchens, bathrooms, bedrooms, and living "
             "spaces looking the way they should."
+        ),
+        "local_hook": lambda n: (
+            f"Residential cleaning in {n['name']} by a local team that knows the difference "
+            f"between a drywall-and-builder-grade new build and a century home with plaster "
+            f"walls and original woodwork. Same room-by-room checklist, different tools, "
+            f"predictable results."
         ),
         "included": [
             "All kitchen surfaces, appliances exterior, stovetop, and sink",
@@ -179,12 +186,18 @@ SERVICES = [
     {
         "slug": "commercial-cleaning",
         "name": "Commercial cleaning",
+        "kw": "commercial cleaning",
         "short": "Offices, retail, salons, and medical spaces.",
         "hero_img": "/images/commercial.jpg",
         "intro": (
             "Your space is the first thing clients notice. We clean offices, retail shops, "
             "salons, and medical suites on a schedule that fits your operation — usually "
             "evenings or weekends so we don't interrupt your day."
+        ),
+        "local_hook": lambda n: (
+            f"Commercial cleaning for {n['name']} businesses &mdash; offices, salons, "
+            f"retail shops, and medical suites. We work evenings or weekends so your "
+            f"customers and staff aren't watching us vacuum at 10am."
         ),
         "included": [
             "Breakrooms, lobbies, conference rooms, and private offices",
@@ -202,12 +215,19 @@ SERVICES = [
     {
         "slug": "deep-cleaning",
         "name": "Deep cleaning",
+        "kw": "deep cleaning",
         "short": "Top-to-bottom detail cleans.",
         "hero_img": "/images/deep-cleaning.jpg",
         "intro": (
             "A deep clean is for spaces that need more than a standard visit — a first-time "
             "clean, a seasonal refresh, or prep for a party or holiday. We get behind, "
             "under, and inside things most cleans skip."
+        ),
+        "local_hook": lambda n: (
+            f"Deep cleaning in {n['name']} for homes that need more than a weekly tidy. "
+            f"We go after the places a regular visit misses &mdash; inside the oven, "
+            f"behind the fridge, grout lines in the tile shower, baseboards and door "
+            f"frames that have collected dust since last spring."
         ),
         "included": [
             "Inside the oven, microwave, and refrigerator",
@@ -226,12 +246,18 @@ SERVICES = [
     {
         "slug": "recurring-service",
         "name": "Recurring service",
+        "kw": "recurring cleaning service",
         "short": "Weekly, bi-weekly, or monthly plans.",
         "hero_img": "/images/recurring.jpg",
         "intro": (
             "The same crew on the same schedule, cleaning to the same standard every visit. "
             "Most of our customers settle into bi-weekly — it keeps the house in rhythm "
             "without overkill."
+        ),
+        "local_hook": lambda n: (
+            f"Recurring cleaning service in {n['name']} &mdash; weekly, bi-weekly, or monthly. "
+            f"Same crew, same day, every visit, so the house stays in rhythm without you "
+            f"having to think about it."
         ),
         "included": [
             "Every standard-clean item on every visit",
@@ -249,12 +275,18 @@ SERVICES = [
     {
         "slug": "move-in-move-out-cleaning",
         "name": "Move-in and move-out cleaning",
+        "kw": "move-out cleaning",
         "short": "Empty-property deep cleans.",
         "hero_img": "/images/move-out.jpg",
         "intro": (
             "Whether you want your deposit back or you're handing keys to a buyer, an "
             "empty-property clean is the last thing standing between you and done. We handle "
             "inside cabinets, appliances, and every surface a new occupant will see."
+        ),
+        "local_hook": lambda n: (
+            f"Move-in and move-out cleaning in {n['name']} for renters trying to get deposits "
+            f"back, sellers closing on a house, and buyers who want to walk into a genuinely "
+            f"clean place. We handle every cabinet, every appliance interior, every closet."
         ),
         "included": [
             "Inside every cabinet and drawer",
@@ -273,12 +305,18 @@ SERVICES = [
     {
         "slug": "short-term-rental-cleaning",
         "name": "Short-term rental cleaning",
+        "kw": "Airbnb cleaning",
         "short": "Airbnb and VRBO turnovers.",
         "hero_img": "/images/short-term.jpg",
         "intro": (
             "Back-to-back guests, five-star expectations, and a narrow window between "
             "check-out and check-in. We turn rentals fast and consistently so your "
             "calendar keeps booking."
+        ),
+        "local_hook": lambda n: (
+            f"Airbnb and short-term rental cleaning in {n['name']} &mdash; fast turnovers "
+            f"between guests, fresh linens, and photo-ready staging so your next booking "
+            f"walks into a five-star review."
         ),
         "included": [
             "Full unit clean to hotel standard",
@@ -419,6 +457,162 @@ TRUST_LIST = """      <ul class="hero-trust">
       </ul>"""
 
 
+# ============ COMBO PAGE (service × location) ============
+
+def combo_page(s, n):
+    title = f"{s['name']} in {n['name']}, OH | North Columbus Cleaning Company"
+    desc = (
+        f"Looking for {s['kw']} in {n['name']}, OH? Local, insured, background-checked crews. "
+        f"Flat-rate quotes. Call (614) 555-0100 or request a quote online."
+    )
+    canonical = f"/services/{s['slug']}/{n['slug']}"
+
+    # Custom intro paragraph: service's local_hook + location's blurb
+    lead = f"{s['local_hook'](n)}"
+    sub = n['blurb']
+    zips_line = ", ".join(n['zips'])
+
+    included_items = "\n".join(f"        <li>{item}</li>" for item in s['included'])
+
+    # Other services offered in this SAME location (links to other combos)
+    others_here = [x for x in SERVICES if x['slug'] != s['slug']]
+    others_here_cards = "\n".join(f"""        <a class="service-card service-card-link" href="/services/{x['slug']}/{n['slug']}">
+          <div class="service-img"><img src="{x['hero_img']}" alt="{x['name']} in {n['name']}" loading="lazy" /></div>
+          <div class="service-body">
+            <h3>{x['name']} in {n['name']}</h3>
+            <p>{x['short']}</p>
+          </div>
+        </a>""" for x in others_here)
+
+    # Same service in OTHER locations (sibling combos)
+    others_elsewhere = [x for x in NEIGHBORHOODS if x['slug'] != n['slug']]
+    other_area_links = "\n".join(
+        f'        <li><a href="/services/{s["slug"]}/{x["slug"]}">{s["name"]} in {x["name"]}</a></li>'
+        for x in others_elsewhere
+    )
+
+    # JSON-LD: LocalBusiness with service area (boosts local SEO)
+    jsonld = f"""  <script type="application/ld+json">
+  {{
+    "@context": "https://schema.org",
+    "@type": "HouseholdCleaningService",
+    "name": "North Columbus Cleaning Company",
+    "image": "https://northcolumbuscleaning.com/images/logo.svg",
+    "url": "https://northcolumbuscleaning.com{canonical}",
+    "telephone": "+1-614-555-0100",
+    "areaServed": {{
+      "@type": "City",
+      "name": "{n['name']}, OH"
+    }},
+    "address": {{
+      "@type": "PostalAddress",
+      "addressLocality": "Columbus",
+      "addressRegion": "OH",
+      "addressCountry": "US"
+    }},
+    "makesOffer": {{
+      "@type": "Offer",
+      "itemOffered": {{
+        "@type": "Service",
+        "name": "{s['name']} in {n['name']}, OH",
+        "areaServed": "{n['name']}, OH"
+      }}
+    }}
+  }}
+  </script>"""
+
+    return f"""{head(title, desc, canonical)}
+{jsonld}
+{TOPBAR}
+{HEADER}
+
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <div class="container">
+      <a href="/">Home</a> &rsaquo;
+      <a href="/services">Services</a> &rsaquo;
+      <a href="/services/{s['slug']}">{s['name']}</a> &rsaquo;
+      <span>{n['name']}</span>
+    </div>
+  </nav>
+
+  <section class="hero hero-compact">
+    <div class="container hero-inner">
+      <div class="hero-text">
+        <span class="eyebrow">{n['county']} &middot; {zips_line}</span>
+        <h1>{s['name']} in {n['name']}, OH</h1>
+        <p class="lead">{lead}</p>
+        <p>{sub}</p>
+        <div class="hero-cta">
+          <a href="/#quote" class="btn btn-primary">Get a quote</a>
+          <a href="tel:+16145550100" class="btn btn-outline">(614) 555-0100</a>
+        </div>
+{TRUST_LIST}
+      </div>
+      <div class="hero-visual">
+        <img src="{s['hero_img']}" alt="{s['name']} by North Columbus Cleaning Company in {n['name']}, OH" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">What's included</span>
+        <h2>Every {s['name'].lower()} in {n['name']} covers</h2>
+        <p class="section-sub">{s['intro']}</p>
+      </div>
+      <ul class="included-list">
+{included_items}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Why {n['name']} picks us</span>
+        <h2>Local, insured, accountable</h2>
+      </div>
+      <div class="grid benefits-grid">
+        <div class="benefit"><h4>We clean here weekly</h4><p>Our crews are in {n['name']} regularly &mdash; we know the area, the home styles, and the traffic patterns.</p></div>
+        <div class="benefit"><h4>Insured and bonded</h4><p>Every cleaner in your {n['name']} home or business is background-checked, bonded, and fully insured.</p></div>
+        <div class="benefit"><h4>Flat-rate pricing</h4><p>We give {n['name']} customers one clear number up front &mdash; no hourly runs, no surprises at the end.</p></div>
+        <div class="benefit"><h4>Same crew each time</h4><p>Recurring {s['name'].lower()} clients in {n['name']} get the same team every visit.</p></div>
+        <div class="benefit"><h4>Flexible scheduling</h4><p>Evenings, weekends, and short-notice availability across {n['name']} and nearby zips ({zips_line}).</p></div>
+        <div class="benefit"><h4>Satisfaction guarantee</h4><p>If something in your {n['name']} clean isn't right, we come back and fix it &mdash; at no charge.</p></div>
+      </div>
+    </div>
+  </section>
+
+{CTA_BLOCK}
+
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Other services in {n['name']}</span>
+        <h2>More ways we help {n['name']} homes and businesses</h2>
+      </div>
+      <div class="grid services-grid">
+{others_here_cards}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">{s['name']} elsewhere</span>
+        <h2>Same service in nearby neighborhoods</h2>
+      </div>
+      <ul class="areas-list areas-list-wide">
+{other_area_links}
+      </ul>
+    </div>
+  </section>
+
+{footer()}"""
+
+
 # ============ LOCATION PAGE ============
 
 def location_page(n):
@@ -426,10 +620,10 @@ def location_page(n):
     desc = f"Residential and commercial cleaning services in {n['name']}, Ohio. Insured, bonded, background-checked crews. Get a free quote."
     zips_line = ", ".join(n['zips'])
 
-    service_cards = "\n".join(f"""        <a class="service-card service-card-link" href="/services/{s['slug']}">
+    service_cards = "\n".join(f"""        <a class="service-card service-card-link" href="/services/{s['slug']}/{n['slug']}">
           <div class="service-img"><img src="{s['hero_img']}" alt="{s['name']} in {n['name']}" loading="lazy" /></div>
           <div class="service-body">
-            <h3>{s['name']}</h3>
+            <h3>{s['name']} in {n['name']}</h3>
             <p>{s['short']}</p>
           </div>
         </a>""" for s in SERVICES)
@@ -517,7 +711,7 @@ def service_page(s):
 
     included_items = "\n".join(f"        <li>{item}</li>" for item in s['included'])
     area_links = "\n".join(
-        f'        <li><a href="/locations/{n["slug"]}">{n["name"]}</a></li>'
+        f'        <li><a href="/services/{s["slug"]}/{n["slug"]}">{n["name"]}</a></li>'
         for n in NEIGHBORHOODS
     )
     other_services = [x for x in SERVICES if x['slug'] != s['slug']]
@@ -681,6 +875,43 @@ def services_hub():
 {footer()}"""
 
 
+# ============ SITEMAP ============
+
+def sitemap():
+    """Generate sitemap.xml covering every page."""
+    base = "https://northcolumbuscleaning.com"
+    urls = [
+        (base + "/", "1.0", "weekly"),
+        (base + "/services", "0.9", "weekly"),
+        (base + "/locations", "0.9", "weekly"),
+    ]
+    for s in SERVICES:
+        urls.append((f"{base}/services/{s['slug']}", "0.8", "monthly"))
+    for n in NEIGHBORHOODS:
+        urls.append((f"{base}/locations/{n['slug']}", "0.8", "monthly"))
+    for s in SERVICES:
+        for n in NEIGHBORHOODS:
+            urls.append((f"{base}/services/{s['slug']}/{n['slug']}", "0.7", "monthly"))
+
+    url_blocks = "\n".join(
+        f"  <url>\n    <loc>{u}</loc>\n    <changefreq>{freq}</changefreq>\n    <priority>{p}</priority>\n  </url>"
+        for u, p, freq in urls
+    )
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{url_blocks}
+</urlset>
+"""
+
+
+def robots():
+    return """User-agent: *
+Allow: /
+
+Sitemap: https://northcolumbuscleaning.com/sitemap.xml
+"""
+
+
 # ============ WRITE OUT ============
 
 def write(path, content):
@@ -701,7 +932,19 @@ def main():
         write(f"services/{s['slug']}.html", service_page(s))
     write("services/index.html", services_hub())
 
-    print(f"\nGenerated {len(NEIGHBORHOODS)} location pages, {len(SERVICES)} service pages, 2 hubs.")
+    # Combo pages (service × location)
+    combo_count = 0
+    for s in SERVICES:
+        for n in NEIGHBORHOODS:
+            write(f"services/{s['slug']}/{n['slug']}.html", combo_page(s, n))
+            combo_count += 1
+
+    # Sitemap + robots.txt
+    write("sitemap.xml", sitemap())
+    write("robots.txt", robots())
+
+    print(f"\nGenerated {len(NEIGHBORHOODS)} location pages, {len(SERVICES)} service pages, "
+          f"2 hubs, {combo_count} combo pages, sitemap.xml, robots.txt.")
 
 
 if __name__ == "__main__":
