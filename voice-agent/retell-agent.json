@@ -1,0 +1,94 @@
+{
+  "agent_name": "Maya — North Columbus Cleaning receptionist",
+  "voice_id": "11labs-Adrian",
+  "voice_model": "eleven_turbo_v2_5",
+  "language": "en-US",
+  "response_engine": {
+    "type": "retell-llm",
+    "llm_id": "REPLACE_WITH_LLM_ID_AFTER_CREATING_LLM"
+  },
+  "webhook_url": "https://northcolumbuscleaning.com/api/retell-webhook",
+  "end_call_after_silence_ms": 20000,
+  "max_call_duration_ms": 900000,
+  "enable_backchannel": true,
+  "backchannel_frequency": 0.8,
+  "interruption_sensitivity": 0.8,
+  "responsiveness": 0.9,
+  "ambient_sound": null,
+  "boosted_keywords": [
+    "North Columbus Cleaning",
+    "Worthington",
+    "Clintonville",
+    "Westerville",
+    "Dublin",
+    "Powell",
+    "Upper Arlington",
+    "New Albany",
+    "Gahanna",
+    "Polaris",
+    "Lewis Center",
+    "Delaware",
+    "Hilliard",
+    "Airbnb",
+    "move-in",
+    "move-out",
+    "deep cleaning",
+    "bi-weekly"
+  ],
+  "voicemail_detection_timeout_ms": 30000,
+  "post_call_analysis_data": [
+    {
+      "type": "string",
+      "name": "caller_name",
+      "description": "The caller's full name as they gave it."
+    },
+    {
+      "type": "string",
+      "name": "callback_number",
+      "description": "Best callback number in E.164 or readable format."
+    },
+    {
+      "type": "enum",
+      "name": "intent",
+      "description": "Primary reason for the call.",
+      "choices": ["new_quote", "existing_customer", "question", "complaint", "other"]
+    },
+    {
+      "type": "enum",
+      "name": "service_type",
+      "description": "Which cleaning service they're interested in, if known.",
+      "choices": ["residential", "commercial", "deep", "recurring", "move_in_out", "short_term_rental", "unknown"]
+    },
+    {
+      "type": "string",
+      "name": "property_details",
+      "description": "Property type and size, e.g. '3 bed 2 bath house' or '1200 sqft office'."
+    },
+    {
+      "type": "string",
+      "name": "service_address_or_area",
+      "description": "Address or neighborhood where service would happen."
+    },
+    {
+      "type": "string",
+      "name": "preferred_timing",
+      "description": "Preferred date or window."
+    },
+    {
+      "type": "string",
+      "name": "special_notes",
+      "description": "Pets, allergies, access codes, products to avoid, focus areas, etc."
+    },
+    {
+      "type": "enum",
+      "name": "urgency",
+      "description": "How soon the caller wants a follow-up.",
+      "choices": ["today", "this_week", "whenever"]
+    },
+    {
+      "type": "boolean",
+      "name": "requires_human_followup",
+      "description": "True if the call needs a human to call back for any reason."
+    }
+  ]
+}
