@@ -1,168 +1,210 @@
-# Voice Agent Setup — Retell AI + Twilio + Zapier → Booking Koala
+# Voice Agent Setup — Quo + Retell AI + Zapier → Booking Koala
 
-Step-by-step to take the voice agent from "code in the repo" to "live on your phone line."
+Step-by-step to take the voice agent from "code in the repo" to "live on your Quo line."
 
-**Estimated setup time**: 2–3 hours for first-time setup.
-**Estimated monthly cost at 100 calls × 2 min avg**: ~$40–$60 (see cost breakdown at the bottom).
+Everything ties back to your existing Quo number — customers dial the same number they already know, the team sees all calls and texts in Quo's shared inbox, and automated SMS come from the Quo workspace number instead of a separate Twilio number.
 
----
-
-## Prerequisites / accounts to create
-
-1. **Retell AI** — https://www.retellai.com — free tier to start, pay-as-you-go after
-2. **Twilio** — https://www.twilio.com — for phone number and SMS recap
-3. **Zapier** — https://zapier.com — you likely already have this via Booking Koala
-4. **OpenAI** (optional) — Retell can use their own LLM credits, or bring your own OpenAI key for cheaper rates at scale
+**Estimated setup time**: ~2 hours for first-time setup.
+**Estimated monthly cost at 100 calls × 2 min avg**: ~$25–$40 (Retell usage + Zapier if you don't already have it). Your existing Quo subscription covers the rest.
 
 ---
 
-## Step 1 — Deploy the webhook endpoints (one-time)
+## Prerequisites
 
-The code in `/api/retell-webhook.js` and `/api/voice-agent/check-service-area.js` auto-deploys to Vercel when pushed to `main`. Confirm they're live:
+1. **Quo account** — the workspace you already use (quo.com, formerly OpenPhone). Admin access required.
+2. **Retell AI** — https://www.retellai.com — free credits to start, pay-as-you-go after
+3. **Zapier** — https://zapier.com — likely already connected to Booking Koala
 
+You do **not** need Twilio for this setup.
+
+---
+
+## Step 1 — Confirm the webhook endpoints are live
+
+The serverless functions auto-deploy from the repo to Vercel when pushed to `main`.
+
+- `/api/retell-webhook` — handles Retell's post-call report, sends SMS recap via Quo, forwards to Zapier
+- `/api/voice-agent/check-service-area` — the agent calls this mid-conversation to check if a zip is in-area
+- `/api/quo-webhook` — Quo's events land here (Phase 2+ — just scaffolded now)
+
+Smoke test (from the repo directory):
+```bash
+vercel curl /api/voice-agent/check-service-area -- -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"args":{"zip":"43085"}}'
+# expect: {"result":"Yes, 43085 is in our service area — that's Worthington.", ...}
 ```
-https://northcolumbuscleaning.com/api/retell-webhook              (POST only)
-https://northcolumbuscleaning.com/api/voice-agent/check-service-area (POST only)
-```
-
-A GET will return `405 Method not allowed` — that's expected and means the function is alive.
 
 ---
 
-## Step 2 — Set Vercel environment variables
+## Step 2 — Get your Quo API key
 
-In the Vercel dashboard → your project → Settings → Environment Variables, add the following (leave blank for now; we'll fill them in as we set up each service):
+1. In Quo, go to **Settings → API**.
+2. Click **Generate API Key**, give it a label like "Vercel-server".
+3. Copy the key — you won't see it again.
+4. Note your **main workspace phone number** in E.164 format (with `+1`, e.g. `+16145550100`).
+
+---
+
+## Step 3 — Set Vercel environment variables
+
+In the Vercel dashboard → your project → **Settings → Environment Variables**, add:
 
 | Variable | Value | Used by |
 |---|---|---|
-| `ZAPIER_WEBHOOK_URL` | (Step 6) | retell-webhook → Zapier forwarding |
-| `TWILIO_ACCOUNT_SID` | (Step 3) | SMS recap to manager |
-| `TWILIO_AUTH_TOKEN` | (Step 3) | SMS recap to manager |
-| `TWILIO_FROM` | (Step 3) E.164, e.g. `+16145550100` | SMS sender |
-| `MANAGER_PHONE` | owner's cell E.164 | SMS recap recipient |
+| `QUO_API_KEY` | the API key from step 2 | All Quo SMS sends |
+| `QUO_FROM_NUMBER` | your Quo number in E.164, e.g. `+16145550100` | Sender of all automated SMS |
+| `MANAGER_PHONE` | owner/manager cell in E.164 | Post-call SMS recap recipient |
+| `ZAPIER_WEBHOOK_URL` | (Step 6) | Forwards call summaries to Zapier |
+| `QUO_WEBHOOK_SECRET` | (Step 7, optional for Phase 1) | Signature verification on `/api/quo-webhook` |
 
-Hit **Redeploy** after adding each one so the new env is picked up.
-
----
-
-## Step 3 — Twilio: buy a number + get API credentials
-
-1. Sign up at https://twilio.com (trial credit: $15).
-2. **Buy a phone number** (Console → Phone Numbers → Buy a Number):
-   - Pick a Columbus, OH area code (614, 380).
-   - Enable **Voice** and **SMS** capabilities.
-   - ~$1.15/mo.
-3. Copy from Console → Account Info:
-   - **Account SID** → `TWILIO_ACCOUNT_SID` in Vercel.
-   - **Auth Token** → `TWILIO_AUTH_TOKEN` in Vercel.
-4. The number itself → `TWILIO_FROM` (with the `+1` prefix).
-5. Put the owner's cell in `MANAGER_PHONE` (also `+1`-prefixed).
-
-> **Trial account note**: Twilio trial numbers can only SMS/call verified numbers. Verify the owner's cell first, and upgrade to a paid account before going live ($20 minimum top-up).
+After each add, Vercel will prompt to redeploy — say yes.
 
 ---
 
-## Step 4 — Retell AI: create the LLM and Agent
+## Step 4 — Set up the Retell agent
 
 1. Sign up at https://beta.retellai.com (free credits to start).
 2. **Create a Retell LLM**:
    - Dashboard → **LLM** → **New LLM**
-   - Either paste the contents of `voice-agent/retell-llm.json` into the JSON editor, or copy the `general_prompt` manually into the Prompt field and add the 3 tools (`end_call`, `transfer_to_manager`, `check_service_area`) one at a time in the Tools section.
-   - For `check_service_area`, set the URL to `https://northcolumbuscleaning.com/api/voice-agent/check-service-area`.
+   - Paste the contents of `voice-agent/retell-llm.json` into the JSON editor — or create manually: copy `general_prompt` from that file, and add the three tools listed (`end_call`, `transfer_to_manager`, `check_service_area`).
+   - For the `check_service_area` custom tool, set the URL to:
+     `https://northcolumbuscleaning.com/api/voice-agent/check-service-area`
+   - For `transfer_to_manager`, set the destination to the **office manager's direct cell** (Retell transfers the caller out of Retell directly to that number — no routing back through Quo).
    - Save. Copy the generated **LLM ID**.
-3. **Create an Agent**:
+3. **Create a Retell Agent**:
    - Dashboard → **Agents** → **New Agent**
    - Paste contents of `voice-agent/retell-agent.json`, replacing `REPLACE_WITH_LLM_ID_AFTER_CREATING_LLM` with the LLM ID from step 2.
-   - Voice: **11labs Adrian** is a solid warm male voice. For female, try **11labs Sarah** or **11labs Rachel**. Test several in Retell's web player.
+   - Voice: `11labs-Adrian` is the default in the config (warm male). Alternatives: `11labs-Sarah` / `11labs-Rachel` (warm female). Test in Retell's web player.
    - Webhook URL: `https://northcolumbuscleaning.com/api/retell-webhook`
    - Save. Copy the **Agent ID**.
-4. **Test in the web player**: Retell lets you call the agent from your browser. Run through a full quote-request flow and a "transfer me to a human" flow.
+4. **Test in the web player** (Retell lets you call the agent from your browser). Run:
+   - A quote-request flow ("I need cleaning for my 3-bed in Worthington")
+   - A "transfer me to a human" flow
+   - A zip check ("what about 43065?")
 
 ---
 
-## Step 5 — Connect a phone number to the agent
+## Step 5 — Get a phone number Quo can forward to
 
-Two options:
+Retell is inbound-only; it needs a phone number that rings when Quo forwards calls. Buy one directly in Retell:
 
-### Option A — Use a Retell-provided number (simplest)
-1. Dashboard → **Phone Numbers** → **Buy/Import**.
-2. Buy a number or import your Twilio number.
-3. Assign your agent to inbound calls.
-4. Test by calling the number from your own phone.
+1. Retell dashboard → **Phone Numbers** → **Buy a Number**
+2. Pick any area code — the customer never sees this number (Quo forwards to it behind the scenes). A Columbus 614 number is nice for consistency.
+3. Assign your Agent as the handler.
+4. Copy the E.164 number (e.g. `+16145559876`).
 
-### Option B — Route your existing business line to Retell via Twilio
-1. In Twilio Console, find the number you bought in Step 3.
-2. Under **Voice Configuration → A call comes in**, set the webhook to Retell's inbound webhook URL (shown in Retell's Phone Numbers section).
-3. This lets you keep the Twilio number as the public-facing phone and still get Retell's agent to handle calls.
-
-### After-hours / overflow routing (recommended)
-In Twilio or via Twilio Studio, add a simple flow:
-- **Business hours (Mon–Sat 7am–7pm)**: ring the office manager's cell for 20 seconds, then fall back to Retell.
-- **After hours**: go straight to Retell.
-
-Twilio Studio has a drag-and-drop flow builder for this — takes 15 minutes.
+Cost: ~$1.15/mo + ~$0.015/min of usage, paid through Retell.
 
 ---
 
-## Step 6 — Zapier: catch the end-of-call webhook
+## Step 6 — Configure Quo's call flow to forward to Retell
+
+This is where Quo earns its keep — the call flow builder handles all the routing logic.
+
+1. In Quo: **Settings → Phone numbers → (your main line) → Call flow → Edit**
+2. The flow should look like this:
+
+```
+Incoming call
+     │
+     ├─ [Business hours condition: Mon–Sat 7am–7pm]
+     │    ├─ Ring group: [owner, office manager, any other team members]
+     │    │   Timeout: 20 seconds
+     │    └─ If no one answers → Forward call to: +1614xxxxxxx (the Retell number)
+     │
+     └─ [Outside business hours]
+          └─ Forward call to: +1614xxxxxxx (the Retell number)
+```
+
+Specifics:
+- Drag an **After hours** condition.
+- Inside business hours, drag a **Ring group** with your team, then a **Forward call** below it (Quo's UI calls this "no answer forward").
+- Inside after-hours, drag a single **Forward call** straight to the Retell number.
+- Save the flow.
+
+Test by calling your Quo number from a personal phone during business hours — nobody picks up → should roll to Retell in ~20 seconds.
+
+> **Caller ID passthrough**: Quo does pass the original caller's number through on forwards, so Retell (and your SMS recap) will show the actual caller, not the Quo number.
+
+---
+
+## Step 7 — Create the Zapier flow
 
 1. In Zapier, create a new Zap.
 2. Trigger: **Webhooks by Zapier → Catch Hook**.
-3. Zapier gives you a unique URL — copy it.
+3. Copy the unique webhook URL Zapier gives you.
 4. Paste it into the `ZAPIER_WEBHOOK_URL` env var in Vercel → Redeploy.
-5. Make a test call through the agent, then let it end normally (say "thanks, that's all").
-6. Back in Zapier, click **Test trigger** — you should see the structured payload (`callerName`, `intent`, `serviceType`, etc.).
-7. Build the actions from `voice-agent/zapier-recipes.md` — at minimum: **Recipe 1** (new quote → Booking Koala) and **Recipe 2** (all calls → Google Sheet log).
+5. Make a test call through the agent; let it end normally.
+6. In Zapier, click **Test trigger** — you should see the structured payload (`callerName`, `intent`, `serviceType`, etc.).
+7. Build actions from `voice-agent/zapier-recipes.md` — at minimum **Recipe 1** (new quote → Booking Koala) and **Recipe 2** (all calls → Google Sheet log).
 
 ---
 
-## Step 7 — Go live checklist
+## Step 8 — (Optional, Phase 2 prep) Set up Quo's webhook
 
-- [ ] Made a test call from your own phone and got a realistic quote conversation
-- [ ] Received an SMS recap at `MANAGER_PHONE` within 10–30 seconds of the call ending
-- [ ] Saw the call appear in the Google Sheet log via Zapier
-- [ ] Booking Koala received a new lead (or got an email from the Zap)
-- [ ] "Transfer to a human" works during business hours
-- [ ] Tried a zip check ("I live in 43065") and the agent confirmed the area correctly
-- [ ] Tried an out-of-area zip ("45202") and the agent gracefully offered to take details anyway
+This doesn't do anything yet in Phase 1, but wiring it now saves time later.
+
+1. Quo → **Settings → Webhooks → Create webhook**
+2. URL: `https://northcolumbuscleaning.com/api/quo-webhook`
+3. Events: `message.received`, `message.delivered`, `call.ringing`, `call.completed`
+4. Phone numbers: your main workspace number
+5. Copy the **signing secret** shown after creation → paste into Vercel env var `QUO_WEBHOOK_SECRET` → Redeploy
+
+When Phase 2 lands (cleaner SMS brain, customer reply handling), the inbound events will already be flowing.
 
 ---
 
-## Cost breakdown (approximate, at 100 calls × 2 minutes)
+## Go-live checklist
+
+- [ ] Test call from a personal phone during business hours → team rings → no answer for 20s → rolls to Maya
+- [ ] Test call after business hours → straight to Maya
+- [ ] Maya identifies as "the automated assistant" in the first sentence
+- [ ] Got an SMS recap at `MANAGER_PHONE` within 30 seconds of call ending
+- [ ] That recap shows up in Quo's shared inbox (because it was sent from the Quo number)
+- [ ] Call appears in the Google Sheet log via Zapier
+- [ ] Booking Koala got a new lead (or team got the email Zap)
+- [ ] "Speak to a human" works during business hours (transfers to manager cell)
+- [ ] Zip check works ("I live in 43065" → "Yes, Powell.")
+- [ ] Out-of-area zip handled gracefully ("90210" → "not in area, but I'll take details")
+
+---
+
+## Cost breakdown (approximate, 100 calls × 2 min avg)
 
 | Service | Usage | Cost |
 |---|---|---|
-| Twilio number | $1.15/mo fixed | $1.15 |
-| Twilio voice | ~200 min × $0.014/min | $2.80 |
-| Twilio SMS | ~100 msg × $0.0083 | $0.83 |
-| Retell AI | ~200 min × $0.08/min (GPT-4o + 11labs) | $16.00 |
-| Retell phone minutes (if buying via Retell) | ~200 min × $0.015 | $3.00 |
-| Zapier | Starter plan (if needed for multi-step Zaps) | $20 |
-| **Monthly total** | | **~$45** |
+| Quo subscription | Unchanged from today | $0 incremental |
+| Retell AI phone number | $1.15/mo fixed | $1.15 |
+| Retell AI call minutes | ~200 min × $0.015 | $3.00 |
+| Retell AI LLM + voice (GPT-4o + 11labs) | ~200 min × $0.08 | $16.00 |
+| Quo SMS via API | 100 recap SMS (covered by Quo plan) | $0 |
+| Zapier Starter (if needed) | flat | $20 |
+| **Monthly total** | | **~$40** |
 
-At 500 calls/mo, multiply voice costs by 5 and Zapier stays fixed: **~$120/mo**. Well within the $100–$300 budget.
+At 500 calls/mo: **~$100/mo**. Inside your budget with room for Phase 2.
 
 ---
 
 ## Troubleshooting
 
-**Agent speaks over the caller / interrupts too much**
-In `retell-agent.json`, lower `interruption_sensitivity` from 0.8 to 0.5.
-
-**Agent is too slow to respond**
-Raise `responsiveness` closer to 1.0. Switch model to `gpt-4o-mini` in the LLM config if you need more speed (slight quality trade-off).
+**Agent's SMS recap isn't landing in Quo's shared inbox**
+The recap goes to `MANAGER_PHONE` (owner's cell). It shows in Quo's inbox because Quo treats every message sent via the API from its number as a workspace message. If it's missing, double-check `QUO_FROM_NUMBER` matches your actual Quo workspace number (E.164 format).
 
 **Agent commits to a price**
-Reinforce the "never commit to a specific price" rule in the system prompt. You can also move it to the very top of the prompt.
+Reinforce the "never commit to a specific price" rule at the top of the system prompt in `voice-agent/system-prompt.md`, then re-save the LLM in the Retell dashboard.
 
-**Call summary is too sparse**
-Make sure `post_call_analysis_data` fields in `retell-agent.json` match your downstream needs. Retell only extracts fields you list.
+**Quo forwarding isn't rolling to Retell**
+Confirm the Retell number is active (make a direct test call to it). In Quo's call flow, verify the "no answer" timeout is ≤30s (Quo's max).
 
 **Webhook not firing**
-Check Vercel logs: Vercel dashboard → Project → Logs → filter to `/api/retell-webhook`. You should see the incoming POST. If not, check that the webhook URL in Retell points to the production domain (not a preview URL).
+Vercel dashboard → Project → Logs → filter to `/api/retell-webhook`. You should see the incoming POST. If you see 4xx/5xx, check the Zapier URL and Quo API key env vars.
 
-**Zapier not seeing data**
-Go to Zapier → your Zap → History. Every incoming hook is logged even if no action matched. If nothing shows up, the Vercel function isn't hitting Zapier — check the `ZAPIER_WEBHOOK_URL` env var and look at Vercel function logs for errors.
+**Quo API returns 401**
+Re-generate the API key in Quo settings and update `QUO_API_KEY` in Vercel. Redeploy.
+
+**Quo API returns 400 "A2P registration not approved"**
+Quo (like Twilio) requires A2P 10DLC registration for high-volume transactional SMS. Check Quo → **Settings → Phone numbers → (your number) → A2P registration**. Business and campaign registration take 1–3 business days. Without it, you can still send SMS but delivery may be rate-limited.
 
 ---
 
@@ -170,9 +212,9 @@ Go to Zapier → your Zap → History. Every incoming hook is logged even if no 
 
 Every week, pull 10 call transcripts from Retell's dashboard. Skim for:
 
-1. **Questions the agent couldn't answer** → add to `knowledge-base.md`.
-2. **Places it got confused** → tighten the `general_prompt`.
-3. **Things it committed to that it shouldn't have** → add to the "hard rules."
-4. **Common asks not in the collected fields** → add to `post_call_analysis_data` so they come out structured.
+1. Questions the agent couldn't answer → add to `knowledge-base.md` or inline in the prompt
+2. Places it got confused → tighten the `general_prompt`
+3. Things it committed to that it shouldn't have → add to the "hard rules"
+4. Common asks not in the collected fields → add to `post_call_analysis_data` in `retell-agent.json`
 
 Then update the Retell LLM in the dashboard (or re-import the JSON) and redeploy.

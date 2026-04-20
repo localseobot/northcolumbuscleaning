@@ -1,16 +1,18 @@
-// Retell AI post-call webhook
-// Receives call-started, call-ended, and call-analyzed events from Retell.
-// On call_analyzed, forwards a structured summary to:
-//   - Zapier webhook (→ Booking Koala lead, Google Sheet log, etc.)
-//   - Twilio SMS to the office manager with a call recap
+// Retell AI post-call webhook — Quo-native version.
 //
-// Environment variables required (set in Vercel dashboard):
-//   RETELL_WEBHOOK_SECRET  — shared secret, optional, see Retell's verification docs
-//   ZAPIER_WEBHOOK_URL     — Zapier "Catch Hook" URL
-//   TWILIO_ACCOUNT_SID
-//   TWILIO_AUTH_TOKEN
-//   TWILIO_FROM            — your Twilio phone number in E.164 (e.g. +16145550100)
-//   MANAGER_PHONE          — office manager's cell in E.164 (e.g. +16145551234)
+// Receives call-started, call-ended, and call-analyzed events from Retell.
+// On call_analyzed, it:
+//   1. Sends the office manager an SMS recap FROM the Quo workspace number
+//      (so the recap lands in Quo's shared team inbox — not a separate Twilio thread)
+//   2. Forwards a structured summary to Zapier for Booking Koala lead creation
+//
+// Environment variables (set in Vercel → Settings → Environment Variables):
+//   QUO_API_KEY         — from Quo dashboard → Settings → API
+//   QUO_FROM_NUMBER     — your Quo workspace number in E.164, e.g. +16145550100
+//   MANAGER_PHONE       — owner/manager cell in E.164, where the recap SMS goes
+//   ZAPIER_WEBHOOK_URL  — Zapier "Catch Hook" URL
+
+import { sendSms } from "./_lib/quo.js";
 
 export const config = { runtime: "nodejs" };
 
@@ -32,8 +34,8 @@ export default async function handler(req, res) {
   const call = payload?.call || {};
   const callId = call?.call_id;
 
-  // Only act on call_analyzed — that's when Retell has the summary + extracted fields.
-  // call_started / call_ended fire earlier but have less data.
+  // Only act on call_analyzed — that's when Retell has the full summary
+  // and the structured custom-analysis fields.
   if (event !== "call_analyzed") {
     return res.status(200).json({ ok: true, ignored: event });
   }
@@ -50,11 +52,15 @@ export default async function handler(req, res) {
     ? Math.round(call.duration_ms / 1000)
     : 0;
 
-  // --- 1. Forward to Zapier ---
+  const zapierResult = { attempted: false };
+  const smsResult = { attempted: false };
+
+  // --- 1. Forward structured payload to Zapier ---
   const zapierUrl = process.env.ZAPIER_WEBHOOK_URL;
   if (zapierUrl) {
+    zapierResult.attempted = true;
     try {
-      await fetch(zapierUrl, {
+      const r = await fetch(zapierUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -77,18 +83,18 @@ export default async function handler(req, res) {
           transcript: call?.transcript,
         }),
       });
+      zapierResult.ok = r.ok;
+      zapierResult.status = r.status;
     } catch (e) {
-      console.error("Zapier forward failed:", e);
+      zapierResult.ok = false;
+      zapierResult.error = String(e);
     }
   }
 
-  // --- 2. SMS the manager a recap ---
-  const sid = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_FROM;
+  // --- 2. SMS recap to manager via Quo API ---
   const to = process.env.MANAGER_PHONE;
-
-  if (sid && token && from && to && summary) {
+  if (to && summary) {
+    smsResult.attempted = true;
     const recap = [
       `New call (${durationSec}s) — ${extracted.intent || "general"}`,
       extracted.caller_name
@@ -103,33 +109,22 @@ export default async function handler(req, res) {
       extracted.preferred_timing ? `Timing: ${extracted.preferred_timing}` : "",
       extracted.special_notes ? `Notes: ${extracted.special_notes}` : "",
       "",
-      summary.slice(0, 700),
+      summary,
     ]
       .filter(Boolean)
-      .join("\n");
+      .join("\n")
+      .slice(0, 1500);
 
-    try {
-      const body = new URLSearchParams({
-        To: to,
-        From: from,
-        Body: recap.slice(0, 1500),
-      });
-      await fetch(
-        `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,
-        {
-          method: "POST",
-          headers: {
-            Authorization:
-              "Basic " + Buffer.from(`${sid}:${token}`).toString("base64"),
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: body.toString(),
-        },
-      );
-    } catch (e) {
-      console.error("Twilio SMS failed:", e);
-    }
+    const result = await sendSms(to, recap);
+    smsResult.ok = result.ok;
+    smsResult.status = result.status;
+    if (!result.ok) smsResult.error = result.body;
   }
 
-  return res.status(200).json({ ok: true, callId });
+  return res.status(200).json({
+    ok: true,
+    callId,
+    zapier: zapierResult,
+    sms: smsResult,
+  });
 }

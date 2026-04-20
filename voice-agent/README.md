@@ -2,6 +2,8 @@
 
 A Retell AI-based voice receptionist for North Columbus Cleaning Company. Covers the line when the office manager is out of office, on another call, or after hours.
 
+**Built around Quo (formerly OpenPhone) as the source of truth.** Every automated SMS flows through the Quo workspace number so customers and cleaners see one thread per contact — not a confusing split between the team inbox and a ghost automation number.
+
 ## What's in this folder
 
 | File | Purpose |
@@ -17,22 +19,28 @@ And the server code lives outside this folder:
 
 | File | Purpose |
 |---|---|
-| `/api/retell-webhook.js` | Post-call webhook — sends SMS recap + forwards to Zapier |
+| `/api/retell-webhook.js` | Post-call webhook — SMS recap via Quo API + forwards to Zapier |
 | `/api/voice-agent/check-service-area.js` | Custom tool the agent calls mid-conversation to verify a zip |
+| `/api/quo-webhook.js` | Inbound Quo events (scaffolded for Phase 2 — reply handling) |
+| `/api/_lib/quo.js` | Shared Quo API helper (`sendSms`) used by every outbound flow |
 
 ## The gist
 
 ```
-Caller dials (614) 555-0100
+Caller dials your Quo main line
          │
          ▼
-Twilio routes to Retell (after-hours or overflow)
+Quo call flow:
+  ├─ Business hours (Mon–Sat 7am–7pm):
+  │   ring team group 20s → if unanswered, forward to Retell
+  └─ After hours:
+      forward straight to Retell
          │
          ▼
 Retell agent "Maya" takes the call
   ├── Uses knowledge base to answer questions
-  ├── Collects quote details
-  ├── Calls check_service_area() if needed
+  ├── Collects quote details (name, phone, service, area, timing, notes)
+  ├── Calls check_service_area() to verify zips
   ├── Transfers to human during business hours if asked
   └── Ends call
          │
@@ -40,13 +48,14 @@ Retell agent "Maya" takes the call
 Retell POSTs end-of-call report to
   https://northcolumbuscleaning.com/api/retell-webhook
          │
-         ├──► SMS recap to office manager
+         ├──► Quo API: SMS recap to manager's cell
+         │      (lands in Quo's shared inbox — team sees it)
          │
          └──► Forward to Zapier
                   │
                   ├──► Booking Koala: new lead
                   ├──► Google Sheet: call log
-                  └──► Email: team notification
+                  └──► Email / Slack: team notification
 ```
 
 ## How to run this forward (after it's live)
@@ -65,4 +74,4 @@ Queued in the roadmap — not built yet:
 4. **Intake AI** — website form → AI-drafted quote email within 2 minutes
 5. **Persistent customer notes** — one-click "remember this" that follows the customer
 
-All four sit on the same infrastructure pattern: Vercel API + Zapier + SMS/email. Each adds one more piece to the operational brain without ripping out Booking Koala as the source of truth.
+All four sit on the same infrastructure pattern: Vercel API + Zapier + Quo SMS/API. Every automated message flows through the Quo number so the shared inbox stays the single source of truth for cleaner and customer communication. Booking Koala remains the source of truth for jobs, schedules, and invoicing.
