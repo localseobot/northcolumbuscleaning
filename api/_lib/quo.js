@@ -5,7 +5,7 @@
 //
 // Env vars:
 //   QUO_API_KEY      — from Quo dashboard → Settings → API
-//   QUO_FROM_NUMBER  — E.164 format, e.g. "+16145550100"
+//   QUO_FROM_NUMBER  — E.164 format, e.g. "+17409133693"
 
 const QUO_BASE = "https://api.openphone.com/v1";
 

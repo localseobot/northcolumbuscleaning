@@ -7,7 +7,7 @@ Upload this as a knowledge base document in Retell, or append it to the `general
 ## Business basics
 
 - **Name:** North Columbus Cleaning Company
-- **Phone:** (614) 555-0100
+- **Phone:** (740) 913-3693
 - **Email:** hello@northcolumbuscleaning.com
 - **Hours:** Monday–Saturday, 7:00 AM – 7:00 PM. Closed Sundays.
 - **Location:** Based in Columbus, Ohio. Service is in-home or on-site.

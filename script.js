@@ -72,7 +72,7 @@
         }
       })
       .catch(function () {
-        note.textContent = 'Something went wrong. Please call us at (614) 555-0100.';
+        note.textContent = 'Something went wrong. Please call us at (740) 913-3693.';
         note.className = 'form-note error';
       });
   });

@@ -21,4 +21,4 @@ Auto-deployed to Vercel on push to `main`.
 ## Configuration
 
 - **Contact form** — replace `YOUR_ID_HERE` in `index.html` (`#quote-form` action) with a [Formspree](https://formspree.io) form ID, or swap for any form handler. Without it, the form falls back to opening the visitor's mail client.
-- **Phone & email** — update `(614) 555-0100` and `hello@northcolumbuscleaning.com` throughout `index.html` + `script.js`.
+- **Phone & email** — update `(740) 913-3693` and `hello@northcolumbuscleaning.com` throughout `index.html` + `script.js`.

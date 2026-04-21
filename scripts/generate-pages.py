@@ -353,7 +353,7 @@ def local_business_jsonld(canonical_path, area_served=None, service_name=None):
     if service_name:
         offer_block = f""","makesOffer":{{"@type":"Offer","itemOffered":{{"@type":"Service","name":"{service_name}"}}}}"""
     return f"""  <script type="application/ld+json">
-  {{"@context":"https://schema.org","@type":"HouseholdCleaningService","name":"North Columbus Cleaning Company","image":"https://northcolumbuscleaning.com/images/logo.svg","url":"{canonical}","telephone":"+1-614-555-0100","email":"hello@northcolumbuscleaning.com","priceRange":"$$","address":{{"@type":"PostalAddress","addressLocality":"Columbus","addressRegion":"OH","addressCountry":"US"}},"areaServed":{area_served_json},"openingHours":"Mo-Sa 07:00-19:00"{offer_block}}}
+  {{"@context":"https://schema.org","@type":"HouseholdCleaningService","name":"North Columbus Cleaning Company","image":"https://northcolumbuscleaning.com/images/logo.svg","url":"{canonical}","telephone":"+1-740-913-3693","email":"hello@northcolumbuscleaning.com","priceRange":"$$","address":{{"@type":"PostalAddress","addressLocality":"Columbus","addressRegion":"OH","addressCountry":"US"}},"areaServed":{area_served_json},"openingHours":"Mo-Sa 07:00-19:00"{offer_block}}}
   </script>"""
 
 
@@ -392,7 +392,7 @@ def head(title, description, canonical_path, og_image="/images/hero.jpg"):
 TOPBAR = """  <div class="topbar">
     <div class="container topbar-inner">
       <span class="topbar-item">Serving Columbus, OH and surrounding neighborhoods</span>
-      <span class="topbar-item"><a href="tel:+16145550100">(614) 555-0100</a></span>
+      <span class="topbar-item"><a href="tel:+17409133693">(740) 913-3693</a></span>
     </div>
   </div>"""
 
@@ -450,7 +450,7 @@ def footer():
       <div class="footer-col">
         <h5>Contact</h5>
         <ul>
-          <li><a href="tel:+16145550100">(614) 555-0100</a></li>
+          <li><a href="tel:+17409133693">(740) 913-3693</a></li>
           <li><a href="mailto:hello@northcolumbuscleaning.com">hello@northcolumbuscleaning.com</a></li>
           <li>Mon&ndash;Sat, 7am&ndash;7pm</li>
           <li>Columbus, OH</li>
@@ -478,7 +478,7 @@ CTA_BLOCK = """  <section class="section section-cta">
       </div>
       <div class="cta-buttons">
         <a href="/#quote" class="btn btn-secondary">Request a quote</a>
-        <a href="tel:+16145550100" class="btn btn-outline-light">(614) 555-0100</a>
+        <a href="tel:+17409133693" class="btn btn-outline-light">(740) 913-3693</a>
       </div>
     </div>
   </section>"""
@@ -500,7 +500,7 @@ def combo_page(s, n):
     title = base + brand if len(base + brand) <= 60 else base
     desc = (
         f"{s['name']} in {n['name']}, OH by a local, insured, bonded crew. Flat-rate quotes, "
-        f"satisfaction guarantee. Call (614) 555-0100."
+        f"satisfaction guarantee. Call (740) 913-3693."
     )
     canonical = f"/services/{s['slug']}/{n['slug']}"
 
@@ -536,7 +536,7 @@ def combo_page(s, n):
     "name": "North Columbus Cleaning Company",
     "image": "https://northcolumbuscleaning.com/images/logo.svg",
     "url": "https://northcolumbuscleaning.com{canonical}",
-    "telephone": "+1-614-555-0100",
+    "telephone": "+1-740-913-3693",
     "areaServed": {{
       "@type": "City",
       "name": "{n['name']}, OH"
@@ -581,7 +581,7 @@ def combo_page(s, n):
         <p>{sub}</p>
         <div class="hero-cta">
           <a href="/#quote" class="btn btn-primary">Get a quote</a>
-          <a href="tel:+16145550100" class="btn btn-outline">(614) 555-0100</a>
+          <a href="tel:+17409133693" class="btn btn-outline">(740) 913-3693</a>
         </div>
 {TRUST_LIST}
       </div>
@@ -658,7 +658,7 @@ def location_page(n):
     title = base + brand if len(base + brand) <= 60 else base
     desc = (
         f"Residential and commercial cleaning in {n['name']}, OH by a local, insured, bonded crew. "
-        f"Flat-rate quotes, satisfaction guarantee. Call (614) 555-0100."
+        f"Flat-rate quotes, satisfaction guarantee. Call (740) 913-3693."
     )
     zips_line = ", ".join(n['zips'])
 
@@ -689,7 +689,7 @@ def location_page(n):
         <p class="lead">{n['blurb']}</p>
         <div class="hero-cta">
           <a href="/#quote" class="btn btn-primary">Get a quote</a>
-          <a href="tel:+16145550100" class="btn btn-outline">(614) 555-0100</a>
+          <a href="tel:+17409133693" class="btn btn-outline">(740) 913-3693</a>
         </div>
 {TRUST_LIST}
       </div>
@@ -754,7 +754,7 @@ def service_page(s):
     title = base + brand if len(base + brand) <= 60 else base
     desc = (
         f"{s['name']} services in Columbus, OH by a local, insured, bonded crew. {s['short']} "
-        f"Flat-rate quotes. Call (614) 555-0100."
+        f"Flat-rate quotes. Call (740) 913-3693."
     )
 
     included_items = "\n".join(f"        <li>{item}</li>" for item in s['included'])
@@ -784,7 +784,7 @@ def service_page(s):
         <p class="lead">{s['intro']}</p>
         <div class="hero-cta">
           <a href="/#quote" class="btn btn-primary">Get a quote</a>
-          <a href="tel:+16145550100" class="btn btn-outline">(614) 555-0100</a>
+          <a href="tel:+17409133693" class="btn btn-outline">(740) 913-3693</a>
         </div>
 {TRUST_LIST}
       </div>
@@ -852,7 +852,7 @@ def locations_hub():
     title = "Cleaning Service Areas in North Columbus, OH"
     desc = (
         "Cleaning services across 12 North Columbus, OH neighborhoods &mdash; Worthington, "
-        "Dublin, Westerville, New Albany, Powell, and more. Call (614) 555-0100."
+        "Dublin, Westerville, New Albany, Powell, and more. Call (740) 913-3693."
     )
     cards = "\n".join(f"""        <a class="area-card" href="/locations/{n['slug']}">
           <h3>{n['name']}</h3>
@@ -893,7 +893,7 @@ def services_hub():
     title = "Cleaning Services in Columbus, OH | North Columbus Cleaning"
     desc = (
         "Residential, commercial, deep, recurring, move-in/out, and Airbnb cleaning "
-        "services in North Columbus, OH. Flat-rate quotes. Call (614) 555-0100."
+        "services in North Columbus, OH. Flat-rate quotes. Call (740) 913-3693."
     )
     cards = "\n".join(f"""        <a class="service-card service-card-link" href="/services/{s['slug']}">
           <div class="service-img"><img src="{s['hero_img']}" alt="{s['name']}" loading="lazy" /></div>

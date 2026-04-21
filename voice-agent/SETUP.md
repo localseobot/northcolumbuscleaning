@@ -42,7 +42,7 @@ vercel curl /api/voice-agent/check-service-area -- -X POST \
 1. In Quo, go to **Settings → API**.
 2. Click **Generate API Key**, give it a label like "Vercel-server".
 3. Copy the key — you won't see it again.
-4. Note your **main workspace phone number** in E.164 format (with `+1`, e.g. `+16145550100`).
+4. Note your **main workspace phone number** in E.164 format (with `+1`, e.g. `+17409133693`).
 
 ---
 
@@ -53,7 +53,7 @@ In the Vercel dashboard → your project → **Settings → Environment Variable
 | Variable | Value | Used by |
 |---|---|---|
 | `QUO_API_KEY` | the API key from step 2 | All Quo SMS sends |
-| `QUO_FROM_NUMBER` | your Quo number in E.164, e.g. `+16145550100` | Sender of all automated SMS |
+| `QUO_FROM_NUMBER` | your Quo number in E.164, e.g. `+17409133693` | Sender of all automated SMS |
 | `MANAGER_PHONE` | owner/manager cell in E.164 | Post-call SMS recap recipient |
 | `ZAPIER_WEBHOOK_URL` | (Step 6) | Forwards call summaries to Zapier |
 | `QUO_WEBHOOK_SECRET` | (Step 7, optional for Phase 1) | Signature verification on `/api/quo-webhook` |

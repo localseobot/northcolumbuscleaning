@@ -8,7 +8,7 @@
 //
 // Environment variables (set in Vercel → Settings → Environment Variables):
 //   QUO_API_KEY         — from Quo dashboard → Settings → API
-//   QUO_FROM_NUMBER     — your Quo workspace number in E.164, e.g. +16145550100
+//   QUO_FROM_NUMBER     — your Quo workspace number in E.164, e.g. +17409133693
 //   MANAGER_PHONE       — owner/manager cell in E.164, where the recap SMS goes
 //   ZAPIER_WEBHOOK_URL  — Zapier "Catch Hook" URL
 
