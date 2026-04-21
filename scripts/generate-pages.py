@@ -353,7 +353,7 @@ def local_business_jsonld(canonical_path, area_served=None, service_name=None):
     if service_name:
         offer_block = f""","makesOffer":{{"@type":"Offer","itemOffered":{{"@type":"Service","name":"{service_name}"}}}}"""
     return f"""  <script type="application/ld+json">
-  {{"@context":"https://schema.org","@type":"HouseholdCleaningService","name":"North Columbus Cleaning Company","image":"https://northcolumbuscleaning.com/images/logo.svg","url":"{canonical}","telephone":"+1-740-913-3693","email":"hello@northcolumbuscleaning.com","priceRange":"$$","address":{{"@type":"PostalAddress","addressLocality":"Columbus","addressRegion":"OH","addressCountry":"US"}},"areaServed":{area_served_json},"openingHours":"Mo-Sa 07:00-19:00"{offer_block}}}
+  {{"@context":"https://schema.org","@type":"HouseholdCleaningService","name":"North Columbus Cleaning Company","image":"https://northcolumbuscleaning.com/images/logo.svg","url":"{canonical}","telephone":"+1-740-913-3693","email":"admin@northcolumbuscleaning.com","priceRange":"$$","address":{{"@type":"PostalAddress","addressLocality":"Columbus","addressRegion":"OH","addressCountry":"US"}},"areaServed":{area_served_json},"openingHours":"Mo-Sa 07:00-19:00"{offer_block}}}
   </script>"""
 
 
@@ -451,7 +451,7 @@ def footer():
         <h5>Contact</h5>
         <ul>
           <li><a href="tel:+17409133693">(740) 913-3693</a></li>
-          <li><a href="mailto:hello@northcolumbuscleaning.com">hello@northcolumbuscleaning.com</a></li>
+          <li><a href="mailto:admin@northcolumbuscleaning.com">admin@northcolumbuscleaning.com</a></li>
           <li>Mon&ndash;Sat, 7am&ndash;7pm</li>
           <li>Columbus, OH</li>
         </ul>

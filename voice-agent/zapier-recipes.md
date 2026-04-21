@@ -38,7 +38,7 @@ These are the flows to build in Zapier so the voice agent's calls actually do so
   - Map `serviceAddressOrArea` → Address
   - Map `serviceType` → Service type (use a Formatter step to map "deep" → "Deep cleaning" etc.)
   - Map `summary` → Notes
-**Action B**: Gmail → Send email to `hello@northcolumbuscleaning.com`
+**Action B**: Gmail → Send email to `admin@northcolumbuscleaning.com`
   - Subject: `New quote call — {{callerName}} ({{serviceAddressOrArea}})`
   - Body: summary + all fields
 

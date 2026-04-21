@@ -46,7 +46,7 @@
         'Service: ' + service + '\n\n' +
         'Message:\n' + message
       );
-      window.location.href = 'mailto:hello@northcolumbuscleaning.com?subject=' + subject + '&body=' + body;
+      window.location.href = 'mailto:admin@northcolumbuscleaning.com?subject=' + subject + '&body=' + body;
       note.textContent = 'Opening your email client.';
       note.className = 'form-note success';
       return;
