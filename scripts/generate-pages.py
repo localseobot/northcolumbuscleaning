@@ -416,7 +416,7 @@ HEADER = """  <header class="site-header">
         <a href="/#why">Why us</a>
         <a href="/#gallery">Our work</a>
         <a href="/#faq">FAQ</a>
-        <a href="/#quote" class="btn btn-primary nav-cta">Get a quote</a>
+        <a href="/book-now" class="btn btn-primary nav-cta">Book now</a>
       </nav>
     </div>
   </header>"""
@@ -944,6 +944,7 @@ def sitemap():
     base = "https://northcolumbuscleaning.com"
     urls = [
         (base + "/", "1.0", "weekly"),
+        (base + "/book-now", "0.9", "weekly"),
         (base + "/services", "0.9", "weekly"),
         (base + "/locations", "0.9", "weekly"),
     ]
