@@ -416,6 +416,7 @@ HEADER = """  <header class="site-header">
         <a href="/#why">Why us</a>
         <a href="/#gallery">Our work</a>
         <a href="/#faq">FAQ</a>
+        <a href="/login">Login</a>
         <a href="/book-now" class="btn btn-primary nav-cta">Book now</a>
       </nav>
     </div>
