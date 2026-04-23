@@ -435,6 +435,34 @@ def footer():
         for n in area_links_top
     )
     return f"""  <footer class="site-footer">
+    <section class="footer-location">
+      <div class="container footer-location-inner">
+        <div class="footer-location-info" itemscope itemtype="https://schema.org/LocalBusiness">
+          <span class="eyebrow light">Visit us</span>
+          <p class="footer-location-name" itemprop="name">North Columbus Cleaning | House Cleaning Services</p>
+          <address itemprop="address" itemscope itemtype="https://schema.org/PostalAddress">
+            <span itemprop="streetAddress">832 Callaway Lane</span>,
+            <span itemprop="addressLocality">Sunbury</span>,
+            <span itemprop="addressRegion">OH</span>
+            <span itemprop="postalCode">43074</span>
+          </address>
+          <p><strong>Phone</strong> <a href="tel:+17409133693" itemprop="telephone">(740) 913-3693</a></p>
+          <p><strong>Web</strong> <a href="https://www.northcolumbuscleaning.com/" itemprop="url">northcolumbuscleaning.com</a></p>
+          <p class="footer-location-description" itemprop="description">Residential and commercial cleaning services in Worthington, Clintonville, Westerville, Dublin, Powell, Upper Arlington, New Albany, Gahanna, Polaris, Lewis Center, Delaware &amp; Hilliard, OH.</p>
+          <meta itemprop="foundingDate" content="2026-04-23" />
+          <meta itemprop="priceRange" content="$$" />
+        </div>
+        <div class="footer-location-map">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3045.3662451718956!2d-82.8825419!3d40.2453912!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x26dc59d42367e577%3A0x8a98bb9156f9b65a!2sNorth%20Columbus%20Cleaning%20%7C%20House%20Cleaning%20Services!5e0!3m2!1sen!2sus!4v1776984116067!5m2!1sen!2sus"
+            title="North Columbus Cleaning location on Google Maps"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </div>
+    </section>
     <div class="container footer-inner">
       <div class="footer-col">
         <img src="/images/logo-horizontal.svg" alt="North Columbus Cleaning Company" />

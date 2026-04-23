@@ -799,3 +799,80 @@ a:hover { color: var(--forest); text-decoration: underline; }
   .form-row-2 { grid-template-columns: 1fr; }
   .footer-inner { grid-template-columns: 1fr; }
 }
+
+/* ============ FOOTER LOCATION BLOCK ============ */
+.footer-location {
+  background: var(--deep-forest);
+  color: var(--off-white);
+  padding: var(--space-8) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.footer-location-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  align-items: center;
+}
+.footer-location-info .eyebrow.light { color: var(--lime); }
+.footer-location-name {
+  font-family: var(--font-sans);
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--lime);
+  line-height: 1.25;
+  margin: var(--space-2) 0 var(--space-3);
+}
+.footer-location-info address {
+  font-style: normal;
+  color: var(--off-white);
+  opacity: 0.9;
+  margin-bottom: var(--space-3);
+  font-size: 16px;
+  line-height: 1.6;
+}
+.footer-location-info p {
+  font-size: 15px;
+  margin: var(--space-1) 0;
+  color: var(--off-white);
+  opacity: 0.9;
+}
+.footer-location-info p strong {
+  color: var(--lime);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 13px;
+  display: inline-block;
+  min-width: 72px;
+}
+.footer-location-info a { color: var(--off-white); }
+.footer-location-info a:hover { color: var(--lime); text-decoration: underline; }
+.footer-location-description {
+  margin-top: var(--space-3);
+  font-size: 14px;
+  color: var(--off-white);
+  opacity: 0.75;
+  line-height: 1.6;
+  max-width: 480px;
+}
+.footer-location-map {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: var(--forest);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.footer-location-map iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+@media (max-width: 960px) {
+  .footer-location { padding: var(--space-6) 0; }
+  .footer-location-inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  .footer-location-map { aspect-ratio: 16 / 10; }
+}
