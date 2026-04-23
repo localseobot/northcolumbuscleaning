@@ -381,7 +381,7 @@ def head(title, description, canonical_path, og_image="/images/hero.jpg"):
   <meta property="og:title" content="{title}" />
   <meta property="og:description" content="{description}" />
   <meta property="og:image" content="{og_img_full}" />
-  <meta property="og:site_name" content="North Columbus Cleaning Company" />
+  <meta property="og:site_name" content="North Columbus Cleaning | House Cleaning Services" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="{title}" />
   <meta name="twitter:description" content="{description}" />
