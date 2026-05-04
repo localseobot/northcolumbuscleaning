@@ -50,6 +50,53 @@
       border-radius: var(--radius-sm);
       font-size: 14px;
     }
+
+    /* SMS digital consent block (CTIA / 10DLC) — A2P verification */
+    .sms-consent {
+      max-width: 760px;
+      margin: 0 auto var(--space-6);
+      background: #fff;
+      border: 2px solid var(--lime);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3) var(--space-4);
+    }
+    .sms-consent-head {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-bottom: var(--space-2);
+    }
+    .sms-consent-checkbox {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px; height: 22px;
+      border: 2px solid var(--forest);
+      border-radius: 4px;
+      flex-shrink: 0;
+      color: var(--forest);
+    }
+    .sms-consent-checkbox svg { width: 14px; height: 14px; }
+    .sms-consent-head strong {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--forest);
+    }
+    .sms-consent-body {
+      font-size: 16px;
+      color: var(--charcoal);
+      margin: 0 0 var(--space-1);
+      line-height: 1.6;
+    }
+    .sms-consent-fine-print {
+      font-size: 14px;
+      color: var(--charcoal);
+      opacity: 0.75;
+      margin: 0;
+      line-height: 1.6;
+    }
+    .sms-consent-fine-print a { color: var(--sage); font-weight: 900; }
+    .sms-consent-fine-print a:hover { color: var(--forest); }
   </style>
 </head>
 <body>
@@ -85,6 +132,21 @@
         <span class="eyebrow">Legal</span>
         <h1>SMS Terms &amp; Privacy</h1>
         <p>Terms of service and privacy policy for SMS communications</p>
+      </div>
+
+      <div class="sms-consent" role="note" aria-label="SMS messaging consent disclosure">
+        <div class="sms-consent-head">
+          <span class="sms-consent-checkbox" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8 6.5 11.5 13 5"/></svg>
+          </span>
+          <strong>I would like to receive updates by text</strong>
+        </div>
+        <p class="sms-consent-body">
+          By providing your phone number on our booking form or to a North Columbus Cleaning team member, you agree we may text you booking confirmations, scheduling messages, day-before reminders, quote messages, and post-service follow-ups at the number you provide.
+        </p>
+        <p class="sms-consent-fine-print">
+          Message and data rates may apply. Message frequency varies (typically 3&ndash;5 messages per booking). Text <strong>HELP</strong> for help or <strong>STOP</strong> to opt out at any time. See the full terms below and our <a href="/privacy">Privacy Policy</a> for details.
+        </p>
       </div>
 
       <div class="legal-body">
