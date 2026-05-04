@@ -59,6 +59,53 @@
     }
     .booking-fallback a { color: var(--sage); font-weight: 900; }
     .booking-fallback a:hover { color: var(--forest); }
+
+    /* SMS digital consent block (CTIA / 10DLC) */
+    .booking-consent {
+      max-width: 960px;
+      margin: 0 auto var(--space-4);
+      background: #fff;
+      border: 1px solid var(--light-gray);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3) var(--space-4);
+    }
+    .booking-consent-head {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-bottom: var(--space-2);
+    }
+    .booking-consent-checkbox {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px; height: 22px;
+      border: 2px solid var(--forest);
+      border-radius: 4px;
+      flex-shrink: 0;
+      color: var(--forest);
+    }
+    .booking-consent-checkbox svg { width: 14px; height: 14px; }
+    .booking-consent-head strong {
+      font-size: 17px;
+      font-weight: 900;
+      color: var(--forest);
+    }
+    .booking-consent-body {
+      font-size: 15px;
+      color: var(--charcoal);
+      margin: 0 0 var(--space-1);
+      line-height: 1.6;
+    }
+    .booking-consent-fine-print {
+      font-size: 13px;
+      color: var(--charcoal);
+      opacity: 0.7;
+      margin: 0;
+      line-height: 1.6;
+    }
+    .booking-consent-fine-print a { color: var(--sage); font-weight: 900; }
+    .booking-consent-fine-print a:hover { color: var(--forest); }
     @media (max-width: 720px) {
       .booking-section { padding: var(--space-4) 0 var(--space-8); }
       .booking-frame iframe { min-height: 1400px; }
@@ -118,6 +165,21 @@
             100% satisfaction guarantee
           </li>
         </ul>
+      </div>
+
+      <div class="booking-consent" role="note" aria-label="SMS messaging consent">
+        <div class="booking-consent-head">
+          <span class="booking-consent-checkbox" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8 6.5 11.5 13 5"/></svg>
+          </span>
+          <strong>I would like to receive updates by text</strong>
+        </div>
+        <p class="booking-consent-body">
+          By submitting your phone number through the booking form, you agree that <strong>North Columbus Cleaning</strong> may text you booking confirmations, scheduling messages, day-before reminders, quote messages, and post-service follow-ups at the number you provide.
+        </p>
+        <p class="booking-consent-fine-print">
+          Message and data rates may apply. Message frequency varies. Text <strong>HELP</strong> for help or <strong>STOP</strong> to opt out at any time. See our <a href="/sms-terms">SMS Terms &amp; Privacy</a> and <a href="/privacy">Privacy Policy</a> for details.
+        </p>
       </div>
 
       <div class="booking-frame">
