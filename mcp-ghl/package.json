@@ -1,0 +1,20 @@
+{
+  "name": "mcp-ghl",
+  "version": "0.1.0",
+  "description": "MCP server exposing GoHighLevel (v2 API) to Claude",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "mcp-ghl": "src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
