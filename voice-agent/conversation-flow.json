@@ -1,0 +1,382 @@
+{
+    "conversation_flow_id": "conversation_flow_957a14980504",
+    "version": 0,
+    "global_prompt": "# Taylor \u2014 North Columbus Cleaning voice agent\n\nYou are Taylor, the friendly voice intake agent for North Columbus Cleaning, a residential cleaning company serving the north side of Columbus, Ohio. You pick up when the team is busy or out.\n\n## What you do\n- Greet warmly, find out why the caller is calling.\n- For quote/booking requests: gather the intake details (name, phone, email, address, service type, beds, baths, sqft, frequency, special notes), give a rough quote using calculate_quote, and close with \"our team will reach out shortly to confirm.\"\n- For FAQ-style questions: answer from the knowledge base concisely.\n- For unclear callers: ask one warm clarifying question.\n\n## What you don't do\n- You do NOT book, confirm, or promise specific dates/times. The team will reach out to schedule.\n- You do NOT take payment information.\n- You do NOT promise refunds, discounts, or make-goods.\n- You do NOT quote commercial, short-term-rental, or post-construction jobs \u2014 collect details and tell the caller the team will follow up with a custom quote.\n- You do NOT pretend to be human. If asked, you can say \"I'm Taylor, the AI assistant for North Columbus Cleaning.\"\n\n## How to speak\n- Warm, natural, conversational. Short sentences. Use the caller's name once you have it.\n- Read back phone numbers and emails digit-by-digit / letter-by-letter to confirm.\n- Don't list questions like a form \u2014 weave the intake into conversation, one or two items at a time.\n- If silent for 15+ seconds or the caller goes quiet, gently re-engage once, then wrap up.\n\n## Tools\n- `check_service_area` \u2014 call as soon as you have the zip. If out of area, continue intake but mention the team will check if we can serve them.\n- `calculate_quote` \u2014 call when you have service + sqft + beds + baths + frequency. Read the result back verbatim.\n\n## Closing line (always)\n\"I've got all your details \u2014 our team will reach out shortly to confirm and lock in a time that works for you. Anything else before you go?\"\n\nThen end the call warmly.\n",
+    "nodes": [
+        {
+            "instruction": {
+                "type": "static_text",
+                "text": "Thank you for calling North Columbus Cleaning. This is Taylor. How can I help you today?"
+            },
+            "name": "Welcome",
+            "edges": [
+                {
+                    "destination_node_id": "node-extract-intent",
+                    "id": "edge-welcome-to-extract",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User responds with their reason for calling"
+                    }
+                }
+            ],
+            "start_speaker": "agent",
+            "id": "node-welcome",
+            "knowledge_base_ids": [
+                "knowledge_base_95f9bc18b5d768a5"
+            ],
+            "type": "conversation",
+            "display_position": {
+                "x": 100,
+                "y": 100
+            }
+        },
+        {
+            "variables": [
+                {
+                    "name": "intent",
+                    "description": "What the caller wants. 'quote' = wants a price for a cleaning. 'faq' = asking a general question about services, policies, supplies, insurance, scheduling. 'other' = unclear or both.",
+                    "type": "enum",
+                    "choices": [
+                        "quote",
+                        "faq",
+                        "other"
+                    ]
+                }
+            ],
+            "else_edge": {
+                "destination_node_id": "node-intent-classifier",
+                "id": "edge-extract-else",
+                "transition_condition": {
+                    "type": "prompt",
+                    "prompt": "Else"
+                }
+            },
+            "name": "Extract Intent",
+            "edges": [],
+            "id": "node-extract-intent",
+            "type": "extract_dynamic_variables",
+            "display_position": {
+                "x": 600,
+                "y": 100
+            }
+        },
+        {
+            "else_edge": {
+                "destination_node_id": "node-clarify",
+                "id": "edge-classifier-else",
+                "transition_condition": {
+                    "type": "prompt",
+                    "prompt": "Else"
+                }
+            },
+            "instruction": {
+                "type": "prompt",
+                "text": "Route by the caller's intent."
+            },
+            "name": "Intent Classifier",
+            "edges": [
+                {
+                    "destination_node_id": "node-collect-info",
+                    "id": "edge-to-quote-path",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Caller wants a quote or to book a cleaning (intent = quote)"
+                    }
+                },
+                {
+                    "destination_node_id": "node-faq",
+                    "id": "edge-to-faq",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Caller is asking a general question (intent = faq)"
+                    }
+                }
+            ],
+            "id": "node-intent-classifier",
+            "type": "branch",
+            "display_position": {
+                "x": 1100,
+                "y": 100
+            }
+        },
+        {
+            "name": "Clarify Intent",
+            "edges": [
+                {
+                    "destination_node_id": "node-extract-intent",
+                    "id": "edge-clarify-to-extract",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "User clarifies what they want"
+                    }
+                }
+            ],
+            "id": "node-clarify",
+            "type": "conversation",
+            "display_position": {
+                "x": 1600,
+                "y": 600
+            },
+            "instruction": {
+                "type": "prompt",
+                "text": "Ask one short, warm clarifying question: 'Sure \u2014 are you looking for a quote on a cleaning, or did you have a question about how we work?' Then route based on the answer."
+            }
+        },
+        {
+            "instruction": {
+                "type": "prompt",
+                "text": "Collect the details needed to quote a cleaning. Ask warmly, one or two items at a time, never as a dry checklist. Keep it conversational.\n\nItems to gather (in roughly this order):\n1. Caller's first name and last name\n2. Best callback phone number (read back to confirm digits)\n3. Email address (spelled out if needed)\n4. Service address \u2014 get the full street address, city, and especially the zip code\n5. As soon as you have the zip, silently call check_service_area to confirm we serve them. If not served, continue gathering info but mention that the team will check whether it's a fit.\n6. What kind of cleaning: regular (recurring/standard), deep (first-time/intensive), or move-in/move-out\n7. How many bedrooms\n8. How many bathrooms (half-baths count as half)\n9. Approximate square footage (offer ranges if they don't know: 'roughly under 2000, 2000-3000, 3000-4500, or larger?')\n10. Frequency they're interested in: one-time, weekly, every other week (biweekly), or monthly\n11. Any pets, allergies, areas to focus on or skip, or special notes\n\nOnce you have service + sqft + bedrooms + bathrooms + frequency, you're ready to quote. Do NOT promise a date or time. Do NOT collect payment info."
+            },
+            "name": "Collect Intake",
+            "edges": [
+                {
+                    "destination_node_id": "node-call-quote",
+                    "id": "edge-collect-to-quote",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "All five quote inputs collected (service, sqft, bedrooms, bathrooms, frequency)"
+                    }
+                }
+            ],
+            "id": "node-collect-info",
+            "knowledge_base_ids": [
+                "knowledge_base_95f9bc18b5d768a5"
+            ],
+            "tool_ids": [
+                "tool-check-service-area"
+            ],
+            "type": "conversation",
+            "display_position": {
+                "x": 1600,
+                "y": 100
+            }
+        },
+        {
+            "tool_id": "tool-calculate-quote",
+            "else_edge": {
+                "destination_node_id": "node-wrap-up",
+                "id": "edge-quote-else",
+                "transition_condition": {
+                    "type": "prompt",
+                    "prompt": "Else"
+                }
+            },
+            "instruction": {
+                "type": "prompt",
+                "text": "Tell the caller you're pulling up the estimate, then call calculate_quote with the collected service, sqft, bedrooms, bathrooms, and frequency."
+            },
+            "name": "Calculate Quote",
+            "edges": [
+                {
+                    "destination_node_id": "node-wrap-up",
+                    "id": "edge-quote-to-wrap",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Quote result received"
+                    }
+                }
+            ],
+            "id": "node-call-quote",
+            "type": "function",
+            "tool_type": "local",
+            "speak_during_execution": true,
+            "display_position": {
+                "x": 2100,
+                "y": 100
+            },
+            "wait_for_result": true
+        },
+        {
+            "name": "Wrap Up",
+            "edges": [
+                {
+                    "destination_node_id": "node-faq",
+                    "id": "edge-wrap-to-faq",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Caller has another question"
+                    }
+                },
+                {
+                    "destination_node_id": "node-end-call",
+                    "id": "edge-wrap-to-end",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Caller is done \u2014 wrap up the call"
+                    }
+                }
+            ],
+            "id": "node-wrap-up",
+            "type": "conversation",
+            "display_position": {
+                "x": 2600,
+                "y": 100
+            },
+            "instruction": {
+                "type": "prompt",
+                "text": "Read back the quote from calculate_quote's result naturally (e.g. 'Based on what you described, the estimate would be about [amount]'). Then say: 'I've got all your details \u2014 our team will reach out shortly to confirm and lock in a time that works for you.' Ask: 'Is there anything else I can help with before you go?' If they have more questions, go to FAQ; otherwise wrap up warmly and end the call."
+            }
+        },
+        {
+            "instruction": {
+                "type": "prompt",
+                "text": "Use the knowledge base to answer the caller's question concisely. After answering, ask 'Was that helpful? Anything else?' If they ask about pricing, offer to put together a quote and route back to intake. If they're done, wrap up warmly."
+            },
+            "name": "FAQ",
+            "edges": [
+                {
+                    "destination_node_id": "node-collect-info",
+                    "id": "edge-faq-quote",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Caller wants a quote now"
+                    }
+                },
+                {
+                    "destination_node_id": "node-faq",
+                    "id": "edge-faq-more",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Caller has another question"
+                    }
+                },
+                {
+                    "destination_node_id": "node-end-call",
+                    "id": "edge-faq-end",
+                    "transition_condition": {
+                        "type": "prompt",
+                        "prompt": "Caller is done"
+                    }
+                }
+            ],
+            "id": "node-faq",
+            "knowledge_base_ids": [
+                "knowledge_base_95f9bc18b5d768a5"
+            ],
+            "type": "conversation",
+            "display_position": {
+                "x": 1600,
+                "y": 1100
+            }
+        },
+        {
+            "name": "End Call",
+            "id": "node-end-call",
+            "type": "end",
+            "display_position": {
+                "x": 3100,
+                "y": 100
+            },
+            "instruction": {
+                "type": "static_text",
+                "text": "Thanks for calling North Columbus Cleaning \u2014 have a great day!"
+            }
+        }
+    ],
+    "components": [],
+    "start_node_id": "node-welcome",
+    "start_speaker": "agent",
+    "tools": [
+        {
+            "headers": {},
+            "parameter_type": "json",
+            "method": "POST",
+            "query_params": {},
+            "description": "Calculate a flat-rate cleaning quote. Call when Taylor has all five inputs: service (regular|deep|move_in_out), sqft (number), bedrooms (integer), bathrooms (number, .5 increments ok), frequency (one_time|weekly|biweekly|monthly). Returns a `result` field Taylor should read back verbatim.",
+            "type": "custom",
+            "url": "https://northcolumbuscleaning.com/api/voice-agent/calculate-quote",
+            "tool_id": "tool-calculate-quote",
+            "args_at_root": false,
+            "timeout_ms": 30000,
+            "speak_after_execution": true,
+            "name": "calculate_quote",
+            "response_variables": {},
+            "speak_during_execution": true,
+            "parameters": {
+                "type": "object",
+                "required": [
+                    "service",
+                    "sqft",
+                    "bedrooms",
+                    "bathrooms",
+                    "frequency"
+                ],
+                "properties": {
+                    "bedrooms": {
+                        "type": "integer",
+                        "description": "Number of bedrooms"
+                    },
+                    "sqft": {
+                        "type": "number",
+                        "description": "Square footage of the home"
+                    },
+                    "bathrooms": {
+                        "type": "number",
+                        "description": "Number of bathrooms (half-baths count as 0.5)"
+                    },
+                    "service": {
+                        "type": "string",
+                        "description": "Service type",
+                        "enum": [
+                            "regular",
+                            "deep",
+                            "move_in_out"
+                        ]
+                    },
+                    "frequency": {
+                        "type": "string",
+                        "description": "Cleaning frequency",
+                        "enum": [
+                            "one_time",
+                            "weekly",
+                            "biweekly",
+                            "monthly"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "headers": {},
+            "parameter_type": "json",
+            "method": "POST",
+            "query_params": {},
+            "description": "Check whether a 5-digit US zip code is in North Columbus Cleaning's service area. Call when caller mentions a zip or unfamiliar city. Returns a `result` field Taylor reads back.",
+            "type": "custom",
+            "url": "https://northcolumbuscleaning.com/api/voice-agent/check-service-area",
+            "tool_id": "tool-check-service-area",
+            "args_at_root": false,
+            "timeout_ms": 15000,
+            "speak_after_execution": true,
+            "name": "check_service_area",
+            "response_variables": {},
+            "speak_during_execution": false,
+            "parameters": {
+                "type": "object",
+                "required": [
+                    "zip"
+                ],
+                "properties": {
+                    "zip": {
+                        "type": "string",
+                        "description": "5-digit US zip code"
+                    }
+                }
+            }
+        }
+    ],
+    "model_choice": {
+        "type": "cascading",
+        "model": "gpt-4.1"
+    },
+    "tool_call_strict_mode": true,
+    "knowledge_base_ids": [
+        "knowledge_base_95f9bc18b5d768a5"
+    ],
+    "kb_config": {
+        "top_k": 3,
+        "filter_score": 0.5
+    },
+    "is_published": false,
+    "is_transfer_cf": false
+}
