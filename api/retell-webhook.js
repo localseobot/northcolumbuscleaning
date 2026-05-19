@@ -3,10 +3,11 @@
 // On every Retell call_analyzed event, this handler:
 //   1. Upserts the caller as a contact in GHL (matched by phone)
 //   2. Applies cleaning-business tags from the structured analysis
-//      (source:maya, inbound-call, intent:*, service:*, frequency:*)
-//   3. Adds a contact note with summary, sentiment, recording URL, key fields
-//   4. Creates an opportunity in Sales Pipeline → New Lead when the intent
-//      is a booking/quote and Taylor gave a quote amount
+//      (source:maya, inbound-call, intent:*, service:*, frequency:*, sms-consent:*)
+//   3. Adds a contact note with summary, sentiment, callback window, SMS consent,
+//      recording URL, and key property details
+//   4. Creates an opportunity in Sales Pipeline → New Lead for any
+//      booking/quote intent — the team takes it from there (Quoted, Booked, etc.)
 //   5. Texts the office manager a recap from the Quo workspace number
 //      (lands in the team's shared inbox)
 //
@@ -30,7 +31,11 @@ export const config = { runtime: "nodejs" };
 //   GET /opportunities/pipelines  and update these constants.
 const SALES_PIPELINE_ID = "6YDehH2kNtHrdfJaEQfa";
 const STAGE_NEW_LEAD = "4bb733e7-d38d-4cb0-afb8-512406509144";
-const STAGE_QUOTED = "e426851f-65f6-4bfe-8fe0-66b93a1309df";
+// Stage IDs kept here for the team's reference / future automations:
+// Quoted   = e426851f-65f6-4bfe-8fe0-66b93a1309df
+// Booked   = a1df2c52-9211-4e13-a920-0c17ab00eff9
+// Won      = 9253419b-4c69-4f61-814b-ee27cd165f7a
+// Lost     = 7eaafc3f-ab36-4ebe-b2c2-c64ab998897d
 
 // Map Retell post-call analysis enums to GHL tag names.
 const SERVICE_TAG = {
@@ -47,6 +52,10 @@ const FREQUENCY_TAG = {
   monthly: "frequency:monthly",
 };
 const BOOKING_INTENTS = new Set(["booking", "quote_only"]);
+const SMS_CONSENT_TAG = {
+  yes: "sms-consent:yes",
+  no: "sms-consent:no",
+};
 
 function s(v) {
   if (v === null || v === undefined) return "";
@@ -87,6 +96,8 @@ function buildTags(extracted) {
   if (SERVICE_TAG[svc]) tags.push(SERVICE_TAG[svc]);
   const freq = s(extracted.frequency).toLowerCase();
   if (FREQUENCY_TAG[freq]) tags.push(FREQUENCY_TAG[freq]);
+  const sms = s(extracted.sms_consent).toLowerCase();
+  if (SMS_CONSENT_TAG[sms]) tags.push(SMS_CONSENT_TAG[sms]);
   return tags;
 }
 
@@ -128,8 +139,10 @@ function buildNote(call, extracted) {
     lines.push(`Address: ${addrParts}${areaLabel}`);
   }
 
-  const quote = num(extracted.quote_amount);
-  if (quote > 0) lines.push(`Quote given: $${quote.toFixed(2)} per visit`);
+  const callback = s(extracted.preferred_callback_window);
+  if (callback) lines.push(`Preferred callback: ${callback}`);
+  const sms = s(extracted.sms_consent);
+  if (sms) lines.push(`SMS consent: ${sms}`);
 
   const notes = s(extracted.special_notes);
   if (notes) lines.push(`Special notes: ${notes}`);
@@ -177,7 +190,8 @@ function buildManagerRecap(call, extracted) {
   const sqft = num(extracted.sqft);
   const zip = s(extracted.service_zip);
   const inArea = s(extracted.in_service_area);
-  const quote = num(extracted.quote_amount);
+  const callback = s(extracted.preferred_callback_window);
+  const sms = s(extracted.sms_consent);
   const summary = call.call_analysis?.call_summary || "";
 
   const lines = [
@@ -195,7 +209,8 @@ function buildManagerRecap(call, extracted) {
     .join(", ");
   if (propLine) lines.push(propLine);
   if (zip) lines.push(`Zip ${zip}${inArea ? ` (in area: ${inArea})` : ""}`);
-  if (quote > 0) lines.push(`Quote: $${quote.toFixed(2)}`);
+  if (callback) lines.push(`Callback: ${callback}`);
+  if (sms) lines.push(`Text OK: ${sms}`);
   if (summary) {
     lines.push("");
     lines.push(summary);
@@ -298,12 +313,12 @@ export default async function handler(req, res) {
     }
   }
 
-  // --- 4. Opportunity if booking/quote intent + a quote was given ---
+  // --- 4. Opportunity in Sales Pipeline → New Lead for booking/quote calls ---
+  // Taylor never quotes anymore, so we always land in New Lead. The team
+  // moves the opportunity to Quoted / Booked manually as they follow up.
   if (contactId) {
     const intent = s(extracted.intent).toLowerCase();
-    const quote = num(extracted.quote_amount);
     if (BOOKING_INTENTS.has(intent)) {
-      const stageId = quote > 0 ? STAGE_QUOTED : STAGE_NEW_LEAD;
       try {
         const opp = await ghl({
           method: "POST",
@@ -311,16 +326,15 @@ export default async function handler(req, res) {
           body: {
             locationId: process.env.GHL_LOCATION_ID,
             pipelineId: SALES_PIPELINE_ID,
-            pipelineStageId: stageId,
+            pipelineStageId: STAGE_NEW_LEAD,
             name: buildOpportunityName(extracted, firstName, lastName),
             contactId,
-            monetaryValue: quote || undefined,
             status: "open",
             source: "Retell — Taylor",
           },
         });
         result.ghl.opportunityId = opp?.opportunity?.id || opp?.id || null;
-        result.ghl.opportunityStage = quote > 0 ? "Quoted" : "New Lead";
+        result.ghl.opportunityStage = "New Lead";
       } catch (e) {
         result.ghl.opportunityError = e.message;
       }
