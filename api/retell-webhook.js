@@ -25,11 +25,12 @@ import { sendSms } from "./_lib/quo.js";
 
 export const config = { runtime: "nodejs" };
 
-// Sales Pipeline (a.k.a. "Marketing Pipeline" until renamed in UI) and stages.
-// IDs are stable across renames, so the rename is risk-free.
-const SALES_PIPELINE_ID = "WUuo5W5hnaIKAwi1Mw6n";
-const STAGE_NEW_LEAD = "36aa4620-4d9c-423f-b468-f35e8c101013";
-const STAGE_QUOTED = "293d64f5-1bca-4ff9-bb2d-dee9d6bb2d71";
+// Sales Pipeline + stage IDs (from GHL → Opportunities → Sales Pipeline).
+// If you recreate the pipeline in GHL, pull the new IDs from
+//   GET /opportunities/pipelines  and update these constants.
+const SALES_PIPELINE_ID = "6YDehH2kNtHrdfJaEQfa";
+const STAGE_NEW_LEAD = "4bb733e7-d38d-4cb0-afb8-512406509144";
+const STAGE_QUOTED = "e426851f-65f6-4bfe-8fe0-66b93a1309df";
 
 // Map Retell post-call analysis enums to GHL tag names.
 const SERVICE_TAG = {
