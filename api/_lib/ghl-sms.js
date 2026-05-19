@@ -3,7 +3,7 @@
 // GHL's /conversations/messages requires a contactId, so this helper upserts
 // the recipient as a contact first (idempotent — GHL matches by phone) and
 // then sends the SMS to that contact. Used for internal recap messages to
-// the office manager so we can decommission Quo.
+// the office manager and any other system-driven SMS.
 
 import { ghl } from "./ghl.js";
 
