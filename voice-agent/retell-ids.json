@@ -3,5 +3,6 @@
   "conversation_flow_id": "conversation_flow_957a14980504",
   "webhook_url": "https://northcolumbuscleaning.com/api/retell-webhook",
   "phone_number_pending_assignment": "+16147629409",
-  "old_agent_id_archived": "agent_b1df4cf7c5f8e2ef380677021e"
+  "old_agent_id_archived": "agent_b1df4cf7c5f8e2ef380677021e (DELETED)",
+  "old_flow_id_archived": "conversation_flow_92a2acec683c (DELETED)"
 }

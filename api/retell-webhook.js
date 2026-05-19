@@ -10,8 +10,8 @@
 //      booking/quote intent — the team takes it from there (Quoted, Booked, etc.)
 //   5. Auto-texts the caller from the GHL number (only if sms_consent === "yes")
 //      with a confirmation + SLA promise
-//   6. Texts the office manager a recap from the Quo workspace number
-//      (lands in the team's shared inbox)
+//   6. Texts the office manager a recap from the GHL number
+//      (lands in the team's GHL conversations inbox)
 //
 // call_started / call_ended events are acknowledged and ignored — only
 // call_analyzed has the structured custom_analysis_data populated.
@@ -21,12 +21,10 @@
 //   GHL_LOCATION_ID     — Sub-account ID
 //   GHL_FROM_NUMBER     — (optional) E.164 number for outbound SMS. If unset,
 //                         GHL uses the location's default SMS-capable number.
-//   QUO_API_KEY         — Quo (OpenPhone) API key, for the manager-recap SMS
-//   QUO_FROM_NUMBER     — Quo workspace number in E.164
-//   MANAGER_PHONE       — owner/manager cell in E.164
+//   MANAGER_PHONE       — owner/manager cell in E.164 (recap SMS recipient)
 
 import { ghl } from "./_lib/ghl.js";
-import { sendSms } from "./_lib/quo.js";
+import { sendGhlSms } from "./_lib/ghl-sms.js";
 
 export const config = { runtime: "nodejs" };
 
@@ -102,6 +100,12 @@ function buildTags(extracted) {
   if (FREQUENCY_TAG[freq]) tags.push(FREQUENCY_TAG[freq]);
   const sms = s(extracted.sms_consent).toLowerCase();
   if (SMS_CONSENT_TAG[sms]) tags.push(SMS_CONSENT_TAG[sms]);
+  if (s(extracted.existing_customer).toLowerCase() === "yes") {
+    tags.push("existing-customer");
+  }
+  // Surface call-quality flags as a tag so the operator can filter for review.
+  const flags = s(extracted.call_quality_flags);
+  if (flags) tags.push("needs-review");
   return tags;
 }
 
@@ -147,6 +151,10 @@ function buildNote(call, extracted) {
   if (callback) lines.push(`Preferred callback: ${callback}`);
   const sms = s(extracted.sms_consent);
   if (sms) lines.push(`SMS consent: ${sms}`);
+  const existing = s(extracted.existing_customer);
+  if (existing) lines.push(`Existing customer: ${existing}`);
+  const flags = s(extracted.call_quality_flags);
+  if (flags) lines.push(`⚠️ Call quality flags: ${flags}`);
 
   const notes = s(extracted.special_notes);
   if (notes) lines.push(`Special notes: ${notes}`);
@@ -392,15 +400,21 @@ export default async function handler(req, res) {
     result.customerSms.skipped = `sms_consent=${s(extracted.sms_consent) || "(not_stated)"}`;
   }
 
-  // --- 6. SMS recap to manager via Quo (kept — lands in team's shared inbox) ---
+  // --- 6. SMS recap to manager via GHL (lands in GHL conversations inbox) ---
   const to = process.env.MANAGER_PHONE;
   const recap = buildManagerRecap(call, extracted);
   if (to && recap) {
     result.managerSms.attempted = true;
-    const smsResp = await sendSms(to, recap);
+    const smsResp = await sendGhlSms({
+      to,
+      message: recap,
+      firstName: "Manager",
+      tag: "internal:manager",
+    });
     result.managerSms.ok = smsResp.ok;
-    result.managerSms.status = smsResp.status;
-    if (!smsResp.ok) result.managerSms.error = smsResp.body;
+    result.managerSms.contactId = smsResp.contactId;
+    result.managerSms.messageId = smsResp.messageId;
+    if (!smsResp.ok) result.managerSms.error = smsResp.error;
   }
 
   return res.status(200).json(result);

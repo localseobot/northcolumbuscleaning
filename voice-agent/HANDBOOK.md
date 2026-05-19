@@ -1,97 +1,158 @@
-# Voice Agent Handbook
+# Taylor — North Columbus Cleaning voice agent
 
-Quick reference for Maya, the AI phone assistant.
+The operator's handbook. Updated for the GHL-native architecture.
 
----
+## What Taylor does
 
-## What Maya does
+Picks up inbound calls when the team is busy or out. She:
 
-Picks up the line when the team is busy or out. She can:
+1. **Greets** the caller warmly.
+2. **Looks them up in GHL** by phone — if they're an existing customer, she greets them by name and skips redundant intake.
+3. **Collects intake details** for the team to quote and schedule: name, callback phone (read back digit-by-digit), email (read back letter-by-letter), full service address, service type, beds, baths, sqft, frequency, special notes.
+4. **Asks** for a preferred callback time and whether texting is OK.
+5. **Closes** with "Our team will reach out shortly to confirm pricing and find a time" — explicitly does not quote a price.
+6. **Answers FAQ-style questions** from the knowledge base (supplies, insurance, scheduling, etc.).
 
-1. **Quote Regular, Deep, and Move-in/out cleanings** using `calculate_quote` (pricing from `voice-agent/pricing.csv`)
-2. **Answer common questions** from the FAQ knowledge base
-3. **Take messages** — you get an SMS recap in Quo within 30 seconds
-4. **Transfer to a human** during business hours if asked
+## What Taylor won't do
 
-## What Maya won't do
-
-- Quote commercial or short-term rental — collects details, escalates
-- Confirm a specific date or time
+- Quote a price out loud (pricing is intentionally handled by the team)
+- Book or confirm a date/time
 - Take payment info
 - Promise refunds, discounts, or make-goods
-- Pretend to be human
+- Pretend to be human (asks → "I'm Taylor, the AI assistant")
 
-## How a call flows
+## Call flow
 
 ```
-Caller → Quo (740-913-3693)
-  ├ Mon–Sat 7–7: rings team 20s → forwards to Retell
-  └ After-hours: straight to Retell
-Retell (Maya answers)
-  └ End of call → /api/retell-webhook
-       ├ SMS recap to manager (via Quo, lands in shared inbox)
-       └ Zapier → Booking Koala lead + Google Sheet log
+Customer dials GHL number
+   │
+   ▼
+GHL workflow forwards to Taylor's Retell number (+1 614 762 9409)
+   │
+   ▼
+Taylor runs the conversation flow (conversation_flow_957a14980504):
+  Welcome → Extract Intent → (quote path | FAQ path | clarify)
+                                  │
+                                  ▼
+                          Collect Intake (calls lookup_contact + check_service_area)
+                                  │
+                                  ▼
+                          Wrap Up (ask callback time + SMS consent)
+                                  │
+                                  ▼
+                          End Call
+   │
+   ▼
+Retell analyzes the call (~30s), extracts 20 structured fields
+   │
+   ▼
+POST /api/retell-webhook
+   ├─ Upsert contact in GHL (matched by phone)
+   ├─ Apply tags: source:maya, inbound-call, intent:*, service:*,
+   │  frequency:*, sms-consent:*, plus existing-customer / needs-review
+   ├─ Add contact note (summary, sentiment, callback window, recording URL)
+   ├─ Create Sales Pipeline → New Lead opportunity (booking/quote intents)
+   ├─ Auto-text caller from GHL number (if sms_consent === "yes")
+   └─ Text manager recap to MANAGER_PHONE from GHL number
 ```
 
-## Tools Maya uses
+## Key IDs (for reference)
 
-| Tool | Fires when |
-|---|---|
-| `calculate_quote` | She has service + sqft + beds + baths + frequency |
-| `check_service_area` | Caller mentions a zip or unfamiliar city |
-| `transfer_to_manager` | Caller explicitly asks for a human, in business hours |
-| `end_call` | Natural wrap-up or 20+ sec silence |
+See [`retell-ids.json`](./retell-ids.json). Currently:
 
-## Weekly review (Monday, 15 min)
+- **Retell agent**: `agent_c89977a01e7c6a1951e4802c8d` ("Taylor (NCC v2)")
+- **Conversation flow**: `conversation_flow_957a14980504`
+- **Phone number**: `+16147629409` (Columbus area; assign to Taylor in Retell when ready)
+- **Webhook URL**: `https://www.northcolumbuscleaning.com/api/retell-webhook`
+- **GHL location**: `XIA5AmegWaylDoPVe3r8` (sub-account, A2P-verified)
+- **Sales Pipeline**: `6YDehH2kNtHrdfJaEQfa`
+- **Knowledge base**: `knowledge_base_95f9bc18b5d768a5` (sourced from `faq.md`)
 
-1. Retell dashboard → Calls → sort by duration → skim the 5 longest
-2. Google Sheet → glance at the week's calls
-3. Flag: made-up quotes, confirmed a date, off-brand phrasing, confused by a common question
-4. Fix in the prompt or FAQ → redeploy
+## Tools Taylor uses
 
-**KPIs**: call volume, avg duration (60–180s is healthy), lead conversion rate, transfer rate (10–20% is normal), complaint rate (<5%)
-
-## How to update her
-
-| Change | File | Deploy |
+| Tool | Fires when | Vercel route |
 |---|---|---|
-| Personality / rules | `voice-agent/retell-llm.json` → `general_prompt` | Paste into Retell dashboard |
-| FAQ entry | `voice-agent/faq.md` | Re-upload to Retell Knowledge Base |
-| Pricing | `voice-agent/pricing.csv` + `api/voice-agent/calculate-quote.js` | `git push` (auto) |
-| Tool logic | `api/voice-agent/*.js` | `git push` (auto) |
+| `lookup_contact` | Right after the caller gives their phone number | `/api/voice-agent/lookup-contact` |
+| `check_service_area` | Caller mentions a zip code | `/api/voice-agent/check-service-area` |
 
-## Quick troubleshooting
+## Tags in GHL
 
-| Symptom | Check |
+Auto-applied by the webhook based on Taylor's post-call analysis:
+
+| Group | Tags |
 |---|---|
-| Not answering | Retell agent status → Retell phone number linked → Quo forward destination |
-| Wrong price | Retell transcript → `calculate_quote` inputs/outputs → fix `pricing.csv` if math is off |
-| No SMS recap | Vercel logs for `/api/retell-webhook` → `QUO_API_KEY` / `QUO_FROM_NUMBER` / `MANAGER_PHONE` env vars |
-| Robotic voice | Try a different 11labs voice in Retell |
-| Transfer loop | `transfer_to_manager` destination must be a human's direct cell, not the Quo line |
+| Source | `source:maya`, `inbound-call` |
+| Intent | `intent:booking`, `intent:quote`, `intent:complaint`, `intent:reschedule` |
+| Service | `service:residential`, `service:commercial`, `service:deep-clean`, `service:move-in-out`, `service:post-construction` |
+| Frequency | `frequency:one-time`, `frequency:weekly`, `frequency:biweekly`, `frequency:monthly` |
+| Consent | `sms-consent:yes`, `sms-consent:no` |
+| Status | `existing-customer`, `needs-review`, `hot lead`, `vip-client`, `do-not-contact` |
+| Internal | `internal:manager` (the recap-SMS recipient contact) |
 
-## Key files
+## Day-to-day operations
+
+### Adding an FAQ entry
+
+1. Edit `voice-agent/faq.md` (append a new Q+A in the existing style).
+2. Re-upload to Retell → Knowledge Bases → `knowledge_base_95f9bc18b5d768a5` → upload `faq.md`.
+3. Taylor picks it up on her next call.
+
+### Updating pricing the team uses
+
+`voice-agent/pricing.csv` is the source of truth for the team's quoting logic. Taylor doesn't read it (she doesn't quote out loud), but the team uses it offline.
+
+### Changing Taylor's persona / rules
+
+The system prompt lives in the conversation flow's `global_prompt` field, not in a repo file. To edit:
 
 ```
-voice-agent/
-  retell-llm.json      ← prompt + tools (source of truth)
-  retell-agent.json    ← voice + webhook wiring
-  faq.md               ← knowledge base (upload to Retell)
-  pricing.csv          ← pricing source of truth
-  SETUP.md             ← first-time setup steps
-api/
-  retell-webhook.js          ← post-call handler (SMS + Zapier)
-  voice-agent/
-    calculate-quote.js        ← quote engine
-    check-service-area.js     ← zip lookup
-  quo-webhook.js       ← inbound Quo events (Phase 2)
-  _lib/quo.js          ← Quo SMS helper
+# Pull current
+curl -H "Authorization: Bearer $RETELL_KEY" \
+  https://api.retellai.com/get-conversation-flow/conversation_flow_957a14980504
+
+# Edit global_prompt locally, then PATCH back
+curl -X PATCH -H "Authorization: Bearer $RETELL_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"global_prompt": "..."}' \
+  https://api.retellai.com/update-conversation-flow/conversation_flow_957a14980504
 ```
 
-## Dashboards
+After editing, save the new state to `voice-agent/conversation-flow.json` for version control.
 
-- Retell: https://beta.retellai.com
-- Quo: https://my.quo.com
-- Vercel: https://vercel.com/localseobots-projects/northcolumbuscleaning
-- Booking Koala: https://northcolumbuscleaning.bookingkoala.com
-- Repo: https://github.com/localseobot/northcolumbuscleaning
+### Watching Taylor's output
+
+- **Live dashboard**: `https://www.northcolumbuscleaning.com/api/admin/calls?token=<ADMIN_TOKEN>` — last 7 days, stale leads, intent breakdown, pipeline distribution.
+- **Weekly audit SMS**: fires Mondays at 10am ET via Vercel Cron (`/api/admin/audit-calls`). Texts the manager from the GHL number if there are calls flagged for review or leads sitting >48h in New Lead.
+- **Spot review**: Retell dashboard → Calls → sort by duration → skim the 5 longest.
+
+## Troubleshooting
+
+| Symptom | Where to look |
+|---|---|
+| Taylor not answering | Retell → agent status → phone-number assignment → GHL forwarding workflow |
+| Webhook silently no-ops | Vercel function logs (`/api/retell-webhook` → recent invocations) — JSON response shows which step failed |
+| Contact not created in GHL | Check `GHL_PIT` + `GHL_LOCATION_ID` env vars in Vercel; check the upsert error in webhook response |
+| Auto-text not sent | Check `sms_consent` value in webhook response — if `not_stated`, tighten Taylor's wrap-up prompt; if `yes` but failed, check GHL's `/conversations/messages` response |
+| Manager recap not received | `MANAGER_PHONE` env var; GHL has an SMS-capable number for outbound |
+| Wrong pipeline stage | Pipeline/stage IDs in `api/retell-webhook.js` constants — update if pipeline was recreated |
+| Robotic voice / unnatural prosody | Try a different voice_id in `update-agent` (e.g. `retell-Chloe`, `retell-Cimo`) |
+
+## Environment variables (Vercel)
+
+| Name | Purpose |
+|---|---|
+| `GHL_PIT` | Private Integration Token for the sub-account |
+| `GHL_LOCATION_ID` | Sub-account ID (`XIA5AmegWaylDoPVe3r8`) |
+| `GHL_FROM_NUMBER` | (optional) Specific SMS-capable number for outbound; else GHL uses location default |
+| `MANAGER_PHONE` | E.164 cell number for the manager-recap SMS |
+| `ADMIN_TOKEN` | Long random string; gates `/api/admin/*` routes |
+| `CRON_SECRET` | Auto-provided by Vercel for Cron jobs |
+
+## KPIs to watch
+
+- **Call volume** (per week)
+- **Existing-customer recognition rate** — should grow as the customer base grows
+- **SMS consent rate** — under 60% means the wrap-up question needs work
+- **Stale-lead rate** — leads sitting >24h in New Lead = team responsiveness issue
+- **Win rate** (Won / (Won+Lost)) — long-term pipeline health
+- **`needs-review` rate** — under 5% is healthy; higher means Taylor's prompt needs tightening

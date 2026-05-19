@@ -1,4 +1,10 @@
 {
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "crons": [
+    {
+      "path": "/api/admin/audit-calls",
+      "schedule": "0 14 * * 1"
+    }
+  ]
 }
