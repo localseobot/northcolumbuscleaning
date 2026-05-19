@@ -8,7 +8,9 @@
 //      recording URL, and key property details
 //   4. Creates an opportunity in Sales Pipeline → New Lead for any
 //      booking/quote intent — the team takes it from there (Quoted, Booked, etc.)
-//   5. Texts the office manager a recap from the Quo workspace number
+//   5. Auto-texts the caller from the GHL number (only if sms_consent === "yes")
+//      with a confirmation + SLA promise
+//   6. Texts the office manager a recap from the Quo workspace number
 //      (lands in the team's shared inbox)
 //
 // call_started / call_ended events are acknowledged and ignored — only
@@ -17,6 +19,8 @@
 // Environment variables (Vercel → Settings → Environment Variables):
 //   GHL_PIT             — Private Integration Token (scoped to the sub-account)
 //   GHL_LOCATION_ID     — Sub-account ID
+//   GHL_FROM_NUMBER     — (optional) E.164 number for outbound SMS. If unset,
+//                         GHL uses the location's default SMS-capable number.
 //   QUO_API_KEY         — Quo (OpenPhone) API key, for the manager-recap SMS
 //   QUO_FROM_NUMBER     — Quo workspace number in E.164
 //   MANAGER_PHONE       — owner/manager cell in E.164
@@ -176,6 +180,17 @@ function buildOpportunityName(extracted, firstName, lastName) {
   return `${name} — ${svcLabel}`;
 }
 
+function buildCustomerConfirmation(firstName) {
+  // Kept short on purpose — A2P-friendly, single message segment when possible.
+  // First-name personalization falls back to "there" if Taylor didn't catch it.
+  const name = firstName ? firstName.trim() : "there";
+  return (
+    `Hi ${name}! Thanks for calling North Columbus Cleaning. ` +
+    `We've got your info — the team will reach out shortly to confirm pricing and find a time. ` +
+    `Reply STOP to opt out.`
+  );
+}
+
 function buildManagerRecap(call, extracted) {
   const durationSec = call.duration_ms ? Math.round(call.duration_ms / 1000) : 0;
   const intent = s(extracted.intent) || "general";
@@ -250,7 +265,13 @@ export default async function handler(req, res) {
   const address1 = s(extracted.service_address);
   const postalCode = s(extracted.service_zip);
 
-  const result = { ok: true, callId, ghl: {}, sms: { attempted: false } };
+  const result = {
+    ok: true,
+    callId,
+    ghl: {},
+    customerSms: { attempted: false },
+    managerSms: { attempted: false },
+  };
 
   // --- 1. Upsert contact in GHL ---
   let contactId = null;
@@ -341,15 +362,45 @@ export default async function handler(req, res) {
     }
   }
 
-  // --- 5. SMS recap to manager via Quo (kept — lands in team's shared inbox) ---
+  // --- 5. Auto-text the caller from the GHL number (only if they consented) ---
+  // GHL's /conversations/messages routes through the location's SMS-capable
+  // number (the A2P-verified one), lands in the same thread as any future
+  // replies, and shows up in the GHL conversations inbox for the team.
+  const consented = s(extracted.sms_consent).toLowerCase() === "yes";
+  if (contactId && consented) {
+    result.customerSms.attempted = true;
+    try {
+      const body = {
+        type: "SMS",
+        contactId,
+        message: buildCustomerConfirmation(firstName),
+      };
+      if (process.env.GHL_FROM_NUMBER) body.fromNumber = process.env.GHL_FROM_NUMBER;
+      const smsResp = await ghl({
+        method: "POST",
+        path: "/conversations/messages",
+        body,
+      });
+      result.customerSms.ok = true;
+      result.customerSms.messageId =
+        smsResp?.messageId || smsResp?.message?.id || null;
+    } catch (e) {
+      result.customerSms.ok = false;
+      result.customerSms.error = e.message;
+    }
+  } else if (contactId && !consented) {
+    result.customerSms.skipped = `sms_consent=${s(extracted.sms_consent) || "(not_stated)"}`;
+  }
+
+  // --- 6. SMS recap to manager via Quo (kept — lands in team's shared inbox) ---
   const to = process.env.MANAGER_PHONE;
   const recap = buildManagerRecap(call, extracted);
   if (to && recap) {
-    result.sms.attempted = true;
+    result.managerSms.attempted = true;
     const smsResp = await sendSms(to, recap);
-    result.sms.ok = smsResp.ok;
-    result.sms.status = smsResp.status;
-    if (!smsResp.ok) result.sms.error = smsResp.body;
+    result.managerSms.ok = smsResp.ok;
+    result.managerSms.status = smsResp.status;
+    if (!smsResp.ok) result.managerSms.error = smsResp.body;
   }
 
   return res.status(200).json(result);
