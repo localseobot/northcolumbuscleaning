@@ -21,6 +21,9 @@
 //   GHL_LOCATION_ID     — Sub-account ID
 //   GHL_FROM_NUMBER     — (optional) E.164 number for outbound SMS. If unset,
 //                         GHL uses the location's default SMS-capable number.
+//   GHL_ASSIGNED_USER_ID — (optional) GHL user ID to auto-assign new contacts
+//                         and opportunities to. Defaults to North Columbus Admin.
+//                         Assigned users get notified in GHL (bell + email + push).
 //   MANAGER_PHONE       — owner/manager cell in E.164 (recap SMS recipient)
 
 import { ghl } from "./_lib/ghl.js";
@@ -33,6 +36,13 @@ export const config = { runtime: "nodejs" };
 //   GET /opportunities/pipelines  and update these constants.
 const SALES_PIPELINE_ID = "6YDehH2kNtHrdfJaEQfa";
 const STAGE_NEW_LEAD = "4bb733e7-d38d-4cb0-afb8-512406509144";
+
+// Default assignee for new contacts + opportunities. When set, the assigned
+// user gets a GHL notification (bell + email + mobile push) for each new
+// opportunity. Override at runtime with the GHL_ASSIGNED_USER_ID env var.
+const DEFAULT_ASSIGNED_USER_ID = "gzWzHHYAIBmbcZExALq9"; // North Columbus Admin
+const ASSIGNED_USER_ID =
+  process.env.GHL_ASSIGNED_USER_ID || DEFAULT_ASSIGNED_USER_ID;
 // Stage IDs kept here for the team's reference / future automations:
 // Quoted   = e426851f-65f6-4bfe-8fe0-66b93a1309df
 // Booked   = a1df2c52-9211-4e13-a920-0c17ab00eff9
@@ -298,6 +308,7 @@ export default async function handler(req, res) {
           postalCode: postalCode || undefined,
           country: "US",
           source: "Retell — Taylor (inbound call)",
+          assignedTo: ASSIGNED_USER_ID,
         },
       });
       contactId = upsert?.contact?.id || upsert?.id || null;
@@ -360,6 +371,7 @@ export default async function handler(req, res) {
             contactId,
             status: "open",
             source: "Retell — Taylor",
+            assignedTo: ASSIGNED_USER_ID,
           },
         });
         result.ghl.opportunityId = opp?.opportunity?.id || opp?.id || null;
