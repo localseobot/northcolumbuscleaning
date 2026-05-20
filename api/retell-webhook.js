@@ -5,7 +5,9 @@
 //   2. Applies cleaning-business tags from the structured analysis
 //      (source:maya, inbound-call, intent:*, service:*, frequency:*, sms-consent:*)
 //   3. Adds a contact note with summary, sentiment, callback window, SMS consent,
-//      recording URL, and key property details
+//      recording URL, key property details, AND an auto-computed quote (when
+//      service + sqft are sufficient). Taylor never quotes out loud — the team
+//      does, using this note as a starting point.
 //   4. Creates an opportunity in Sales Pipeline → New Lead for any
 //      booking/quote intent — the team takes it from there (Quoted, Booked, etc.)
 //   5. Auto-texts the caller from the GHL number (only if sms_consent === "yes")
@@ -28,6 +30,7 @@
 
 import { ghl } from "./_lib/ghl.js";
 import { sendGhlSms } from "./_lib/ghl-sms.js";
+import { calculateQuote } from "./_lib/pricing.js";
 
 export const config = { runtime: "nodejs" };
 
@@ -68,6 +71,70 @@ const SMS_CONSENT_TAG = {
   yes: "sms-consent:yes",
   no: "sms-consent:no",
 };
+
+// Map Retell's service_type enum to the pricing engine's service keys.
+const SERVICE_TO_PRICING = {
+  regular: "standard",
+  deep: "deep",
+  move_in_out: "move_in_out",
+};
+
+// Map Retell's frequency enum to the pricing engine's frequency keys.
+// (They mostly already align — this is here as the explicit contract.)
+const FREQUENCY_TO_PRICING = {
+  one_time: "one_time",
+  weekly: "weekly",
+  biweekly: "biweekly",
+  every_3_weeks: "every_3_weeks",
+  monthly: "monthly",
+};
+
+/**
+ * Compute a quote from Taylor's post-call analysis fields, if possible.
+ * Returns { ok, total, summary, line } on success, or { ok: false, reason }
+ * when the inputs aren't sufficient for an instant quote.
+ */
+function computeQuote(extracted) {
+  const svc = SERVICE_TO_PRICING[s(extracted.service_type).toLowerCase()];
+  if (!svc) {
+    return {
+      ok: false,
+      reason:
+        s(extracted.service_type).toLowerCase() === "commercial"
+          ? "commercial — team prices each commercial job custom"
+          : s(extracted.service_type).toLowerCase() === "post_construction"
+            ? "post-construction — needs custom quote"
+            : "service type unclear",
+    };
+  }
+  const sqft = num(extracted.sqft);
+  if (!sqft) return { ok: false, reason: "sqft not captured" };
+  const freq = FREQUENCY_TO_PRICING[s(extracted.frequency).toLowerCase()] || "one_time";
+
+  const q = calculateQuote({
+    service: svc,
+    sqft,
+    frequency: freq,
+    bedrooms: num(extracted.bedrooms),
+    bathrooms: num(extracted.bathrooms),
+  });
+  if (!q.breakdown.base) {
+    return {
+      ok: false,
+      reason:
+        q.breakdown.flags[0] || "sqft outside standard pricing bands — custom quote",
+    };
+  }
+  return {
+    ok: true,
+    total: q.breakdown.total,
+    summary: q.summary,
+    line:
+      q.breakdown.discountPct > 0
+        ? `Est. quote: $${q.breakdown.total.toFixed(2)}/visit ($${q.breakdown.base.toFixed(2)} base − ${(q.breakdown.discountPct * 100).toFixed(1)}% recurring)`
+        : `Est. quote: $${q.breakdown.total.toFixed(2)}/visit`,
+  };
+}
 
 function s(v) {
   if (v === null || v === undefined) return "";
@@ -119,7 +186,7 @@ function buildTags(extracted) {
   return tags;
 }
 
-function buildNote(call, extracted) {
+function buildNote(call, extracted, quote) {
   const startedAt = call.start_timestamp
     ? new Date(call.start_timestamp).toISOString()
     : "";
@@ -166,6 +233,18 @@ function buildNote(call, extracted) {
   const flags = s(extracted.call_quality_flags);
   if (flags) lines.push(`⚠️ Call quality flags: ${flags}`);
 
+  // Auto-computed quote (best-effort)
+  if (quote) {
+    if (quote.ok) {
+      lines.push("");
+      lines.push("--- Auto quote ---");
+      lines.push(quote.line);
+      lines.push(quote.summary);
+    } else {
+      lines.push(`Auto quote: pending (${quote.reason})`);
+    }
+  }
+
   const notes = s(extracted.special_notes);
   if (notes) lines.push(`Special notes: ${notes}`);
 
@@ -209,7 +288,7 @@ function buildCustomerConfirmation(firstName) {
   );
 }
 
-function buildManagerRecap(call, extracted) {
+function buildManagerRecap(call, extracted, quote) {
   const durationSec = call.duration_ms ? Math.round(call.duration_ms / 1000) : 0;
   const intent = s(extracted.intent) || "general";
   const name = [s(extracted.caller_first_name), s(extracted.caller_last_name)]
@@ -242,6 +321,9 @@ function buildManagerRecap(call, extracted) {
     .join(", ");
   if (propLine) lines.push(propLine);
   if (zip) lines.push(`Zip ${zip}${inArea ? ` (in area: ${inArea})` : ""}`);
+  if (quote) {
+    lines.push(quote.ok ? quote.line : `Quote: pending (${quote.reason})`);
+  }
   if (callback) lines.push(`Callback: ${callback}`);
   if (sms) lines.push(`Text OK: ${sms}`);
   if (summary) {
@@ -283,10 +365,21 @@ export default async function handler(req, res) {
   const address1 = s(extracted.service_address);
   const postalCode = s(extracted.service_zip);
 
+  // Compute the auto-quote once up front — used by both the GHL note and
+  // the manager-recap SMS. Best-effort; falls back to a "pending" status
+  // line when sqft/service isn't sufficient for a quote.
+  const intentLower = s(extracted.intent).toLowerCase();
+  const quote = BOOKING_INTENTS.has(intentLower) ? computeQuote(extracted) : null;
+
   const result = {
     ok: true,
     callId,
     ghl: {},
+    quote: quote
+      ? quote.ok
+        ? { ok: true, total: quote.total }
+        : { ok: false, reason: quote.reason }
+      : { skipped: "non-booking intent" },
     customerSms: { attempted: false },
     managerSms: { attempted: false },
   };
@@ -338,10 +431,10 @@ export default async function handler(req, res) {
     }
   }
 
-  // --- 3. Contact note with summary + recording link ---
+  // --- 3. Contact note with summary + recording link + auto-quote ---
   if (contactId) {
     try {
-      const note = buildNote(call, extracted);
+      const note = buildNote(call, extracted, quote);
       await ghl({
         method: "POST",
         path: `/contacts/${contactId}/notes`,
@@ -414,7 +507,7 @@ export default async function handler(req, res) {
 
   // --- 6. SMS recap to manager via GHL (lands in GHL conversations inbox) ---
   const to = process.env.MANAGER_PHONE;
-  const recap = buildManagerRecap(call, extracted);
+  const recap = buildManagerRecap(call, extracted, quote);
   if (to && recap) {
     result.managerSms.attempted = true;
     const smsResp = await sendGhlSms({
