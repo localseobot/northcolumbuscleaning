@@ -1,65 +1,62 @@
 // North Columbus Cleaning — pricing engine.
 //
 // Mirrors the Booking Koala admin pricing model:
-//   Total = bedroom_adder + bathroom_adder + sqft_adder
-//   Final = Total × (1 − frequency_discount)
+//   base = sqft_price[service][sqft_range]
+//   final = base × (1 − frequency_discount)
 //
-// Source of truth for the numbers is BK's pricing pages; transcribed below.
-// If you change pricing in BK, update these tables to match (or vice versa).
+// Sqft is the only price driver. The Bedroom and Bathroom parameter tables
+// in BK are NOT part of the formula — they're collected for scoping/time
+// estimation but do not change the price. (Confirmed by operator 2026-05-20.)
 //
-// TODOs to verify with a real BK booking:
-//   1. Square Footage table is documented in BK as "Standard Cleaning" only.
-//      Currently this engine applies the same sqft adders to Deep + Move In/Out.
-//      If BK uses different sqft pricing for those services, swap to per-service tables.
-//   2. Under 1000 sqft → currently $0 sqft adder. Verify this matches BK.
-//   3. The BK admin shows an "Exclude parameters" section (Bedroom $5, Full Bath $10,
-//      qty-based). This engine ignores it — assumed to be optional add-on/remove logic.
+// Frequencies are restricted per service:
+//   - Standard: every frequency
+//   - Deep: One-Time, Every 3 Weeks, Monthly (no Weekly or Biweekly)
+//   - Move In/Out: One-Time only
 
-// ---- Adders ----
+// ---- Sqft pricing tables, per service ----
 
-// Per-bedroom-count price (NOT per bedroom — this is the total bedroom adder
-// for a home with N bedrooms). Same across all three service categories.
-const BEDROOM_PRICE = {
-  1: 25,
-  2: 50,
-  3: 75,
-  4: 100,
-  5: 115,
-  6: 130,
-  7: 145,
+// Each row: [minSqft, maxSqft, price].
+// Bands not listed for a service mean "custom quote — fall outside our standard pricing."
+const SQFT_PRICE = {
+  standard: [
+    // No row under 1000 sqft for Standard (small apartments → custom quote).
+    [1000, 1499, 75],
+    [1500, 1999, 75],
+    [2000, 2499, 110],
+    [2500, 2999, 140],
+    [3000, 3499, 180],
+    [3500, 3999, 230],
+    [4000, 4499, 280],
+    [4500, 4999, 315],
+    [5000, 5499, 350],
+    [5500, 5999, 400],
+  ],
+  deep: [
+    [500, 999, 135],
+    [1000, 1499, 155],
+    [1500, 1999, 205],
+    [2000, 2499, 245],
+    [2500, 2999, 245], // BK has same price for both — verified in screenshot.
+    [3000, 3499, 275],
+    [3500, 3999, 305],
+    [4000, 4499, 335],
+    [4500, 4999, 375],
+    [5000, 5499, 405],
+    [5500, Infinity, 410], // BK labels this row "5000+ Sq Ft" → using as 5500+.
+  ],
+  move_in_out: [
+    [500, 999, 215],
+    [1000, 1499, 235],
+    [1500, 1999, 255],
+    [2000, 2499, 305],
+    [2500, 2999, 405],
+    [3000, 3499, 405],
+    [3500, 3999, 455],
+    [4000, 4499, 485],
+    // TODO: BK rows for 4500+ Move In/Out not yet captured. Currently
+    //       quotes at this size flag for custom-quote follow-up.
+  ],
 };
-
-// Per-bathroom-count price. Includes half-baths (0.5 increments).
-const BATHROOM_PRICE = {
-  1: 30,
-  1.5: 40,
-  2: 60,
-  2.5: 70,
-  3: 85,
-  3.5: 90,
-  4: 100,
-  4.5: 110,
-  5: 115,
-  5.5: 120,
-  6: 125,
-};
-
-// Square-footage brackets. [minSqft, maxSqft, price].
-// Under 1000 sqft → no adder (TODO: verify with a real booking).
-const SQFT_BRACKETS = [
-  [0, 999, 0],
-  [1000, 1499, 75],
-  [1500, 1999, 75],
-  [2000, 2499, 110],
-  [2500, 2999, 140],
-  [3000, 3499, 180],
-  [3500, 3999, 230],
-  [4000, 4499, 280],
-  [4500, 4999, 315],
-  [5000, 5499, 350],
-  [5500, 5999, 400],
-];
-const SQFT_OVER_6000 = 400; // Use top bracket; flag for custom quote.
 
 // Recurring discounts.
 const FREQUENCY_DISCOUNT = {
@@ -67,10 +64,16 @@ const FREQUENCY_DISCOUNT = {
   every_3_weeks: 0.085,
   biweekly: 0.15,
   weekly: 0.20,
-  monthly: 0, // BK shows 0% for monthly
+  monthly: 0,
 };
 
-// Pretty labels for output formatting.
+// Allowed (service, frequency) combinations.
+const ALLOWED_FREQ = {
+  standard: new Set(["one_time", "weekly", "biweekly", "every_3_weeks", "monthly"]),
+  deep: new Set(["one_time", "every_3_weeks", "monthly"]),
+  move_in_out: new Set(["one_time"]),
+};
+
 const SERVICE_LABEL = {
   standard: "Standard Cleaning",
   deep: "Deep Cleaning",
@@ -86,37 +89,44 @@ const FREQUENCY_LABEL = {
 
 export const SERVICES = Object.keys(SERVICE_LABEL);
 export const FREQUENCIES = Object.keys(FREQUENCY_DISCOUNT);
-export const BEDROOM_OPTIONS = Object.keys(BEDROOM_PRICE).map(Number);
-export const BATHROOM_OPTIONS = Object.keys(BATHROOM_PRICE).map(Number);
+export const SQFT_BRACKETS_BY_SERVICE = SQFT_PRICE;
+
+/** Return the frequencies that BK actually offers for a given service. */
+export function frequenciesForService(service) {
+  const set = ALLOWED_FREQ[service] || ALLOWED_FREQ.standard;
+  return FREQUENCIES.filter((f) => set.has(f));
+}
 
 // ---- Lookups ----
 
-function lookupBedroomPrice(n) {
-  if (n <= 0) return { price: 0, capped: false };
-  if (n in BEDROOM_PRICE) return { price: BEDROOM_PRICE[n], capped: false };
-  // Above the table → cap at top tier + flag for custom quote
-  const maxKey = Math.max(...Object.keys(BEDROOM_PRICE).map(Number));
-  return { price: BEDROOM_PRICE[maxKey], capped: true };
-}
-
-function lookupBathroomPrice(n) {
-  if (n <= 0) return { price: 0, capped: false };
-  // Round to nearest 0.5 (half-bath granularity)
-  const rounded = Math.round(n * 2) / 2;
-  if (rounded in BATHROOM_PRICE) return { price: BATHROOM_PRICE[rounded], capped: false };
-  const maxKey = Math.max(...Object.keys(BATHROOM_PRICE).map(Number));
-  return { price: BATHROOM_PRICE[maxKey], capped: true };
-}
-
-function lookupSqftPrice(sqft) {
-  if (!sqft || sqft < 0) return { price: 0, bracket: "not specified", capped: false };
-  for (const [lo, hi, price] of SQFT_BRACKETS) {
+function lookupSqftPrice(service, sqft) {
+  const table = SQFT_PRICE[service];
+  if (!table) return { price: null, bracket: null, capped: false, error: `unknown service ${service}` };
+  if (!sqft || sqft < 0) return { price: null, bracket: null, capped: false, error: "no sqft provided" };
+  for (const [lo, hi, price] of table) {
     if (sqft >= lo && sqft <= hi) {
-      return { price, bracket: `${lo}-${hi}`, capped: false };
+      const label = hi === Infinity ? `${lo}+` : `${lo}-${hi}`;
+      return { price, bracket: label, capped: false };
     }
   }
-  // Over the top bracket
-  return { price: SQFT_OVER_6000, bracket: "6000+", capped: true };
+  // Below the lowest band → flag for custom quote.
+  const lowest = table[0][0];
+  if (sqft < lowest) {
+    return {
+      price: null,
+      bracket: `<${lowest}`,
+      capped: false,
+      error: `Sqft ${sqft} is below the smallest standard band (${lowest}). Custom quote needed.`,
+    };
+  }
+  // Above the highest band → flag for custom quote.
+  const last = table[table.length - 1];
+  return {
+    price: null,
+    bracket: `>${last[1]}`,
+    capped: true,
+    error: `Sqft ${sqft} exceeds the largest standard band. Custom quote needed.`,
+  };
 }
 
 // ---- Main calculation ----
@@ -126,85 +136,77 @@ function lookupSqftPrice(sqft) {
  *
  * @param {object} input
  * @param {"standard"|"deep"|"move_in_out"} input.service
- * @param {number} input.bedrooms
- * @param {number} input.bathrooms     (half-baths = 0.5)
- * @param {number} input.sqft          (approx; bracketed)
- * @param {"one_time"|"weekly"|"biweekly"|"every_3_weeks"|"monthly"} input.frequency
- * @returns {{
- *   inputs: object,
- *   breakdown: {
- *     bedrooms: number, bathrooms: number, sqft: number,
- *     subtotal: number, discountPct: number, discount: number, total: number,
- *     sqftBracket: string, flags: string[]
- *   },
- *   summary: string
- * }}
+ * @param {number} input.sqft      Approx, used to look up the bracket
+ * @param {string} input.frequency "one_time"|"weekly"|"biweekly"|"every_3_weeks"|"monthly"
+ * @param {number} [input.bedrooms]  Captured for the team; not used in price calc
+ * @param {number} [input.bathrooms] Captured for the team; not used in price calc
  */
 export function calculateQuote(input) {
   const service = (input.service || "standard").toLowerCase();
   const frequency = (input.frequency || "one_time").toLowerCase();
+  const sqft = Number(input.sqft) || 0;
   const bedrooms = Number(input.bedrooms) || 0;
   const bathrooms = Number(input.bathrooms) || 0;
-  const sqft = Number(input.sqft) || 0;
 
-  const bed = lookupBedroomPrice(bedrooms);
-  const bath = lookupBathroomPrice(bathrooms);
-  const sq = lookupSqftPrice(sqft);
-
-  const subtotal = bed.price + bath.price + sq.price;
-  const discountPct = FREQUENCY_DISCOUNT[frequency] ?? 0;
-  const discount = +(subtotal * discountPct).toFixed(2);
-  const total = +(subtotal - discount).toFixed(2);
-
+  const inputs = { service, frequency, sqft, bedrooms, bathrooms };
   const flags = [];
-  if (bed.capped) flags.push("Bedrooms over standard tier — verify with a custom quote");
-  if (bath.capped) flags.push("Bathrooms over standard tier — verify with a custom quote");
-  if (sq.capped) flags.push("Sqft above 5,999 — verify with a custom quote");
-  if (service !== "standard") {
+
+  // 1. Validate service/frequency combination
+  const allowed = ALLOWED_FREQ[service];
+  if (!allowed) {
+    return {
+      inputs,
+      breakdown: { base: 0, discount: 0, total: 0, flags: [`Unknown service "${service}"`] },
+      summary: `Unknown service: ${service}`,
+      error: true,
+    };
+  }
+  if (!allowed.has(frequency)) {
+    const allowedList = [...allowed].map((f) => FREQUENCY_LABEL[f]).join(", ");
     flags.push(
-      `Service = ${SERVICE_LABEL[service] || service}: this engine currently uses the Standard pricing tables. Verify the total matches your BK booking for Deep / Move In/Out — flag the difference if any.`,
+      `${SERVICE_LABEL[service]} doesn't support ${FREQUENCY_LABEL[frequency]}. Valid frequencies: ${allowedList}.`,
     );
   }
-  if (sqft > 0 && sqft < 1000) {
-    flags.push("Sqft under 1000 — $0 sqft adder applied. Verify with BK.");
-  }
+
+  // 2. Look up sqft price
+  const sq = lookupSqftPrice(service, sqft);
+  if (sq.error) flags.push(sq.error);
+
+  const base = sq.price || 0;
+  const discountPct = FREQUENCY_DISCOUNT[frequency] ?? 0;
+  const discount = +(base * discountPct).toFixed(2);
+  const total = +(base - discount).toFixed(2);
 
   const breakdown = {
-    bedrooms: bed.price,
-    bathrooms: bath.price,
-    sqft: sq.price,
-    sqftBracket: sq.bracket,
-    subtotal,
+    sqftBracket: sq.bracket || "n/a",
+    base,
     discountPct,
     discount,
     total,
     flags,
   };
 
-  const summary = formatSummary({ service, frequency, bedrooms, bathrooms, sqft }, breakdown);
+  const summary = formatSummary(inputs, breakdown);
 
-  return { inputs: { service, frequency, bedrooms, bathrooms, sqft }, breakdown, summary };
+  return { inputs, breakdown, summary, error: flags.length > 0 && !sq.price };
 }
 
 function formatSummary(inputs, b) {
   const lines = [
-    `${SERVICE_LABEL[inputs.service] || inputs.service} — ${inputs.bedrooms}bd / ${inputs.bathrooms}ba / ${inputs.sqft || "?"} sqft`,
+    `${SERVICE_LABEL[inputs.service] || inputs.service} — ${inputs.sqft || "?"} sqft (${inputs.bedrooms}bd / ${inputs.bathrooms}ba)`,
     `Frequency: ${FREQUENCY_LABEL[inputs.frequency] || inputs.frequency}`,
     ``,
-    `Bedrooms (${inputs.bedrooms}): $${b.bedrooms.toFixed(2)}`,
-    `Bathrooms (${inputs.bathrooms}): $${b.bathrooms.toFixed(2)}`,
-    `Sqft (${b.sqftBracket}): $${b.sqft.toFixed(2)}`,
-    `Subtotal: $${b.subtotal.toFixed(2)}`,
+    `Base (${b.sqftBracket}): $${b.base.toFixed(2)}`,
   ];
   if (b.discountPct > 0) {
     lines.push(
-      `Recurring discount (${Math.round(b.discountPct * 1000) / 10}%): −$${b.discount.toFixed(2)}`,
+      `Recurring discount (${(b.discountPct * 100).toFixed(1)}%): −$${b.discount.toFixed(2)}`,
     );
   }
   lines.push(`Total: $${b.total.toFixed(2)} per visit`);
   if (b.flags.length) {
     lines.push("");
-    lines.push("⚠️  " + b.flags.join(" / "));
+    for (const f of b.flags) lines.push(`⚠️  ${f}`);
   }
   return lines.join("\n");
 }
@@ -214,9 +216,15 @@ export function formatForSms(quote, firstName) {
   const name = firstName ? firstName.trim() : "there";
   const svc = SERVICE_LABEL[quote.inputs.service] || quote.inputs.service;
   const freq = FREQUENCY_LABEL[quote.inputs.frequency] || quote.inputs.frequency;
+  if (!quote.breakdown.base) {
+    return (
+      `Hi ${name}! We need to put together a custom quote for your ${svc.toLowerCase()} ` +
+      `(${quote.inputs.sqft} sqft, ${freq}) — our team will reach out shortly.`
+    );
+  }
   return (
     `Hi ${name}! Quote for your ${svc.toLowerCase()} — ` +
-    `${quote.inputs.bedrooms}bd/${quote.inputs.bathrooms}ba/${quote.inputs.sqft}sqft, ${freq}: ` +
+    `${quote.inputs.sqft} sqft, ${freq}: ` +
     `$${quote.breakdown.total.toFixed(2)} per visit. ` +
     `Ready to book?`
   );

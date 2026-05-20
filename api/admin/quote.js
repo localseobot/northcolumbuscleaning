@@ -2,19 +2,18 @@
 // against the BK pricing model, and gives an SMS-friendly summary to paste.
 //
 // Usage:
-//   GET  /api/admin/quote?token=<ADMIN_TOKEN>             → form
-//   GET  /api/admin/quote?token=<...>&service=standard&...  → form + quote result
+//   GET /api/admin/quote?token=<ADMIN_TOKEN>             → form
+//   GET /api/admin/quote?token=<...>&service=...&...     → form + result
 //
 // Required env: ADMIN_TOKEN
-// Pricing logic lives in api/_lib/pricing.js so it stays separate from the UI.
+// Pricing engine lives in api/_lib/pricing.js.
 
 import {
   calculateQuote,
   formatForSms,
   SERVICES,
   FREQUENCIES,
-  BEDROOM_OPTIONS,
-  BATHROOM_OPTIONS,
+  frequenciesForService,
 } from "../_lib/pricing.js";
 
 export const config = { runtime: "nodejs" };
@@ -41,6 +40,12 @@ const FREQUENCY_LABELS = {
   monthly: "Monthly",
 };
 
+// Bedroom/bathroom dropdowns aren't part of the formula but the team still
+// captures them for scoping. Hardcoded here since the pricing engine no
+// longer exports them.
+const BEDROOM_OPTIONS = [1, 2, 3, 4, 5, 6, 7];
+const BATHROOM_OPTIONS = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6];
+
 function renderForm(query, quote) {
   const token = query.token || "";
   const sel = (val, key) => (query[key] === String(val) ? "selected" : "");
@@ -49,9 +54,17 @@ function renderForm(query, quote) {
   const serviceOpts = SERVICES
     .map((s) => `<option value="${s}" ${sel(s, "service")}>${escapeHtml(SERVICE_LABELS[s])}</option>`)
     .join("");
+
+  // Frequency dropdown: limit to what the selected service supports so the
+  // team can't pick an invalid combo. Default to Standard's full list if no
+  // service is selected yet.
+  const activeService = query.service || "standard";
+  const validFreqs = new Set(frequenciesForService(activeService));
   const freqOpts = FREQUENCIES
+    .filter((f) => validFreqs.has(f))
     .map((f) => `<option value="${f}" ${sel(f, "frequency")}>${escapeHtml(FREQUENCY_LABELS[f])}</option>`)
     .join("");
+
   const bedOpts = BEDROOM_OPTIONS
     .map((n) => `<option value="${n}" ${sel(n, "bedrooms")}>${n}</option>`)
     .join("");
@@ -60,25 +73,20 @@ function renderForm(query, quote) {
     .join("");
 
   const quoteBlock = quote
-    ? `
-      <section class="result">
-        <h2>Quote</h2>
-        <div class="big">$${quote.breakdown.total.toFixed(2)} <span class="muted">per visit</span></div>
-        <table class="breakdown">
-          <tr><td>Bedrooms (${quote.inputs.bedrooms})</td><td>$${quote.breakdown.bedrooms.toFixed(2)}</td></tr>
-          <tr><td>Bathrooms (${quote.inputs.bathrooms})</td><td>$${quote.breakdown.bathrooms.toFixed(2)}</td></tr>
-          <tr><td>Sqft (${escapeHtml(quote.breakdown.sqftBracket)})</td><td>$${quote.breakdown.sqft.toFixed(2)}</td></tr>
-          <tr class="sub"><td>Subtotal</td><td>$${quote.breakdown.subtotal.toFixed(2)}</td></tr>
-          ${quote.breakdown.discountPct > 0 ? `<tr class="discount"><td>Recurring discount (${(quote.breakdown.discountPct * 100).toFixed(1)}%)</td><td>−$${quote.breakdown.discount.toFixed(2)}</td></tr>` : ""}
-          <tr class="total"><td>Total</td><td>$${quote.breakdown.total.toFixed(2)}</td></tr>
-        </table>
-        ${quote.breakdown.flags.length ? `<div class="flags">${quote.breakdown.flags.map((f) => `<div>⚠️ ${escapeHtml(f)}</div>`).join("")}</div>` : ""}
-        <h3>Copy/paste to customer</h3>
-        <textarea readonly rows="3" onclick="this.select()">${escapeHtml(formatForSms(quote, query.first_name))}</textarea>
-        <h3>Full breakdown (internal)</h3>
-        <textarea readonly rows="10" onclick="this.select()">${escapeHtml(quote.summary)}</textarea>
-      </section>`
+    ? renderQuoteBlock(quote, query)
     : "";
+
+  // When user changes service we want the frequency list to update. Tiny
+  // inline script reloads the form with the new service so server-side
+  // re-renders with the right options.
+  const onChangeScript = `
+    document.querySelector('select[name=service]').addEventListener('change', function() {
+      const f = this.form;
+      // Drop frequency so server picks the default for the new service.
+      f.querySelector('select[name=frequency]').value = '';
+      f.submit();
+    });
+  `;
 
   return `<!doctype html>
 <html lang="en">
@@ -100,22 +108,23 @@ function renderForm(query, quote) {
   .result{background:white;border:1px solid #eee;border-radius:8px;padding:18px;margin-top:18px}
   .result h2{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:#666}
   .big{font-size:42px;font-weight:700;margin:8px 0 16px;color:#0d8043}
+  .big.custom{color:#b07020}
   .big .muted{font-size:14px;color:#888;font-weight:400}
   table.breakdown{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px}
   table.breakdown td{padding:6px 0;border-bottom:1px solid #f0f0f0}
   table.breakdown td:last-child{text-align:right;font-variant-numeric:tabular-nums}
-  table.breakdown .sub td{font-weight:600;border-top:1px solid #ccc}
   table.breakdown .discount td{color:#0d8043}
   table.breakdown .total td{font-weight:700;font-size:15px;border-top:2px solid #222;border-bottom:none}
   .flags{background:#fff5e6;border-left:3px solid #f0a020;padding:10px 12px;margin:12px 0;font-size:12px;color:#7a5500;border-radius:0 6px 6px 0}
   .flags div{margin:2px 0}
   textarea{width:100%;font:13px/1.4 ui-monospace,Menlo,monospace;padding:10px;border:1px solid #ddd;border-radius:6px;background:#fafafa;margin:6px 0 14px;resize:vertical;color:#222}
   h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#666;margin:14px 0 4px}
+  .info{background:#eef5ff;border-left:3px solid #4080d0;padding:10px 12px;margin:0 0 14px;font-size:12px;color:#234670;border-radius:0 6px 6px 0}
 </style>
 </head>
 <body>
 <h1>NCC — Quote tool</h1>
-<div class="sub">Internal quote calculator. Pricing mirrors Booking Koala.</div>
+<div class="sub">Internal calculator. Price = sqft band × (1 − recurring discount). Bedrooms / bathrooms captured for scope only.</div>
 
 <form method="GET" action="/api/admin/quote">
   <input type="hidden" name="token" value="${escapeHtml(token)}">
@@ -135,14 +144,44 @@ function renderForm(query, quote) {
     <select name="bathrooms">${bathOpts}</select>
   </label>
   <label class="span2">Square footage (approx)
-    <input type="number" name="sqft" value="${v("sqft")}" placeholder="2000" min="0" step="100">
+    <input type="number" name="sqft" value="${v("sqft")}" placeholder="2000" min="0" step="100" required>
   </label>
   <button type="submit">Calculate quote</button>
 </form>
 
 ${quoteBlock}
+
+<script>${onChangeScript}</script>
 </body>
 </html>`;
+}
+
+function renderQuoteBlock(quote, query) {
+  const isCustom = !quote.breakdown.base;
+  const total = quote.breakdown.total;
+
+  return `
+    <section class="result">
+      <h2>Quote</h2>
+      <div class="big ${isCustom ? "custom" : ""}">
+        ${isCustom ? "Custom" : "$" + total.toFixed(2)}
+        ${!isCustom ? '<span class="muted">per visit</span>' : ""}
+      </div>
+      ${
+        isCustom
+          ? '<div class="info">This combination is outside the standard pricing bands. Take details and the team will follow up with a tailored quote.</div>'
+          : `<table class="breakdown">
+              <tr><td>${escapeHtml(SERVICE_LABELS[quote.inputs.service])} — ${escapeHtml(quote.breakdown.sqftBracket)} sqft</td><td>$${quote.breakdown.base.toFixed(2)}</td></tr>
+              ${quote.breakdown.discountPct > 0 ? `<tr class="discount"><td>${escapeHtml(FREQUENCY_LABELS[quote.inputs.frequency])} discount (${(quote.breakdown.discountPct * 100).toFixed(1)}%)</td><td>−$${quote.breakdown.discount.toFixed(2)}</td></tr>` : ""}
+              <tr class="total"><td>Total</td><td>$${quote.breakdown.total.toFixed(2)}</td></tr>
+             </table>`
+      }
+      ${quote.breakdown.flags.length ? `<div class="flags">${quote.breakdown.flags.map((f) => `<div>⚠️ ${escapeHtml(f)}</div>`).join("")}</div>` : ""}
+      <h3>Copy/paste to customer</h3>
+      <textarea readonly rows="3" onclick="this.select()">${escapeHtml(formatForSms(quote, query.first_name))}</textarea>
+      <h3>Full breakdown (internal)</h3>
+      <textarea readonly rows="8" onclick="this.select()">${escapeHtml(quote.summary)}</textarea>
+    </section>`;
 }
 
 export default async function handler(req, res) {
@@ -151,16 +190,14 @@ export default async function handler(req, res) {
   const token = req.query?.token || "";
   if (token !== expected) return res.status(401).send("unauthorized");
 
-  // Compute the quote only if the user picked a service AND specified inputs
-  // (avoids showing "$0" on a fresh page load).
   let quote = null;
-  if (req.query.service && (req.query.bedrooms || req.query.bathrooms || req.query.sqft)) {
+  if (req.query.service && req.query.sqft) {
     quote = calculateQuote({
       service: req.query.service,
+      sqft: req.query.sqft,
       bedrooms: req.query.bedrooms,
       bathrooms: req.query.bathrooms,
-      sqft: req.query.sqft,
-      frequency: req.query.frequency,
+      frequency: req.query.frequency || "one_time",
     });
   }
 

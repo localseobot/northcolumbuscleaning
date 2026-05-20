@@ -1,6 +1,10 @@
 # North Columbus Cleaning — pricing reference
 # Source of truth: Booking Koala admin. Mirror lives in api/_lib/pricing.js.
-# Last verified: 2026-05-20 (overwrote stale Apr 2026 version).
+# Last verified: 2026-05-20.
+#
+# Pricing model: price is driven by SQUARE FOOTAGE and SERVICE TYPE.
+#   total = sqft_price[service][sqft_range] × (1 − frequency_discount)
+# Bedrooms and bathrooms are captured for scope/time but do NOT affect price.
 
 [Frequency discounts]
 frequency,discount_pct
@@ -10,33 +14,14 @@ Every 2 Weeks (Biweekly),15
 Weekly,20
 Monthly,0
 
-[Bedrooms — adder, same across Standard / Deep / Move In/Out]
-bedrooms,price
-1,25
-2,50
-3,75
-4,100
-5,115
-6,130
-7,145
+[Allowed frequencies per service]
+service,allowed_frequencies
+Standard,"One-Time, Every 3 Weeks, Every 2 Weeks, Weekly, Monthly"
+Deep,"One-Time, Every 3 Weeks, Monthly"
+Move In/Out,"One-Time"
 
-[Bathrooms — adder, half-baths count as 0.5]
-bathrooms,price
-1,30
-1.5,40
-2,60
-2.5,70
-3,85
-3.5,90
-4,100
-4.5,110
-5,115
-5.5,120
-6,125
-
-[Square footage — adder (Standard Cleaning verified; Deep / Move In/Out TBD)]
+[Standard Cleaning — sqft base price]
 sqft_range,price
-0-999,0
 1000-1499,75
 1500-1999,75
 2000-2499,110
@@ -47,15 +32,35 @@ sqft_range,price
 4500-4999,315
 5000-5499,350
 5500-5999,400
-6000+,custom quote
+under 1000 / over 6000,custom quote
 
-# Formula:
-#   subtotal = bedroom_adder + bathroom_adder + sqft_adder
-#   total = subtotal × (1 − frequency_discount)
-#
-# Open questions (resolve by test booking in BK):
-# 1. Does Deep Cleaning use the same sqft table, or a different one?
-# 2. Does Move In/Out use the same sqft table, or a different one?
-# 3. What does BK do for <1000 sqft homes? (Currently assume $0 sqft adder.)
-# 4. What is the "Exclude parameters" section (Bedroom $5, Full Bath $10) for?
-#    Add-ons? Removals? Skip-this-room discounts?
+[Deep Cleaning — sqft base price]
+sqft_range,price
+500-999,135
+1000-1499,155
+1500-1999,205
+2000-2499,245
+2500-2999,245
+3000-3499,275
+3500-3999,305
+4000-4499,335
+4500-4999,375
+5000-5499,405
+5500+,410
+
+[Move In/Out Cleaning — sqft base price]
+sqft_range,price
+500-999,215
+1000-1499,235
+1500-1999,255
+2000-2499,305
+2500-2999,405
+3000-3499,405
+3500-3999,455
+4000-4499,485
+4500+,custom quote (BK rows not yet captured)
+
+# Open question:
+# - Move In/Out rows for 4500+ sqft are not yet in the engine. Currently
+#   quotes that big flag for custom-quote follow-up. Add rows from BK to
+#   api/_lib/pricing.js when available.
