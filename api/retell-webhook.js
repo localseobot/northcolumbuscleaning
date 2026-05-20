@@ -72,6 +72,24 @@ const SMS_CONSENT_TAG = {
   no: "sms-consent:no",
 };
 
+// Interpret Retell's sms_consent string permissively. The schema asks Retell
+// to normalize to "yes" / "no" / "not_stated", but in practice callers say
+// "yeah", "sure", "absolutely", "I'd rather not", etc. and the normalization
+// isn't perfect. Treat a clear positive as consent UNLESS a negative is also
+// present.
+function interpretSmsConsent(raw) {
+  const v = String(raw || "").toLowerCase().trim();
+  if (!v || v === "not_stated") return { value: "not_stated", consented: false };
+  const POSITIVE = /\b(yes|yeah|yep|sure|ok|okay|alright|fine|please|definitely|absolutely|agreed|sounds good|that works|go ahead)\b/;
+  const NEGATIVE = /\b(no|nope|don'?t|do not|rather not|never|nah|no thanks|no thank you)\b/;
+  const neg = NEGATIVE.test(v);
+  const pos = POSITIVE.test(v);
+  if (neg && !pos) return { value: "no", consented: false };
+  if (pos) return { value: "yes", consented: true };
+  // Falls through: unclear text → safer to NOT send (TCPA caution).
+  return { value: v, consented: false };
+}
+
 // Map Retell's service_type enum to the pricing engine's service keys.
 const SERVICE_TO_PRICING = {
   regular: "standard",
@@ -175,8 +193,11 @@ function buildTags(extracted) {
   if (SERVICE_TAG[svc]) tags.push(SERVICE_TAG[svc]);
   const freq = s(extracted.frequency).toLowerCase();
   if (FREQUENCY_TAG[freq]) tags.push(FREQUENCY_TAG[freq]);
-  const sms = s(extracted.sms_consent).toLowerCase();
-  if (SMS_CONSENT_TAG[sms]) tags.push(SMS_CONSENT_TAG[sms]);
+  // Use the same permissive interpretation we use for sending the SMS.
+  const consent = interpretSmsConsent(extracted.sms_consent);
+  if (consent.value === "yes" || consent.value === "no") {
+    tags.push(SMS_CONSENT_TAG[consent.value]);
+  }
   if (s(extracted.existing_customer).toLowerCase() === "yes") {
     tags.push("existing-customer");
   }
@@ -479,8 +500,10 @@ export default async function handler(req, res) {
   // GHL's /conversations/messages routes through the location's SMS-capable
   // number (the A2P-verified one), lands in the same thread as any future
   // replies, and shows up in the GHL conversations inbox for the team.
-  const consented = s(extracted.sms_consent).toLowerCase() === "yes";
-  if (contactId && consented) {
+  const consent = interpretSmsConsent(extracted.sms_consent);
+  result.customerSms.smsConsentRaw = s(extracted.sms_consent) || "(empty)";
+  result.customerSms.smsConsentInterpreted = consent.value;
+  if (contactId && consent.consented) {
     result.customerSms.attempted = true;
     try {
       const body = {
@@ -501,8 +524,8 @@ export default async function handler(req, res) {
       result.customerSms.ok = false;
       result.customerSms.error = e.message;
     }
-  } else if (contactId && !consented) {
-    result.customerSms.skipped = `sms_consent=${s(extracted.sms_consent) || "(not_stated)"}`;
+  } else if (contactId) {
+    result.customerSms.skipped = `no consent (raw: "${result.customerSms.smsConsentRaw}", interpreted: ${consent.value})`;
   }
 
   // --- 6. SMS recap to manager via GHL (lands in GHL conversations inbox) ---
