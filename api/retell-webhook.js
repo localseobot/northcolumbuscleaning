@@ -14,6 +14,8 @@
 //      with a confirmation + SLA promise
 //   6. Texts the office manager a recap from the GHL number
 //      (lands in the team's GHL conversations inbox)
+//   7. Posts a rich Slack block to the configured channel (when
+//      SLACK_WEBHOOK_URL is set) with deep links to GHL + recording
 //
 // call_started / call_ended events are acknowledged and ignored — only
 // call_analyzed has the structured custom_analysis_data populated.
@@ -27,10 +29,13 @@
 //                         and opportunities to. Defaults to North Columbus Admin.
 //                         Assigned users get notified in GHL (bell + email + push).
 //   MANAGER_PHONE       — owner/manager cell in E.164 (recap SMS recipient)
+//   SLACK_WEBHOOK_URL   — (optional) Slack Incoming Webhook URL; if set,
+//                         posts a rich call recap per call
 
 import { ghl } from "./_lib/ghl.js";
 import { sendGhlSms } from "./_lib/ghl-sms.js";
 import { calculateQuote } from "./_lib/pricing.js";
+import { buildCallBlocks, sendSlack } from "./_lib/slack.js";
 
 export const config = { runtime: "nodejs" };
 
@@ -403,6 +408,7 @@ export default async function handler(req, res) {
       : { skipped: "non-booking intent" },
     customerSms: { attempted: false },
     managerSms: { attempted: false },
+    slack: { attempted: false },
   };
 
   // --- 1. Upsert contact in GHL ---
@@ -543,6 +549,32 @@ export default async function handler(req, res) {
     result.managerSms.contactId = smsResp.contactId;
     result.managerSms.messageId = smsResp.messageId;
     if (!smsResp.ok) result.managerSms.error = smsResp.error;
+  }
+
+  // --- 7. Slack notification (optional — only if SLACK_WEBHOOK_URL is set) ---
+  if (process.env.SLACK_WEBHOOK_URL) {
+    result.slack.attempted = true;
+    try {
+      const callerName =
+        [firstName, lastName].filter(Boolean).join(" ") || "Unknown caller";
+      const blocks = buildCallBlocks({
+        call,
+        extracted,
+        contactId,
+        locationId: process.env.GHL_LOCATION_ID,
+        quote,
+      });
+      const slackResp = await sendSlack(
+        process.env.SLACK_WEBHOOK_URL,
+        blocks,
+        `📞 New call from ${callerName}`,
+      );
+      result.slack.ok = slackResp.ok;
+      if (!slackResp.ok) result.slack.error = slackResp.error;
+    } catch (e) {
+      result.slack.ok = false;
+      result.slack.error = e.message;
+    }
   }
 
   return res.status(200).json(result);
