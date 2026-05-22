@@ -5,3 +5,6 @@ node_modules
 *.log
 .env
 .env.local
+
+# All env files
+.env*
