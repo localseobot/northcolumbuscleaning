@@ -12,7 +12,7 @@ import { ghl } from "./ghl.js";
  * automatically.
  *
  * @param {object} opts
- * @param {string} opts.to        Recipient phone in E.164 (e.g. "+17409133693")
+ * @param {string} opts.to        Recipient phone in E.164 (e.g. "+16143522588")
  * @param {string} opts.message   SMS body
  * @param {string} [opts.firstName] Optional, used when creating the contact
  * @param {string} [opts.tag]     Optional tag to apply (e.g. "internal:manager")
