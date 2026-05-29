@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cleaning checklist — what's included | North Columbus Cleaning</title>
+  <meta name="description" content="See exactly what's included in our Standard Clean, Deep Clean, and Move-In/Out cleans — room by room. North Columbus Cleaning. Call (614) 352-2588." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://northcolumbuscleaning.com/checklist" />
+  <meta name="theme-color" content="#1a4d2e" />
+  <link rel="icon" href="/images/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://northcolumbuscleaning.com/checklist" />
+  <meta property="og:title" content="Cleaning checklist — what's included | North Columbus Cleaning" />
+  <meta property="og:description" content="See exactly what's included in our Standard Clean, Deep Clean, and Move-In/Out cleans — room by room." />
+  <meta property="og:image" content="https://northcolumbuscleaning.com/images/residential.jpg" />
+  <meta property="og:site_name" content="North Columbus Cleaning | House Cleaning Services" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Cleaning checklist — what's included | North Columbus Cleaning" />
+  <meta name="twitter:description" content="See exactly what's included in our Standard Clean, Deep Clean, and Move-In/Out cleans — room by room." />
+  <meta name="twitter:image" content="https://northcolumbuscleaning.com/images/residential.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    /* ============ CHECKLIST PAGE ============ */
+    .checklist-intro {
+      max-width: 780px;
+      margin: 0 auto var(--space-6);
+      text-align: center;
+    }
+    .checklist-intro p {
+      font-size: 18px;
+      color: var(--charcoal);
+      opacity: 0.85;
+    }
+
+    /* Tabs */
+    .tabs {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+    .tab-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-1);
+      border-bottom: 2px solid var(--light-gray);
+      margin-bottom: var(--space-4);
+      padding: 0;
+    }
+    .tab-btn {
+      font-family: var(--font-sans);
+      font-weight: 900;
+      font-size: 15px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      background: transparent;
+      color: var(--charcoal);
+      border: 0;
+      padding: var(--space-2) var(--space-3);
+      cursor: pointer;
+      position: relative;
+      top: 2px;
+      border-bottom: 3px solid transparent;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    .tab-btn:hover { color: var(--forest); }
+    .tab-btn[aria-selected="true"] {
+      color: var(--forest);
+      border-bottom-color: var(--forest);
+    }
+    .tab-btn:focus-visible {
+      outline: 2px solid var(--sage);
+      outline-offset: 2px;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.is-active { display: block; }
+
+    /* Checklist table */
+    .checklist-table-wrap {
+      background: var(--off-white);
+      border: 1px solid var(--light-gray);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .checklist-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+    .checklist-table thead th {
+      background: var(--forest);
+      color: var(--off-white);
+      font-family: var(--font-sans);
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: var(--space-3) var(--space-3);
+      text-align: left;
+    }
+    .checklist-table thead th.col-task {
+      width: 46%;
+    }
+    .checklist-table thead th.col-tier {
+      width: 18%;
+      text-align: center;
+    }
+    .checklist-table tbody tr {
+      border-bottom: 1px solid var(--light-gray);
+    }
+    .checklist-table tbody tr:last-child { border-bottom: 0; }
+    .checklist-table tbody tr:nth-child(even) { background: #fff; }
+    .checklist-table td {
+      padding: var(--space-2) var(--space-3);
+      vertical-align: middle;
+      color: var(--charcoal);
+      line-height: 1.45;
+    }
+    .checklist-table td.task {
+      font-weight: 400;
+    }
+    .checklist-table td.mark {
+      text-align: center;
+      width: 18%;
+    }
+    .mark-yes,
+    .mark-no,
+    .mark-na {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-weight: 900;
+      font-size: 16px;
+      line-height: 1;
+    }
+    .mark-yes {
+      background: rgba(45, 122, 74, 0.12);
+      color: var(--sage);
+    }
+    .mark-no {
+      background: rgba(192, 57, 43, 0.10);
+      color: #c0392b;
+    }
+    .mark-na {
+      background: var(--light-gray);
+      color: var(--charcoal);
+      opacity: 0.7;
+      font-size: 13px;
+    }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      margin-top: var(--space-4);
+      font-size: 14px;
+      color: var(--charcoal);
+    }
+    .legend-item { display: inline-flex; align-items: center; gap: 8px; }
+
+    /* Final CTA */
+    .final-cta {
+      background: var(--forest);
+      color: var(--off-white);
+      text-align: center;
+      padding: var(--space-12) 0;
+    }
+    .final-cta h2 {
+      color: var(--off-white);
+      font-size: 48px;
+      margin-bottom: var(--space-2);
+    }
+    .final-cta p {
+      color: var(--off-white);
+      opacity: 0.9;
+      max-width: 600px;
+      margin: 0 auto var(--space-4);
+      font-size: 18px;
+    }
+    .final-cta .cta-buttons {
+      justify-content: center;
+    }
+
+    @media (max-width: 720px) {
+      .checklist-table { font-size: 14px; }
+      .checklist-table thead th {
+        font-size: 11px;
+        letter-spacing: 1px;
+        padding: var(--space-2) 10px;
+      }
+      .checklist-table td { padding: 12px 10px; }
+      .checklist-table thead th.col-task { width: 50%; }
+      .mark-yes, .mark-no { width: 24px; height: 24px; font-size: 14px; }
+      .tab-btn { padding: 12px 14px; font-size: 13px; letter-spacing: 1px; }
+      .final-cta h2 { font-size: 36px; }
+      .final-cta { padding: var(--space-8) 0; }
+    }
+    @media (max-width: 480px) {
+      .checklist-table thead th.col-task { width: 44%; }
+      .checklist-table thead th.col-tier { width: 18.66%; }
+    }
+  </style>
+</head>
+<body>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"HouseholdCleaningService","name":"North Columbus Cleaning Company","image":"https://northcolumbuscleaning.com/images/logo.svg","url":"https://northcolumbuscleaning.com/checklist","telephone":"+1-614-352-2588","email":"admin@northcolumbuscleaning.com","priceRange":"$$","address":{"@type":"PostalAddress","addressLocality":"Columbus","addressRegion":"OH","addressCountry":"US"},"openingHours":"Mo-Sa 07:00-19:00"}
+  </script>
+
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <span class="topbar-item">Serving Columbus, OH and surrounding neighborhoods</span>
+      <span class="topbar-item"><a href="tel:+16143522588">(614) 352-2588</a></span>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/" class="logo-link" aria-label="North Columbus Cleaning Company home">
+        <img src="/images/logo-horizontal.svg" alt="North Columbus Cleaning Company" />
+      </a>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="nav" id="nav">
+        <a href="/services">Services</a>
+        <a href="/locations">Areas</a>
+        <a href="/#why">Why us</a>
+        <a href="/#gallery">Our work</a>
+        <a href="/#faq">FAQ</a>
+        <a href="/login">Login</a>
+        <a href="/book-now" class="btn btn-primary nav-cta">Book now</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero hero-compact">
+    <div class="container hero-inner" style="grid-template-columns: 1fr; text-align: center;">
+      <div class="hero-text" style="margin: 0 auto;">
+        <span class="eyebrow">What's included</span>
+        <h1>Our cleaning checklist</h1>
+        <p class="lead" style="margin: 0 auto var(--space-3);">A room-by-room breakdown of exactly what we clean — and what's included in each service level. Pick a room to see the details.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="container">
+      <div class="checklist-intro">
+        <p>Every home is different, but our process is the same: top-to-bottom, room by room, with a senior cleaner double-checking the work before we leave. Here's what gets done at each service level.</p>
+      </div>
+
+      <div class="tabs">
+        <div class="tab-list" role="tablist" aria-label="Cleaning checklist by room">
+          <button class="tab-btn" role="tab" aria-selected="true" aria-controls="panel-kitchen" id="tab-kitchen" data-tab="kitchen">Kitchen</button>
+          <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-bathrooms" id="tab-bathrooms" data-tab="bathrooms" tabindex="-1">Bathrooms</button>
+          <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-bedrooms" id="tab-bedrooms" data-tab="bedrooms" tabindex="-1">Bedrooms</button>
+          <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-common" id="tab-common" data-tab="common" tabindex="-1">Common Areas</button>
+        </div>
+
+        <!-- KITCHEN -->
+        <div class="tab-panel is-active" id="panel-kitchen" role="tabpanel" aria-labelledby="tab-kitchen">
+          <div class="checklist-table-wrap">
+            <table class="checklist-table">
+              <thead>
+                <tr>
+                  <th class="col-task">Kitchen</th>
+                  <th class="col-tier">Standard</th>
+                  <th class="col-tier">Deep</th>
+                  <th class="col-tier">Move-In/Out</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="task">Remove cobwebs</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Dust light fixtures</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Dust blinds, shutters, windowsills, and window frames</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Dust ceiling fans</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean &amp; dry sink and soap dish</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean countertops and back splash</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean microwave (inside &amp; outside)</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean stove burners, stovetop, front &amp; control panels</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean appliance exteriors</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean items (toaster, Keurig, etc.)</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean all light switches &amp; doorknobs</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Wipe down and disinfect cabinets</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Trash can emptied &amp; wiped down</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Vacuum, sweep, &amp; mop floors</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Gather all dishes &amp; glassware (load into dishwasher)</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td></tr>
+                <tr><td class="task">Clean table &amp; chairs</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td></tr>
+                <tr><td class="task">Clean doors &amp; frames</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean light fixtures</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Wet wipe blinds</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean window ledges</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Wet wipe baseboards</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean inside cabinets, pantry, drawers</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean hood range</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean inside oven</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean inside refrigerator</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- BATHROOMS -->
+        <div class="tab-panel" id="panel-bathrooms" role="tabpanel" aria-labelledby="tab-bathrooms" hidden>
+          <div class="checklist-table-wrap">
+            <table class="checklist-table">
+              <thead>
+                <tr>
+                  <th class="col-task">Bathrooms</th>
+                  <th class="col-tier">Standard</th>
+                  <th class="col-tier">Deep</th>
+                  <th class="col-tier">Move-In/Out</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="task">Remove cobwebs</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Dust light fixtures</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Dust blinds, shutters, windowsills, and window frames</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Dust &amp; tidy knick-knacks, personal items, hand towels</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean shower / tub</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean &amp; dry sink, counters, soap dish</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean and buff all mirrors &amp; glass</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Polish towel racks &amp; toilet paper holder</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean inside and out of toilet &amp; surrounding areas</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean all light switches &amp; doorknobs</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Wipe down and disinfect cabinets</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Vacuum, sweep, &amp; mop floors</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Empty garbage and replace bag</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean doors &amp; frames</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean light fixtures</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Wet wipe blinds</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean window ledges</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean ceiling fans &amp; vents</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean inside cabinets &amp; drawers</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- BEDROOMS -->
+        <div class="tab-panel" id="panel-bedrooms" role="tabpanel" aria-labelledby="tab-bedrooms" hidden>
+          <div class="checklist-table-wrap">
+            <table class="checklist-table">
+              <thead>
+                <tr>
+                  <th class="col-task">Bedrooms</th>
+                  <th class="col-tier">Standard</th>
+                  <th class="col-tier">Deep</th>
+                  <th class="col-tier">Move-In/Out</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="task">Remove cobwebs</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Dust light fixtures</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Dust blinds, shutters, windowsills, and window frames</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Dust ceiling fans</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Dust furniture, lamps, lampshades, hanging lights</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Tidy area(s), fold blankets, arrange pillows</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean mirrors</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean all light switches &amp; doorknobs</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Vacuum, sweep, &amp; mop floors</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Empty garbage and replace bag</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Dust &amp; tidy knick-knacks &amp; personal items</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-na" aria-label="Not applicable">N/A</span></td></tr>
+                <tr><td class="task">Make bed(s)</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-na" aria-label="Not applicable">N/A</span></td></tr>
+                <tr><td class="task">Clean doors &amp; frames</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean light fixtures</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Wet wipe blinds</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean window ledges</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Wet wipe baseboards</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Vacuum furniture</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-na" aria-label="Not applicable">N/A</span></td></tr>
+                <tr><td class="task">Wipe down furniture</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-na" aria-label="Not applicable">N/A</span></td></tr>
+                <tr><td class="task">Clean inside cabinets &amp; drawers</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- COMMON AREAS -->
+        <div class="tab-panel" id="panel-common" role="tabpanel" aria-labelledby="tab-common" hidden>
+          <div class="checklist-table-wrap">
+            <table class="checklist-table">
+              <thead>
+                <tr>
+                  <th class="col-task">Common Areas</th>
+                  <th class="col-tier">Standard</th>
+                  <th class="col-tier">Deep</th>
+                  <th class="col-tier">Move-In/Out</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="task">Remove cobwebs</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Dust light fixtures</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Dust blinds, shutters, windowsills, and window frames</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Dust ceiling fans</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Dust furniture, lamps, lampshades, hanging lights</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Tidy area(s), fold blankets, arrange pillows</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean mirrors</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean all light switches &amp; doorknobs</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Vacuum, sweep, &amp; mop floors</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Empty garbage and replace bag</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Dust &amp; tidy knick-knacks &amp; personal items</td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-na" aria-label="Not applicable">N/A</span></td></tr>
+                <tr><td class="task">Clean doors &amp; frames</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean light fixtures</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Wet wipe blinds</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Clean window ledges</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Wet wipe baseboards</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Vacuum furniture</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-na" aria-label="Not applicable">N/A</span></td></tr>
+                <tr><td class="task">Wipe down furniture</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td><td class="mark"><span class="mark-na" aria-label="Not applicable">N/A</span></td></tr>
+                <tr><td class="task">Clean inside cabinets &amp; drawers</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+                <tr><td class="task">Sweep out garage</td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-no" aria-label="Not included">✕</span></td><td class="mark"><span class="mark-yes" aria-label="Included">✓</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="legend" aria-hidden="true">
+          <span class="legend-item"><span class="mark-yes">✓</span> Included</span>
+          <span class="legend-item"><span class="mark-no">✕</span> Not included</span>
+          <span class="legend-item"><span class="mark-na">N/A</span> Not applicable</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="final-cta">
+    <div class="container">
+      <span class="eyebrow light">Ready to book</span>
+      <h2>Get Started Now!</h2>
+      <p>Pick a date, get a flat-rate quote, and our team will handle the rest. No hidden fees, no surprises.</p>
+      <div class="cta-buttons">
+        <a href="/book-now" class="btn btn-secondary">Book online</a>
+        <a href="tel:+16143522588" class="btn btn-outline-light">(614) 352-2588</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <section class="footer-location">
+      <div class="container footer-location-inner">
+        <div class="footer-location-info" itemscope itemtype="https://schema.org/LocalBusiness">
+          <span class="eyebrow light">Visit us</span>
+          <p class="footer-location-name" itemprop="name">North Columbus Cleaning | House Cleaning Services</p>
+          <address itemprop="address" itemscope itemtype="https://schema.org/PostalAddress">
+            <span itemprop="streetAddress">832 Callaway Lane</span>,
+            <span itemprop="addressLocality">Sunbury</span>,
+            <span itemprop="addressRegion">OH</span>
+            <span itemprop="postalCode">43074</span>
+          </address>
+          <p><strong>Phone</strong> <a href="tel:+16143522588" itemprop="telephone">(614) 352-2588</a></p>
+          <p><strong>Web</strong> <a href="https://www.northcolumbuscleaning.com/" itemprop="url">northcolumbuscleaning.com</a></p>
+          <p class="footer-location-description" itemprop="description">Residential and commercial cleaning services in Worthington, Clintonville, Westerville, Dublin, Powell, Upper Arlington, New Albany, Gahanna, Polaris, Lewis Center, Delaware &amp; Hilliard, OH.</p>
+          <meta itemprop="foundingDate" content="2026-04-23" />
+          <meta itemprop="priceRange" content="$$" />
+        </div>
+        <div class="footer-location-map">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3045.3662451718956!2d-82.8825419!3d40.2453912!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x26dc59d42367e577%3A0x8a98bb9156f9b65a!2sNorth%20Columbus%20Cleaning%20%7C%20House%20Cleaning%20Services!5e0!3m2!1sen!2sus!4v1776984116067!5m2!1sen!2sus"
+            title="North Columbus Cleaning location on Google Maps"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </div>
+    </section>
+    <div class="container footer-inner">
+      <div class="footer-col">
+        <img src="/images/logo-horizontal.svg" alt="North Columbus Cleaning Company" />
+        <p class="footer-tag">Residential and commercial cleaning serving North Columbus, Ohio.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Services</h5>
+        <ul>
+          <li><a href="/services/residential-cleaning">Residential cleaning</a></li>
+          <li><a href="/services/commercial-cleaning">Commercial cleaning</a></li>
+          <li><a href="/services/deep-cleaning">Deep cleaning</a></li>
+          <li><a href="/services/recurring-service">Recurring service</a></li>
+          <li><a href="/services/move-in-move-out-cleaning">Move-in and move-out cleaning</a></li>
+          <li><a href="/services/short-term-rental-cleaning">Short-term rental cleaning</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Areas we serve</h5>
+        <ul>
+          <li><a href="/locations/worthington">Worthington</a></li>
+          <li><a href="/locations/clintonville">Clintonville</a></li>
+          <li><a href="/locations/westerville">Westerville</a></li>
+          <li><a href="/locations/dublin">Dublin</a></li>
+          <li><a href="/locations/powell">Powell</a></li>
+          <li><a href="/locations/upper-arlington">Upper Arlington</a></li>
+          <li><a href="/locations">All areas &rarr;</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Contact &amp; legal</h5>
+        <ul>
+          <li><a href="tel:+16143522588">(614) 352-2588</a></li>
+          <li><a href="mailto:admin@northcolumbuscleaning.com">admin@northcolumbuscleaning.com</a></li>
+          <li>Mon&ndash;Sat, 7am&ndash;7pm</li>
+          <li><a href="/privacy">Privacy policy</a></li>
+          <li><a href="/sms-terms">SMS terms</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">
+        <p>&copy; <span id="year"></span> North Columbus Cleaning Company &middot; <a href="/privacy">Privacy</a> &middot; <a href="/sms-terms">SMS terms</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/script.js" defer></script>
+  <script>
+    (function () {
+      var tabs = document.querySelectorAll('.tab-btn');
+      var panels = document.querySelectorAll('.tab-panel');
+
+      function activate(target) {
+        tabs.forEach(function (t) {
+          var selected = t.dataset.tab === target;
+          t.setAttribute('aria-selected', selected ? 'true' : 'false');
+          t.tabIndex = selected ? 0 : -1;
+        });
+        panels.forEach(function (p) {
+          var match = p.id === 'panel-' + target;
+          p.classList.toggle('is-active', match);
+          if (match) { p.removeAttribute('hidden'); } else { p.setAttribute('hidden', ''); }
+        });
+      }
+
+      tabs.forEach(function (t, i) {
+        t.addEventListener('click', function () { activate(t.dataset.tab); });
+        t.addEventListener('keydown', function (e) {
+          if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+          e.preventDefault();
+          var next = e.key === 'ArrowRight'
+            ? tabs[(i + 1) % tabs.length]
+            : tabs[(i - 1 + tabs.length) % tabs.length];
+          next.focus();
+          activate(next.dataset.tab);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
