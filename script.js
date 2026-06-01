@@ -112,13 +112,14 @@
         '<h2 id="promo-title">30% off your first clean</h2>' +
         '<p>Get your home Summer-ready. Pop in your email and we&rsquo;ll send you the code.</p>' +
         '<form id="promo-form" novalidate>' +
+          '<input type="text" name="firstName" id="promo-name" placeholder="First name" required autocomplete="given-name" />' +
           '<input type="email" name="email" id="promo-email" placeholder="you@example.com" required autocomplete="email" />' +
           '<button type="submit" id="promo-submit">Get my 30% off</button>' +
           '<div class="promo-error" id="promo-error" hidden></div>' +
-          '<div class="promo-note">We only use your email to send the code and follow up if you have questions. No spam.</div>' +
+          '<div class="promo-note">We only use your info to send the code and follow up if you have questions. No spam.</div>' +
         '</form>' +
         '<div class="promo-success">' +
-          '<p style="margin-bottom:6px;">Use this code at checkout:</p>' +
+          '<p id="promo-thanks" style="margin-bottom:6px;font-size:17px;">Use this code at checkout:</p>' +
           '<div class="promo-code" id="promo-code">SUMMER30</div>' +
           '<p style="margin-bottom:16px;font-size:14px;">Valid on your first cleaning. One per household.</p>' +
           '<a href="/book-now" class="promo-cta">Book now</a>' +
@@ -139,8 +140,8 @@
     if (!bd) return;
     bd.classList.add('open');
     bd.hidden = false;
-    var email = document.getElementById('promo-email');
-    if (email) setTimeout(function () { email.focus(); }, 180);
+    var name = document.getElementById('promo-name');
+    if (name) setTimeout(function () { name.focus(); }, 180);
   }
 
   function close(reason) {
@@ -153,10 +154,14 @@
     }
   }
 
-  function showSuccess(code) {
+  function showSuccess(code, firstName) {
     var modal = document.getElementById('promo-modal');
     var codeEl = document.getElementById('promo-code');
+    var thanks = document.getElementById('promo-thanks');
     if (codeEl && code) codeEl.textContent = code;
+    if (thanks && firstName) {
+      thanks.textContent = 'Thanks, ' + firstName + '! Use this code at checkout:';
+    }
     if (modal) modal.classList.add('is-success');
     try { localStorage.setItem(STATE_KEY, 'signed_up'); } catch (_) {}
   }
@@ -177,7 +182,13 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       error.hidden = true;
+      var firstName = (form.firstName.value || '').trim();
       var email = (form.email.value || '').trim();
+      if (!firstName) {
+        error.textContent = 'Please enter your first name.';
+        error.hidden = false;
+        return;
+      }
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
         error.textContent = 'Please enter a valid email address.';
         error.hidden = false;
@@ -188,27 +199,27 @@
       fetch('/api/promo-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email })
+        body: JSON.stringify({ email: email, firstName: firstName })
       })
         .then(function (r) { return r.json().catch(function () { return {}; }); })
         .then(function (data) {
           submit.disabled = false;
           submit.textContent = 'Get my 30% off';
           if (data && data.code) {
-            showSuccess(data.code);
+            showSuccess(data.code, firstName);
           } else if (data && data.error) {
             error.textContent = data.error;
             error.hidden = false;
           } else {
             // Network or partial failure — still grant the code so visitor isn't stuck
-            showSuccess('SUMMER30');
+            showSuccess('SUMMER30', firstName);
           }
         })
         .catch(function () {
           submit.disabled = false;
           submit.textContent = 'Get my 30% off';
           // Network failure: still reveal the code, log captured email locally
-          showSuccess('SUMMER30');
+          showSuccess('SUMMER30', firstName);
         });
     });
   }
