@@ -245,3 +245,15 @@
     if (!e.relatedTarget && e.clientY <= 0) trigger();
   });
 })();
+
+// Sticky mobile CTA: show after user scrolls past hero
+(function () {
+  var bar = document.getElementById('sticky-cta');
+  if (!bar) return;
+  function update() {
+    if (window.scrollY > 480) bar.classList.add('is-visible');
+    else bar.classList.remove('is-visible');
+  }
+  window.addEventListener('scroll', update, { passive: true });
+  update();
+})();

@@ -93,9 +93,9 @@
 
       <nav class="nav" id="nav">
         <a href="/services">Services</a>
-        <a href="/checklist">Checklist</a>
+        <a href="/quote">Pricing</a>
         <a href="/locations">Areas</a>
-        <a href="#why">Why us</a>
+        <a href="#owner">About us</a>
         <a href="#gallery">Our work</a>
         <a href="#faq">FAQ</a>
         <a href="/login">Login</a>
@@ -114,7 +114,7 @@
           Residential and commercial cleaning services across North Columbus, Ohio. Insured, bonded, background-checked crews &mdash; clear pricing and work that holds up.
         </p>
         <div class="hero-cta">
-          <a href="#quote" class="btn btn-primary">Get a quote</a>
+          <a href="/quote" class="btn btn-primary">See your price</a>
           <a href="tel:+16143522588" class="btn btn-outline">(614) 352-2588</a>
         </div>
         <ul class="hero-trust">
@@ -134,6 +134,29 @@
       </div>
       <div class="hero-visual">
         <img src="/images/hero.jpg" fetchpriority="high" width="1200" height="1600" alt="A spotless kitchen cleaned by North Columbus Cleaning Company" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GUARANTEE STRIP ============ -->
+  <section class="guarantee-strip" aria-label="Our guarantee">
+    <div class="container guarantee-inner">
+      <div class="guarantee-badge" aria-hidden="true">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2 L20 6 V12 C20 16.5 16 20.5 12 22 C8 20.5 4 16.5 4 12 V6 Z"/>
+          <polyline points="8.5 12 11 14.5 15.5 9.5"/>
+        </svg>
+      </div>
+      <div class="guarantee-text">
+        <h3>100% Satisfaction guarantee</h3>
+        <p>Not happy with anything we did? Tell us within 24 hours and we come back and make it right &mdash; at no charge. Period.</p>
+      </div>
+      <div class="guarantee-meta">
+        <ul>
+          <li>$1M general-liability insured</li>
+          <li>Bonded crews, background-checked</li>
+          <li>Flat-rate pricing &mdash; no surprises</li>
+        </ul>
       </div>
     </div>
   </section>
@@ -195,6 +218,31 @@
             <p>Guest turnovers on your schedule. Linens, restock, and ready for the next booking.</p>
           </div>
         </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ OWNER STORY ============ -->
+  <section id="owner" class="section section-alt">
+    <div class="container owner-inner">
+      <div class="owner-photo">
+        <!-- TODO: replace with real owner photo. 1:1 square crop, ~800x800px works well. -->
+        <img src="/images/owner-placeholder.jpg" alt="Founder of North Columbus Cleaning" loading="lazy" onerror="this.style.display='none'" />
+        <div class="owner-photo-fallback" aria-hidden="true">NCC</div>
+      </div>
+      <div class="owner-text">
+        <span class="eyebrow">Meet the team</span>
+        <h2>A neighbor, not a faceless service</h2>
+        <p class="lead">
+          North Columbus Cleaning started in Columbus, by a Columbus team, for Columbus homes and offices. We're not a national franchise. When you call, a real local person picks up. When something needs to be fixed, it's our reputation on the line &mdash; not a corporate office four states away.
+        </p>
+        <p>
+          Every crew member is hand-picked, background-checked, and trained on our room-by-room checklist before they ever step into a customer's home. We treat your space like our own.
+        </p>
+        <div class="owner-cta">
+          <a href="/quote" class="btn btn-primary">See your price</a>
+          <a href="tel:+16143522588" class="btn btn-outline">Talk to us &mdash; (614) 352-2588</a>
+        </div>
       </div>
     </div>
   </section>
@@ -433,28 +481,44 @@
 
       <div class="faq">
         <details>
-          <summary>Do I need to provide cleaning supplies?</summary>
-          <p>No. We bring everything, including eco-friendly options on request. If you prefer your own products, just let us know.</p>
+          <summary>How much does a cleaning cost?</summary>
+          <p>Flat-rate, based on the size of your home and the type of clean. <a href="/quote">See your exact price in 30 seconds</a> &mdash; no email or phone number required to look. Standard 3-bed / 2-bath homes start around $110 per visit, with up to 20% off for recurring service.</p>
         </details>
         <details>
           <summary>Are you insured and bonded?</summary>
-          <p>Yes. North Columbus Cleaning Company is fully insured and bonded, and every crew member passes a background check.</p>
+          <p>Yes &mdash; $1 million in general-liability coverage, fully bonded, every crew member background-checked. If anything were ever damaged, you're covered.</p>
         </details>
         <details>
-          <summary>How much does a cleaning cost?</summary>
-          <p>It depends on the size of the space, the type of clean, and frequency. Most standard homes fall between $120 and $250. Request a free quote for a clear number.</p>
+          <summary>What if I'm not happy with the clean?</summary>
+          <p>Tell us within 24 hours and we come back and re-do whatever needs re-doing &mdash; no charge, no hassle. We don't ask questions, we just fix it.</p>
+        </details>
+        <details>
+          <summary>Do I need to provide cleaning supplies?</summary>
+          <p>No. We bring everything &mdash; pro-grade products, vacuum, microfibers, all of it. Eco-friendly options available on request. If you prefer your own products, just let us know.</p>
         </details>
         <details>
           <summary>Do I need to be home during the cleaning?</summary>
-          <p>Up to you. Many clients give us access through a code or lockbox.</p>
+          <p>Up to you. Many clients give us access through a door code or lockbox. We treat your space like our own whether you're there or not.</p>
         </details>
         <details>
-          <summary>What if something is missed?</summary>
-          <p>Let us know within 24 hours. We come back and make it right at no extra cost.</p>
+          <summary>Are you pet-friendly?</summary>
+          <p>Absolutely. Tell us about your pets when you book &mdash; we'll work around them. Eco-friendly products available if you'd rather keep harsher chemicals away from animals.</p>
+        </details>
+        <details>
+          <summary>How soon can you come?</summary>
+          <p>Usually within a few days. Call us at (614) 352-2588 and we'll give you the next available slot for your area.</p>
+        </details>
+        <details>
+          <summary>What's the difference between a deep clean and a standard clean?</summary>
+          <p>A deep clean covers everything a standard clean does plus baseboards, blinds, inside the oven and fridge, vents, and grout work. If it's been a while or you're moving in, deep is the move. Most customers start with a deep clean, then switch to standard for recurring service.</p>
         </details>
         <details>
           <summary>How do I reschedule or cancel?</summary>
-          <p>Give us at least 24 hours notice by phone or email. We reschedule at no charge.</p>
+          <p>Give us at least 24 hours notice by phone or email. We reschedule at no charge. Inside 24 hours, there's a small fee to cover the crew's blocked time &mdash; we'll explain the specifics when you book.</p>
+        </details>
+        <details>
+          <summary>How do I pay?</summary>
+          <p>Card on file, charged after each clean. No cash, no checks, no awkward end-of-job moments.</p>
         </details>
       </div>
     </div>
@@ -539,5 +603,6 @@
   </footer>
 
   <script src="/script.js" defer></script>
-</body>
+  <div class="sticky-cta" id="sticky-cta" aria-label="Quick actions"><a class="sticky-cta-call" href="tel:+16143522588">📞 Call (614) 352-2588</a><a class="sticky-cta-quote" href="/quote">Get instant price</a></div>
+  </body>
 </html>
