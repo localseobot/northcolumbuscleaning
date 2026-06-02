@@ -71,7 +71,20 @@
     .ob-done-banner { text-align:center; padding:var(--space-5); background:rgba(45,122,74,.08); border:1px solid var(--sage); border-radius:var(--radius-lg); }
     .ob-done-banner h2 { color:var(--forest); }
     .ob-loading, .ob-error { text-align:center; padding:var(--space-8) 0; }
-    @media (max-width:540px){ .field-row{grid-template-columns:1fr;} }
+    .guide-link {
+      display:inline-block; font-weight:900; font-size:15px; line-height:1.3;
+      color:var(--forest); background:rgba(45,122,74,.10); border:1px solid var(--sage);
+      border-radius:var(--radius-sm); padding:10px 14px; text-decoration:none;
+    }
+    .guide-link:hover { background:rgba(45,122,74,.18); }
+    @media (max-width:540px){
+      .field-row { grid-template-columns:1fr; }
+      .ob-wrap h1 { font-size:28px; }
+      .ob-wrap .lead { font-size:16px; }
+      .ob-card { padding:var(--space-3); }
+      .ob-card h2 { font-size:19px; }
+      .guide-link { display:block; text-align:center; font-size:15px; }
+    }
   </style>
 </head>
 <body>
@@ -213,7 +226,7 @@
           <h2>3. Review onboarding &amp; checklist</h2>
           <span class="ob-status pending" id="status-checklist">Required</span>
           <div class="ob-body" id="body-checklist">
-            <p style="margin:10px 0 12px"><a href="/onboarding-guide" target="_blank" rel="noopener" class="btn btn-secondary" style="width:100%">📖 Open the full onboarding guide ↗</a></p>
+            <p style="margin:10px 0 14px"><a href="/onboarding-guide" target="_blank" rel="noopener" class="guide-link">📖 Open the full onboarding guide ↗</a></p>
             <div class="doc-box" id="doc-text" tabindex="0"></div>
             <ul class="check-list" id="checklist-items"></ul>
             <form id="checklist-form">
@@ -259,26 +272,38 @@
       errorEl.innerHTML = '<p>' + msg + '</p>';
     }
 
-    // ── Signature pad ──
+    // ── Signature pad (pointer events; sizes lazily so it works after the
+    //    card becomes visible and on touch screens) ──
     function makeSigPad(canvas) {
       var ctx = canvas.getContext('2d');
-      var drawing = false, dirty = false, last = null;
-      function resize() {
-        var ratio = window.devicePixelRatio || 1;
+      var drawing = false, dirty = false, last = null, sized = false;
+      // Match the backing store to the displayed size. Only (re)size when the
+      // canvas is visible (nonzero rect) and either unsized or still empty, so
+      // we never wipe an in-progress signature.
+      function ensureSize() {
         var rect = canvas.getBoundingClientRect();
-        canvas.width = rect.width * ratio;
-        canvas.height = rect.height * ratio;
-        ctx.scale(ratio, ratio);
-        ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#1a2b1f';
+        if (!rect.width || !rect.height) return false;
+        if (sized && (dirty || (canvas.width === Math.round(rect.width * dpr()) ))) return true;
+        var r = dpr();
+        canvas.width = Math.round(rect.width * r);
+        canvas.height = Math.round(rect.height * r);
+        ctx.setTransform(r, 0, 0, r, 0, 0);
+        ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#1a2b1f';
+        sized = true; return true;
       }
-      setTimeout(resize, 0);
-      window.addEventListener('resize', function () { /* keep simple: don't wipe on resize */ });
+      function dpr() { return window.devicePixelRatio || 1; }
       function pos(e) {
         var rect = canvas.getBoundingClientRect();
-        var p = e.touches ? e.touches[0] : e;
-        return { x: p.clientX - rect.left, y: p.clientY - rect.top };
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
       }
-      function start(e) { drawing = true; last = pos(e); e.preventDefault(); }
+      function start(e) {
+        if (!ensureSize()) return;
+        drawing = true; last = pos(e);
+        if (e.pointerId != null && canvas.setPointerCapture) {
+          try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+        }
+        e.preventDefault();
+      }
       function move(e) {
         if (!drawing) return;
         var p = pos(e);
@@ -286,14 +311,16 @@
         last = p; dirty = true; e.preventDefault();
       }
       function end() { drawing = false; }
-      canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move);
-      window.addEventListener('mouseup', end);
-      canvas.addEventListener('touchstart', start, { passive: false });
-      canvas.addEventListener('touchmove', move, { passive: false });
-      canvas.addEventListener('touchend', end);
+      // Pointer events cover mouse, touch and pen uniformly (touch-action:none
+      // in CSS stops the page scrolling while signing).
+      canvas.addEventListener('pointerdown', start);
+      canvas.addEventListener('pointermove', move);
+      canvas.addEventListener('pointerup', end);
+      canvas.addEventListener('pointercancel', end);
+      window.addEventListener('resize', function () { if (!dirty) ensureSize(); });
       return {
         isEmpty: function () { return !dirty; },
-        clear: function () { ctx.clearRect(0, 0, canvas.width, canvas.height); dirty = false; },
+        clear: function () { ensureSize(); ctx.clearRect(0, 0, canvas.width, canvas.height); dirty = false; },
         dataUrl: function () { return dirty ? canvas.toDataURL('image/png') : ''; }
       };
     }
