@@ -14,15 +14,28 @@
 //   { firstName, lastName, email, phone? }
 
 import { ghl } from "./_lib/ghl.js";
+import { sendEmail } from "./_lib/resend.js";
+import { sendGhlSms, INTERNAL_LINE } from "./_lib/ghl-sms.js";
+import { signToken, newNonce } from "./_lib/onboard-token.js";
 import {
   RECRUITMENT_PIPELINE_ID,
   STAGE_FOR_TEST_CLEAN,
 } from "./_lib/onboarding-complete.js";
-import { TAG_ONBOARDING_ELIGIBLE } from "./_lib/onboarding-fields.js";
+import {
+  TAG_ONBOARDING_ELIGIBLE,
+  CONTACT_ONBOARDING_TOKEN_NONCE,
+} from "./_lib/onboarding-fields.js";
 
 export const config = { runtime: "nodejs" };
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+function siteBase() {
+  return (process.env.SITE_BASE_URL || "https://www.northcolumbuscleaning.com").replace(/\/$/, "");
+}
+function escapeHtml(s) {
+  return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -124,6 +137,61 @@ export default async function handler(req, res) {
     }
   } catch (e) {
     result.opportunityWarning = e.message;
+  }
+
+  // 4. Send the welcome email + SMS with a ready-to-use onboarding link.
+  //    We mint a token (set the nonce, then sign it) so the link works on
+  //    click; the email/OTP gate on /onboard remains for re-entry.
+  const nonce = newNonce();
+  try {
+    await ghl({
+      method: "PUT",
+      path: `/contacts/${contactId}`,
+      body: { customFields: [{ id: CONTACT_ONBOARDING_TOKEN_NONCE, field_value: nonce }] },
+    });
+  } catch (e) {
+    result.nonceWarning = e.message;
+  }
+  const link = `${siteBase()}/onboard?t=${encodeURIComponent(signToken({ contactId, nonce }))}`;
+  const guide = `${siteBase()}/onboarding-guide`;
+  const greet = firstName || "there";
+
+  if (email) {
+    const html = `
+      <div style="font-family:Inter,Arial,sans-serif;color:#2b2b2b;max-width:520px">
+        <h2 style="color:#1a4d2e">Welcome to North Columbus Cleaning, ${escapeHtml(greet)}!</h2>
+        <p>You've been added to our team. Before your first job, please complete your onboarding — it takes just a few minutes:</p>
+        <ul>
+          <li>Fill out or upload your <strong>W-9</strong></li>
+          <li>Sign the <strong>contractor agreement</strong></li>
+          <li>Review our <strong>onboarding guide &amp; checklist</strong></li>
+        </ul>
+        <p style="margin:24px 0">
+          <a href="${link}" style="background:#1a4d2e;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:bold">Start onboarding</a>
+        </p>
+        <p style="font-size:14px">First, read the <a href="${guide}">onboarding guide</a> to see how everything works.</p>
+        <p style="font-size:13px;color:#666">If the button doesn't work, paste this link into your browser:<br>${link}</p>
+        <p style="font-size:13px;color:#666">This link is personal to you and expires in 14 days. You can also go to ${siteBase()}/onboard and enter this email to get a code.</p>
+      </div>`;
+    const er = await sendEmail({
+      to: email,
+      subject: "Welcome to North Columbus Cleaning — finish your onboarding",
+      html,
+      tags: ["onboarding", "welcome"],
+    });
+    result.email = er.id ? "sent" : er.skipped ? er.reason : er.error;
+  } else {
+    result.email = "no email on provider";
+  }
+
+  if (phone) {
+    const sr = await sendGhlSms({
+      to: phone,
+      firstName,
+      fromNumber: INTERNAL_LINE,
+      message: `Hi ${greet}, welcome to North Columbus Cleaning! Finish your onboarding (W-9, contractor agreement, quick review) here: ${link}`,
+    });
+    result.sms = sr.ok ? "sent" : sr.error;
   }
 
   return res.status(200).json(result);
