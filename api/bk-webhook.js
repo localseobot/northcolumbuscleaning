@@ -115,6 +115,68 @@ function normPhone(raw) {
 function lower(v) {
   return s(v).toLowerCase();
 }
+// Normalize Zapier/BK field-name variations into the keys we use below.
+// Accepts: first_name/firstName/customer_first_name, customer_name (split),
+// email/customer_email, phone/customer_phone, etc.
+function normalizeBody(b) {
+  const out = { ...b };
+
+  // First / last name — handle "customer_name" full name → split
+  const fullName = s(b.customer_name || b.full_name || b.name);
+  if (!out.first_name && !out.firstName && fullName) {
+    const parts = fullName.split(/\s+/);
+    out.first_name = parts[0];
+    if (parts.length > 1) out.last_name = parts.slice(1).join(" ");
+  }
+  if (!out.first_name && (b.customer_first_name || b.firstName))
+    out.first_name = b.customer_first_name || b.firstName;
+  if (!out.last_name && (b.customer_last_name || b.lastName))
+    out.last_name = b.customer_last_name || b.lastName;
+
+  // Email / phone
+  if (!out.email) out.email = b.customer_email || b.email_address || b.customerEmail;
+  if (!out.phone)
+    out.phone = b.customer_phone || b.phone_number || b.customerPhone;
+
+  // Booking ID
+  if (!out.booking_id)
+    out.booking_id = b.id || b.booking_number || b.bookingId;
+
+  // Appointment date+time — combine BK's separate date + arrival fields
+  if (!out.appointment_datetime) {
+    const date = s(b.booking_date || b.appointment_date || b.service_date);
+    const time = s(b.arrival_time || b.appointment_time || b.start_time);
+    if (date && time) out.appointment_datetime = `${date} ${time}`;
+    else if (date) out.appointment_datetime = date;
+    else if (b.datetime) out.appointment_datetime = b.datetime;
+  }
+
+  // Service / frequency
+  if (!out.service_type)
+    out.service_type = b.service || b.service_name || b.cleaning_type;
+  if (!out.frequency)
+    out.frequency = b.recurring || b.cadence || b.service_frequency;
+
+  // Property details
+  if (!out.bedrooms) out.bedrooms = b.beds || b.bedroom_count || b.num_bedrooms;
+  if (!out.bathrooms)
+    out.bathrooms = b.baths || b.bathroom_count || b.num_bathrooms;
+  if (!out.sqft) out.sqft = b.square_feet || b.square_footage || b.sq_ft;
+
+  // Price
+  if (!out.price_total)
+    out.price_total = b.total || b.total_price || b.amount || b.price;
+
+  // Notes
+  if (!out.notes)
+    out.notes = b.customer_notes || b.special_notes || b.special_instructions;
+
+  // Address parts (BK often gives a single address string)
+  if (!out.address) out.address = b.street_address || b.address_line_1;
+  if (!out.zip) out.zip = b.postal_code || b.zipcode || b.zip_code;
+
+  return out;
+}
 function buildName(b) {
   const f = s(b.first_name || b.firstName);
   const l = s(b.last_name || b.lastName);
@@ -433,7 +495,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Invalid JSON" });
     }
   }
-  body = body || {};
+  body = normalizeBody(body || {});
 
   const event = lower(body.event || "booking.created");
   const result = {
