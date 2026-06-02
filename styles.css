@@ -25,7 +25,11 @@
 
 /* ============ RESET / BASE ============ */
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 body {
   margin: 0;
   font-family: var(--font-sans);
@@ -35,8 +39,21 @@ body {
   color: var(--charcoal);
   background: var(--off-white);
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
 }
 img, svg { display: block; max-width: 100%; }
+
+/* iOS won't zoom on focus for inputs >= 16px. Keep all form fields >=16px on mobile. */
+input, select, textarea, button {
+  font-family: inherit;
+  font-size: 16px;
+}
+
+/* Guarantee tap targets meet 44px Apple HIG minimum on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .btn { min-height: 48px; }
+}
 
 h1, h2, h3, h4 {
   font-family: var(--font-sans);
@@ -165,36 +182,82 @@ a:hover { color: var(--forest); text-decoration: underline; }
   display: inline-flex;
   align-items: center;
   text-decoration: none;
+  flex-shrink: 0;
 }
 .logo-link:hover { text-decoration: none; }
-.logo-link img { height: 56px; width: auto; }
+.logo-link img { height: 52px; width: auto; }
 
 .nav {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 .nav a {
   color: var(--forest);
   font-weight: 900;
-  font-size: 16px;
+  font-size: 15px;
   letter-spacing: 1px;
   text-transform: uppercase;
+  padding: 6px 0;
 }
 .nav a:hover { color: var(--sage); text-decoration: none; }
-.nav .nav-cta { color: var(--lime); letter-spacing: 2px; }
+.nav .nav-cta {
+  color: var(--lime);
+  letter-spacing: 2px;
+  padding: var(--space-1) var(--space-3);
+}
 .nav .nav-cta:hover { color: var(--lime); }
+.nav .nav-call {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--sage);
+  letter-spacing: 0.5px;
+}
+.nav .nav-call::before {
+  content: "📞";
+  font-size: 14px;
+}
+
+/* Mobile actions wrapper (call button + hamburger) — visible only on small screens */
+.header-mobile-actions {
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Click-to-call icon button — mobile only */
+.header-call-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--lime);
+  color: var(--forest);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease;
+}
+.header-call-btn:hover,
+.header-call-btn:active { background: var(--forest); color: var(--lime); text-decoration: none; }
 
 .nav-toggle {
   display: none;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: 0;
-  padding: var(--space-1);
+  padding: 0;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 .nav-toggle span {
   display: block;
-  width: 26px;
+  width: 24px;
   height: 2px;
   background: var(--forest);
   margin: 5px 0;
@@ -203,6 +266,21 @@ a:hover { color: var(--forest); text-decoration: underline; }
 .nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
 .nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
 .nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Backdrop overlay when mobile nav is open */
+.nav-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 51, 32, 0.4);
+  z-index: 40;
+  animation: fade-in 0.18s ease;
+}
+.nav-backdrop.is-visible { display: block; }
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
 /* ============ HERO ============ */
 .hero {
@@ -757,13 +835,10 @@ a:hover { color: var(--forest); text-decoration: underline; }
   .footer-inner { grid-template-columns: 1fr 1fr; gap: var(--space-4); }
 }
 
-@media (max-width: 720px) {
-  body { font-size: 16px; }
-  h1 { font-size: 40px; letter-spacing: -1px; }
-  h2 { font-size: 32px; }
-  h3 { font-size: 22px; }
-  .topbar-item:first-child { display: none; }
-  .nav-toggle { display: block; }
+/* Switch to hamburger nav earlier so tablets aren't cramped. */
+@media (max-width: 900px) {
+  .nav-toggle { display: inline-flex; }
+  .header-mobile-actions { display: inline-flex; }
   .nav {
     display: none;
     position: absolute;
@@ -774,19 +849,49 @@ a:hover { color: var(--forest); text-decoration: underline; }
     flex-direction: column;
     align-items: stretch;
     gap: 0;
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-2) var(--space-3) var(--space-3);
     border-bottom: 1px solid var(--light-gray);
+    box-shadow: 0 8px 24px rgba(13, 51, 32, 0.08);
+    z-index: 45;
   }
   .nav.open { display: flex; }
   .nav a {
-    padding: var(--space-2) 0;
+    padding: 14px 4px;
     border-bottom: 1px solid var(--light-gray);
+    font-size: 16px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
   }
-  .nav a:last-child {
+  .nav .nav-call {
+    color: var(--sage);
+    letter-spacing: 1px;
+  }
+  .nav .nav-cta {
     border-bottom: 0;
-    margin-top: var(--space-1);
+    margin-top: var(--space-2);
     text-align: center;
+    justify-content: center;
+    padding: 14px var(--space-3);
+    font-size: 16px;
   }
+}
+
+@media (max-width: 720px) {
+  body { font-size: 16px; }
+  h1 { font-size: 40px; letter-spacing: -1px; }
+  h2 { font-size: 32px; }
+  h3 { font-size: 22px; }
+  /* Hide topbar entirely — phone is now in header + sticky CTA */
+  .topbar { display: none; }
+  .logo-link img { height: 40px; }
+  .header-inner { padding: 10px var(--space-2); gap: var(--space-2); }
+  .container { padding: 0 var(--space-2); }
+  /* Hero CTAs stack full-width — easier to tap, no awkward wrapping */
+  .hero-cta { flex-direction: column; align-items: stretch; }
+  .hero-cta .btn { width: 100%; }
+  .hero { padding: var(--space-6) 0 var(--space-8); }
+  .hero-text .lead { font-size: 17px; }
   .services-grid,
   .services-grid-3,
   .benefits-grid,
@@ -798,6 +903,16 @@ a:hover { color: var(--forest); text-decoration: underline; }
   .areas-list { grid-template-columns: repeat(2, 1fr); }
   .form-row-2 { grid-template-columns: 1fr; }
   .footer-inner { grid-template-columns: 1fr; }
+}
+
+/* Extra-small phones (iPhone SE etc.) */
+@media (max-width: 380px) {
+  h1 { font-size: 34px; }
+  h2 { font-size: 28px; }
+  .container { padding: 0 14px; }
+  .header-mobile-actions { gap: 4px; }
+  .header-call-btn { width: 40px; height: 40px; }
+  .nav-toggle { width: 40px; height: 40px; }
 }
 
 /* ============ FOOTER LOCATION BLOCK ============ */

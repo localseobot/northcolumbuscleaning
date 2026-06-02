@@ -1,19 +1,47 @@
-// Mobile nav toggle
+// Mobile nav toggle + backdrop overlay
 (function () {
   var toggle = document.getElementById('nav-toggle');
   var nav = document.getElementById('nav');
   if (!toggle || !nav) return;
 
+  // Lazily create the backdrop on first open so we don't pollute every page
+  // with a dead element.
+  var backdrop = null;
+  function ensureBackdrop() {
+    if (backdrop) return backdrop;
+    backdrop = document.createElement('div');
+    backdrop.className = 'nav-backdrop';
+    backdrop.setAttribute('aria-hidden', 'true');
+    backdrop.addEventListener('click', close);
+    document.body.appendChild(backdrop);
+    return backdrop;
+  }
+
+  function open() {
+    nav.classList.add('open');
+    toggle.setAttribute('aria-expanded', 'true');
+    ensureBackdrop().classList.add('is-visible');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function close() {
+    nav.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+    if (backdrop) backdrop.classList.remove('is-visible');
+    document.body.style.overflow = '';
+  }
+
   toggle.addEventListener('click', function () {
-    var open = nav.classList.toggle('open');
-    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (nav.classList.contains('open')) close();
+    else open();
   });
 
   nav.querySelectorAll('a').forEach(function (a) {
-    a.addEventListener('click', function () {
-      nav.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
-    });
+    a.addEventListener('click', close);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && nav.classList.contains('open')) close();
   });
 })();
 
