@@ -1,12 +1,12 @@
 // Resend transactional email client.
 //
 // Env vars (set in Vercel — never commit):
-//   RESEND_API_KEY      Required. From https://resend.com/api-keys
-//   RESEND_FROM         Required. "North Columbus Cleaning <hello@northcolumbuscleaning.com>"
-//   RESEND_REPLY_TO     Optional. Defaults to RESEND_FROM. Set to admin@northcolumbuscleaning.com
-//                        so customer replies land in your real inbox.
-//   RESEND_BCC_OPS      Optional. BCC every transactional email to your own ops inbox
-//                        (useful early on to verify what's going out).
+//   RESEND_API or RESEND_API_KEY   Required. From https://resend.com/api-keys
+//   RESEND_FROM                    Required. "North Columbus Cleaning <hello@northcolumbuscleaning.com>"
+//   RESEND_REPLY_TO                Optional. Defaults to RESEND_FROM. Set to admin@northcolumbuscleaning.com
+//                                    so customer replies land in your real inbox.
+//   RESEND_BCC_OPS                 Optional. BCC every transactional email to your own ops inbox
+//                                    (useful early on to verify what's going out).
 //
 // Behaviour:
 //   - If RESEND_API_KEY or RESEND_FROM is missing, sendEmail() is a no-op
@@ -47,9 +47,9 @@ export async function sendEmail({
   attachments,
   tags,
 }) {
-  const key = process.env.RESEND_API_KEY;
+  const key = process.env.RESEND_API_KEY || process.env.RESEND_API;
   const from = getFrom();
-  if (!key) return { skipped: true, reason: "RESEND_API_KEY not set" };
+  if (!key) return { skipped: true, reason: "RESEND_API not set" };
   if (!from) return { skipped: true, reason: "RESEND_FROM not set" };
   if (!to) return { skipped: true, reason: "no recipient" };
   if (!subject) return { skipped: true, reason: "no subject" };
