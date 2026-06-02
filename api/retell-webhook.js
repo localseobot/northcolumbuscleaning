@@ -33,7 +33,7 @@
 //                         posts a rich call recap per call
 
 import { ghl } from "./_lib/ghl.js";
-import { sendGhlSms } from "./_lib/ghl-sms.js";
+import { sendGhlSms, CUSTOMER_LINE, INTERNAL_LINE } from "./_lib/ghl-sms.js";
 import { calculateQuote } from "./_lib/pricing.js";
 import { buildCallBlocks, sendSlack } from "./_lib/slack.js";
 import {
@@ -546,26 +546,25 @@ export default async function handler(req, res) {
     }
   }
 
-  // --- 5. Auto-text the caller from the GHL number (only if they consented) ---
-  // GHL's /conversations/messages routes through the location's SMS-capable
-  // number (the A2P-verified one), lands in the same thread as any future
-  // replies, and shows up in the GHL conversations inbox for the team.
+  // --- 5. Auto-text the caller from the customer-facing GHL number ---
+  // Sends ONLY if the caller consented during the call. Always uses the
+  // A2P-verified customer line so the SMS matches the number on our
+  // website/marketing and lands in the customer conversations inbox.
   const consent = interpretSmsConsent(extracted.sms_consent);
   result.customerSms.smsConsentRaw = s(extracted.sms_consent) || "(empty)";
   result.customerSms.smsConsentInterpreted = consent.value;
   if (contactId && consent.consented) {
     result.customerSms.attempted = true;
     try {
-      const body = {
-        type: "SMS",
-        contactId,
-        message: buildCustomerConfirmation(firstName),
-      };
-      if (process.env.GHL_FROM_NUMBER) body.fromNumber = process.env.GHL_FROM_NUMBER;
       const smsResp = await ghl({
         method: "POST",
         path: "/conversations/messages",
-        body,
+        body: {
+          type: "SMS",
+          contactId,
+          message: buildCustomerConfirmation(firstName),
+          fromNumber: CUSTOMER_LINE,
+        },
       });
       result.customerSms.ok = true;
       result.customerSms.messageId =
@@ -578,7 +577,9 @@ export default async function handler(req, res) {
     result.customerSms.skipped = `no consent (raw: "${result.customerSms.smsConsentRaw}", interpreted: ${consent.value})`;
   }
 
-  // --- 6. SMS recap to manager via GHL (lands in GHL conversations inbox) ---
+  // --- 6. SMS recap to manager via GHL — uses the INTERNAL line so manager
+  // replies thread in the internal conversations inbox rather than mixing
+  // with customer-line traffic.
   const to = process.env.MANAGER_PHONE;
   const recap = buildManagerRecap(call, extracted, quote);
   if (to && recap) {
@@ -588,6 +589,7 @@ export default async function handler(req, res) {
       message: recap,
       firstName: "Manager",
       tag: "internal:manager",
+      fromNumber: INTERNAL_LINE,
     });
     result.managerSms.ok = smsResp.ok;
     result.managerSms.contactId = smsResp.contactId;

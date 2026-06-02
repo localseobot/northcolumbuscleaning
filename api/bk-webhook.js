@@ -62,7 +62,7 @@ import {
   cf,
 } from "./_lib/ghl-fields.js";
 import { sendEmail } from "./_lib/resend.js";
-import { sendGhlSms } from "./_lib/ghl-sms.js";
+import { sendGhlSms, CUSTOMER_LINE } from "./_lib/ghl-sms.js";
 import {
   buildBookingConfirmation,
   buildBookingConfirmationSms,
@@ -530,6 +530,7 @@ async function handleCreated(b, result) {
         to: phone,
         message,
         firstName: confirmInput.firstName || undefined,
+        fromNumber: CUSTOMER_LINE,
       });
       result.confirmationSms = smsResult.ok
         ? { sent: true, messageId: smsResult.messageId }
