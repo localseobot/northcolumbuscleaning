@@ -68,8 +68,31 @@ export const config = { runtime: "nodejs" };
 const SALES_PIPELINE_ID = "6YDehH2kNtHrdfJaEQfa";
 const STAGE_NEW_LEAD = "4bb733e7-d38d-4cb0-afb8-512406509144";
 const STAGE_BOOKED = "a1df2c52-9211-4e13-a920-0c17ab00eff9";
-const STAGE_WON = "9253419b-4c69-4f61-814b-ee27cd165f7a";
+const STAGE_WON_ONE_TIME = "9253419b-4c69-4f61-814b-ee27cd165f7a";
+// TODO: replace with the new "Recurring Customer" stage ID after the user
+// creates it in the GHL UI. Until then, recurring jobs land in the same
+// stage as one-time completions (the existing behaviour). Pass the new
+// ID via the STAGE_RECURRING_ID env var to override without a code push.
+const STAGE_RECURRING =
+  process.env.STAGE_RECURRING_ID || STAGE_WON_ONE_TIME;
 const STAGE_LOST = "7eaafc3f-ab36-4ebe-b2c2-c64ab998897d";
+
+// Set of frequency values that imply an ongoing recurring relationship.
+// Anything not in this set (or empty) is treated as one-time.
+const RECURRING_FREQUENCIES = new Set([
+  "weekly",
+  "biweekly",
+  "bi-weekly",
+  "every-2-weeks",
+  "every 2 weeks",
+  "every_3_weeks",
+  "every-3-weeks",
+  "every 3 weeks",
+  "monthly",
+]);
+function isRecurringFrequency(raw) {
+  return RECURRING_FREQUENCIES.has(lower(raw));
+}
 
 // ───────── Mapping tables ─────────
 const SERVICE_TAG = {
@@ -516,14 +539,21 @@ async function handleCompleted(b, result) {
   const opp = await findOpenOpp(contact.id);
   if (opp) {
     const price = num(b.price_total || b.total || b.price);
+    // Recurring customers route to a dedicated terminal stage so they're
+    // visible at a glance in the kanban view (10× LTV of one-time clients).
+    // Falls back to STAGE_WON_ONE_TIME when the Recurring stage doesn't
+    // exist yet, so behaviour is unchanged until the user creates it.
+    const recurring = isRecurringFrequency(b.frequency);
+    const wonStage = recurring ? STAGE_RECURRING : STAGE_WON_ONE_TIME;
     await moveOpp(opp.id, {
-      stageId: STAGE_WON,
+      stageId: wonStage,
       status: "won",
       monetaryValue: price || undefined,
       customFields: buildOppCustomFields(b),
     });
     result.opportunityId = opp.id;
-    result.action = "moved-opp-to-won";
+    result.action = recurring ? "moved-opp-to-recurring" : "moved-opp-to-won-one-time";
+    result.recurringDetected = recurring;
   } else {
     result.action = "no-open-opp-found-to-complete";
   }

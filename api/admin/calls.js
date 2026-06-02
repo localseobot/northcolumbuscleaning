@@ -21,8 +21,12 @@ const STAGES = {
   "06cf319d-8de6-4c09-82dd-dcc5b823c682": "Contacted",
   "e426851f-65f6-4bfe-8fe0-66b93a1309df": "Quoted",
   "a1df2c52-9211-4e13-a920-0c17ab00eff9": "Booked",
-  "9253419b-4c69-4f61-814b-ee27cd165f7a": "Won",
+  "9253419b-4c69-4f61-814b-ee27cd165f7a": "Won — One Time",
   "7eaafc3f-ab36-4ebe-b2c2-c64ab998897d": "Lost",
+  // Recurring Customer stage — set STAGE_RECURRING_ID env var to the new
+  // stage's UUID after creating it in the GHL UI. Until then this entry
+  // is a no-op since no opps live in that stage yet.
+  [process.env.STAGE_RECURRING_ID || "__placeholder__"]: "Recurring Customer",
 };
 
 function escapeHtml(s) {

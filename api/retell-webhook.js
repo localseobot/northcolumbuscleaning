@@ -66,10 +66,12 @@ const DEFAULT_ASSIGNED_USER_ID = "gzWzHHYAIBmbcZExALq9"; // North Columbus Admin
 const ASSIGNED_USER_ID =
   process.env.GHL_ASSIGNED_USER_ID || DEFAULT_ASSIGNED_USER_ID;
 // Stage IDs kept here for the team's reference / future automations:
-// Quoted   = e426851f-65f6-4bfe-8fe0-66b93a1309df
-// Booked   = a1df2c52-9211-4e13-a920-0c17ab00eff9
-// Won      = 9253419b-4c69-4f61-814b-ee27cd165f7a
-// Lost     = 7eaafc3f-ab36-4ebe-b2c2-c64ab998897d
+// Contacted        = 06cf319d-8de6-4c09-82dd-dcc5b823c682
+// Quoted           = e426851f-65f6-4bfe-8fe0-66b93a1309df
+// Booked           = a1df2c52-9211-4e13-a920-0c17ab00eff9
+// Won — One Time   = 9253419b-4c69-4f61-814b-ee27cd165f7a
+// Recurring        = (set STAGE_RECURRING_ID env var after creating in UI)
+// Lost             = 7eaafc3f-ab36-4ebe-b2c2-c64ab998897d
 
 // Map Retell post-call analysis enums to GHL tag names.
 const SERVICE_TAG = {
