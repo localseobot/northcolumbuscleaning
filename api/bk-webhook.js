@@ -61,6 +61,8 @@ import {
   cfArray,
   cf,
 } from "./_lib/ghl-fields.js";
+import { sendEmail } from "./_lib/resend.js";
+import { buildBookingConfirmation } from "./_lib/email-templates/booking-confirmation.js";
 
 export const config = { runtime: "nodejs" };
 
@@ -473,6 +475,41 @@ async function handleCreated(b, result) {
     result.action = "created-new-opp-in-booked";
   }
   result.opp_fields_set = oppFields.length;
+
+  // Branded confirmation email via Resend. No-op if RESEND_API_KEY +
+  // RESEND_FROM aren't set in Vercel, so this deploys safely before
+  // the env vars exist. Errors don't break the webhook — email is
+  // best-effort, the GHL record is the source of truth.
+  if (lower(b.email)) {
+    try {
+      const { subject, html } = buildBookingConfirmation({
+        firstName: s(b.first_name || b.firstName),
+        appointmentDateTime: b.appointment_datetime,
+        serviceType: b.service_type || b.service,
+        frequency: b.frequency,
+        bedrooms: num(b.bedrooms),
+        bathrooms: num(b.bathrooms),
+        sqft: num(b.sqft || b.square_feet),
+        priceTotal: price,
+        address: [s(b.address), s(b.city), s(b.state), s(b.zip)]
+          .filter(Boolean)
+          .join(", "),
+      });
+      const emailResult = await sendEmail({
+        to: lower(b.email),
+        subject,
+        html,
+        tags: ["booking-confirmation"],
+      });
+      result.confirmationEmail = emailResult.id
+        ? { sent: true, id: emailResult.id }
+        : { sent: false, reason: emailResult.reason || emailResult.error };
+    } catch (e) {
+      result.confirmationEmail = { sent: false, error: e.message };
+    }
+  } else {
+    result.confirmationEmail = { sent: false, reason: "no email on file" };
+  }
 }
 
 async function handleRescheduled(b, result) {
