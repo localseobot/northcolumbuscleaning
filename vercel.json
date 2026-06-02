@@ -25,6 +25,14 @@
     {
       "path": "/api/cron/reminder-24h",
       "schedule": "0 22 * * *"
+    },
+    {
+      "path": "/api/cron/provider-reminder-evening",
+      "schedule": "0 23 * * *"
+    },
+    {
+      "path": "/api/cron/provider-reminder-morning",
+      "schedule": "0 12 * * *"
     }
   ]
 }

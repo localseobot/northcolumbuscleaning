@@ -55,6 +55,8 @@ import {
   OPP_QUOTED_PRICE,
   OPP_APPOINTMENT_DATE,
   OPP_LEAD_SOURCE,
+  OPP_PROVIDER_NAME,
+  OPP_PROVIDER_PHONE,
   LEAD_SOURCE_OPTIONS,
   normalizeServiceType,
   normalizeFrequency,
@@ -458,6 +460,45 @@ function normalizeBody(b) {
       "addresszip",
     );
 
+  // ── Assigned provider / cleaner ─────────────────────────────────────
+  if (!out.provider_name)
+    out.provider_name = pick(
+      "provider_name",
+      "providername",
+      "assigned_provider",
+      "assignedprovider",
+      "assigned_to",
+      "assignedto",
+      "cleaner_name",
+      "cleanername",
+      "provider",
+      "cleaner",
+      "staff_name",
+      "staffname",
+      "team_member",
+      "teammember",
+    );
+  if (!out.provider_phone)
+    out.provider_phone = pick(
+      "provider_phone",
+      "providerphone",
+      "cleaner_phone",
+      "cleanerphone",
+      "assigned_provider_phone",
+      "assignedproviderphone",
+      "staff_phone",
+      "staffphone",
+    );
+  if (!out.provider_email)
+    out.provider_email = pick(
+      "provider_email",
+      "provideremail",
+      "cleaner_email",
+      "cleaneremail",
+      "assigned_provider_email",
+      "assignedprovideremail",
+    );
+
   return out;
 }
 function buildName(b) {
@@ -556,6 +597,8 @@ function buildOppCustomFields(b) {
     cf(OPP_QUOTED_PRICE, price || null),
     cf(OPP_APPOINTMENT_DATE, apptDate),
     cf(OPP_LEAD_SOURCE, LEAD_SOURCE_OPTIONS.BOOKING_KOALA),
+    cf(OPP_PROVIDER_NAME, s(b.provider_name) || null),
+    cf(OPP_PROVIDER_PHONE, s(b.provider_phone) || null),
   ]);
 }
 

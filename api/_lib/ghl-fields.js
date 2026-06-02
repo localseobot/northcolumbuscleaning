@@ -25,6 +25,12 @@ export const OPP_LEAD_SOURCE = "f18VFRw0fSCjdH2aQHNx";
 // https://highlevel.stoplight.io/docs/integrations/3c0a52e8a26b3-update-opportunity
 export const OPP_LOST_REASON_ID = "3GuRvwNmfbdpxBwnlBNe";
 
+// Provider (cleaner) assignment — populated by BK→Zapier when BK includes
+// the assigned cleaner in the booking payload. Used by provider-reminder
+// crons to text the cleaner with the job details.
+export const OPP_PROVIDER_NAME = "SSesWRSxrYWC10TieO2v";
+export const OPP_PROVIDER_PHONE = "TEXkSLAthBZK4vXbmM8b";
+
 // ── Contact ────────────────────────────────────────────────────────────────
 export const CONTACT_GATE_CODE = "N9nprluvSbdcAsMe5lzw";
 export const CONTACT_PETS = "ffaJWuTCjxbNr9I4ZBB8";
