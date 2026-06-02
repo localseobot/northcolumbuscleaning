@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "name": "northcolumbuscleaning",
+  "version": "1.0.0",
+  "description": "North Columbus Cleaning marketing site + Vercel serverless functions.",
+  "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "dependencies": {
+    "pdf-lib": "^1.17.1"
+  }
+}

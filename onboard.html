@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="no-referrer" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Contractor onboarding | North Columbus Cleaning</title>
+  <meta name="theme-color" content="#1a4d2e" />
+  <link rel="icon" href="/images/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    .ob-wrap { max-width: 720px; margin: 0 auto; padding: 0 var(--space-3); }
+    .ob-progress { display: flex; gap: var(--space-2); margin: var(--space-4) 0; flex-wrap: wrap; }
+    .ob-pill {
+      flex: 1 1 140px; text-align: center; padding: 10px 8px; border-radius: var(--radius-sm);
+      border: 1px solid var(--light-gray); font-weight: 900; font-size: 13px;
+      letter-spacing: .5px; color: var(--charcoal); background: #fff;
+    }
+    .ob-pill.done { background: rgba(45,122,74,.12); border-color: var(--sage); color: var(--forest); }
+    .ob-card {
+      background: var(--off-white); border: 1px solid var(--light-gray);
+      border-radius: var(--radius-lg); padding: var(--space-4); margin-bottom: var(--space-4);
+    }
+    .ob-card.done { border-color: var(--sage); }
+    .ob-card h2 { font-size: 22px; margin: 0 0 4px; }
+    .ob-card .ob-status { font-size: 13px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+    .ob-status.pending { color: #b8860b; }
+    .ob-status.done { color: var(--sage); }
+    .ob-collapsed .ob-body { display: none; }
+    .field { margin-bottom: var(--space-3); }
+    .field label { display:block; font-weight:900; font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--charcoal); margin-bottom:6px; }
+    .field input[type=text], .field input[type=email], .field input[type=tel], .field select, .field textarea {
+      width:100%; padding:11px 13px; border:1px solid var(--light-gray); border-radius:var(--radius-sm);
+      font-size:16px; font-family:inherit; background:#fff; color:var(--charcoal);
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { outline:2px solid var(--sage); outline-offset:1px; border-color:var(--forest); }
+    .field-row { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-3); }
+    .field-hint { font-size:13px; color:var(--charcoal); opacity:.7; margin-top:4px; }
+    .toggle { display:flex; gap:8px; margin-bottom:var(--space-3); }
+    .toggle button {
+      flex:1; padding:10px; border:1px solid var(--light-gray); background:#fff; border-radius:var(--radius-sm);
+      font-weight:900; cursor:pointer; font-family:inherit; color:var(--charcoal);
+    }
+    .toggle button[aria-pressed=true] { background:var(--forest); color:#fff; border-color:var(--forest); }
+    .radio-row { display:flex; gap:var(--space-3); margin-bottom:var(--space-2); }
+    .radio-row label { display:flex; align-items:center; gap:6px; font-weight:400; text-transform:none; letter-spacing:0; font-size:15px; }
+    .sigpad-wrap { border:1px dashed var(--light-gray); border-radius:var(--radius-sm); background:#fff; }
+    .sigpad { width:100%; height:140px; display:block; touch-action:none; border-radius:var(--radius-sm); }
+    .sig-actions { display:flex; justify-content:space-between; align-items:center; padding:6px 10px; border-top:1px solid var(--light-gray); }
+    .sig-actions button { background:none; border:0; color:var(--forest); font-weight:900; cursor:pointer; font-size:13px; }
+    .agreement-box, .doc-box {
+      max-height:280px; overflow-y:auto; background:#fff; border:1px solid var(--light-gray);
+      border-radius:var(--radius-sm); padding:var(--space-3); margin-bottom:var(--space-3);
+      white-space:pre-wrap; font-size:14px; line-height:1.55;
+    }
+    .doc-box h3 { font-size:15px; margin:14px 0 4px; color:var(--forest); }
+    .doc-box p { margin:0 0 8px; }
+    .check-list { list-style:none; padding:0; margin:0 0 var(--space-3); }
+    .check-list li { display:flex; gap:8px; align-items:flex-start; margin-bottom:8px; font-size:15px; }
+    .confirm-row { display:flex; gap:10px; align-items:flex-start; margin-bottom:var(--space-3); }
+    .confirm-row input { margin-top:3px; width:18px; height:18px; }
+    .ob-msg { font-size:14px; margin-top:8px; min-height:18px; }
+    .ob-msg.err { color:#c0392b; }
+    .ob-msg.ok { color:var(--sage); font-weight:900; }
+    .ob-done-banner { text-align:center; padding:var(--space-5); background:rgba(45,122,74,.08); border:1px solid var(--sage); border-radius:var(--radius-lg); }
+    .ob-done-banner h2 { color:var(--forest); }
+    .ob-loading, .ob-error { text-align:center; padding:var(--space-8) 0; }
+    @media (max-width:540px){ .field-row{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/" class="logo-link" aria-label="North Columbus Cleaning Company home">
+        <img src="/images/logo-horizontal.svg" alt="North Columbus Cleaning Company" />
+      </a>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="ob-wrap">
+      <div id="ob-loading" class="ob-loading" hidden><p>Loading…</p></div>
+      <div id="ob-error" class="ob-error" hidden></div>
+
+      <!-- Email + one-time code gate (self-serve entry) -->
+      <div id="ob-gate" hidden>
+        <h1>Contractor onboarding</h1>
+        <p class="lead">Enter the email you were added with and we'll send you a one-time code to continue.</p>
+        <div class="ob-card">
+          <form id="email-form">
+            <div class="field">
+              <label for="g-email">Your email</label>
+              <input type="email" id="g-email" autocomplete="email" required />
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%">Send my code</button>
+            <p class="ob-msg" id="email-msg" aria-live="polite"></p>
+          </form>
+          <form id="otp-form" hidden>
+            <p class="field-hint" id="otp-sent" style="margin-bottom:var(--space-3)"></p>
+            <div class="field">
+              <label for="g-code">6-digit code</label>
+              <input type="text" id="g-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="••••••" />
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%">Verify &amp; continue</button>
+            <button type="button" id="otp-back" class="btn btn-secondary" style="width:100%;margin-top:8px">Use a different email</button>
+            <p class="ob-msg" id="otp-msg" aria-live="polite"></p>
+          </form>
+        </div>
+      </div>
+
+      <div id="ob-main" hidden>
+        <h1 id="ob-greeting">Welcome</h1>
+        <p class="lead">Complete the three steps below to finish onboarding. You can do them in any order, and you can come back to this link if you need to finish later.</p>
+
+        <div class="ob-progress" id="ob-progress">
+          <div class="ob-pill" data-pill="w9">W-9</div>
+          <div class="ob-pill" data-pill="agreement">Agreement</div>
+          <div class="ob-pill" data-pill="checklist">Review</div>
+        </div>
+
+        <div id="ob-done-banner" class="ob-done-banner" hidden>
+          <h2>You're all set! 🎉</h2>
+          <p>Everything's complete. Our team has been notified and will be in touch about your first jobs.</p>
+        </div>
+
+        <!-- W-9 -->
+        <div class="ob-card" id="card-w9">
+          <h2>1. Your W-9</h2>
+          <span class="ob-status pending" id="status-w9">Required</span>
+          <div class="ob-body" id="body-w9">
+            <p class="field-hint" style="margin:10px 0 16px">We need your taxpayer info to pay you as an independent contractor. Fill it out here, or upload a completed W-9.</p>
+            <div class="toggle" role="group" aria-label="W-9 method">
+              <button type="button" id="w9-tab-fill" aria-pressed="true">Fill it out here</button>
+              <button type="button" id="w9-tab-upload" aria-pressed="false">Upload completed W-9</button>
+            </div>
+
+            <form id="w9-fill-form">
+              <div class="field"><label for="w9-name">Name (as on your tax return)</label><input type="text" id="w9-name" required /></div>
+              <div class="field"><label for="w9-business">Business name (if different)</label><input type="text" id="w9-business" /></div>
+              <div class="field"><label for="w9-class">Federal tax classification</label><select id="w9-class"></select></div>
+              <div class="field"><label for="w9-address">Address</label><input type="text" id="w9-address" /></div>
+              <div class="field"><label for="w9-csz">City, state, ZIP</label><input type="text" id="w9-csz" /></div>
+              <div class="field">
+                <label>Taxpayer ID type</label>
+                <div class="radio-row">
+                  <label><input type="radio" name="w9-tintype" value="SSN" checked /> SSN</label>
+                  <label><input type="radio" name="w9-tintype" value="EIN" /> EIN</label>
+                </div>
+                <input type="text" id="w9-tin" inputmode="numeric" autocomplete="off" placeholder="XXX-XX-XXXX" />
+                <p class="field-hint">Your SSN/EIN is used only to generate your W-9 PDF — it is never stored in our CRM.</p>
+              </div>
+              <div class="field">
+                <label for="w9-signame">Sign — type your legal name</label>
+                <input type="text" id="w9-signame" />
+              </div>
+              <div class="field">
+                <label>Draw your signature</label>
+                <div class="sigpad-wrap">
+                  <canvas class="sigpad" id="w9-sig"></canvas>
+                  <div class="sig-actions"><span class="field-hint">Sign above</span><button type="button" data-clear="w9-sig">Clear</button></div>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary" style="width:100%">Submit W-9</button>
+              <p class="ob-msg" id="w9-fill-msg" aria-live="polite"></p>
+            </form>
+
+            <form id="w9-upload-form" hidden>
+              <div class="field">
+                <label for="w9-file">Upload your completed W-9 (PDF or photo)</label>
+                <input type="file" id="w9-file" accept=".pdf,image/png,image/jpeg,application/pdf" />
+                <p class="field-hint">We'll automatically check that your SSN/EIN is filled in.</p>
+              </div>
+              <button type="submit" class="btn btn-primary" style="width:100%">Upload W-9</button>
+              <p class="ob-msg" id="w9-upload-msg" aria-live="polite"></p>
+            </form>
+          </div>
+        </div>
+
+        <!-- Agreement -->
+        <div class="ob-card" id="card-agreement">
+          <h2>2. Contractor agreement</h2>
+          <span class="ob-status pending" id="status-agreement">Required</span>
+          <div class="ob-body" id="body-agreement">
+            <p class="field-hint" style="margin:10px 0 12px">Please read the agreement, then sign below.</p>
+            <div class="agreement-box" id="agreement-text" tabindex="0"></div>
+            <form id="agreement-form">
+              <div class="field"><label for="ag-name">Sign — type your full legal name</label><input type="text" id="ag-name" required /></div>
+              <div class="field">
+                <label>Draw your signature</label>
+                <div class="sigpad-wrap">
+                  <canvas class="sigpad" id="ag-sig"></canvas>
+                  <div class="sig-actions"><span class="field-hint">Sign above</span><button type="button" data-clear="ag-sig">Clear</button></div>
+                </div>
+              </div>
+              <div class="confirm-row">
+                <input type="checkbox" id="ag-confirm" />
+                <label for="ag-confirm" style="text-transform:none;letter-spacing:0;font-weight:400;font-size:15px">I have read and agree to the contractor agreement above.</label>
+              </div>
+              <button type="submit" class="btn btn-primary" style="width:100%">Sign agreement</button>
+              <p class="ob-msg" id="agreement-msg" aria-live="polite"></p>
+            </form>
+          </div>
+        </div>
+
+        <!-- Checklist / review -->
+        <div class="ob-card" id="card-checklist">
+          <h2>3. Review onboarding &amp; checklist</h2>
+          <span class="ob-status pending" id="status-checklist">Required</span>
+          <div class="ob-body" id="body-checklist">
+            <div class="doc-box" id="doc-text" tabindex="0"></div>
+            <ul class="check-list" id="checklist-items"></ul>
+            <form id="checklist-form">
+              <div class="confirm-row">
+                <input type="checkbox" id="cl-confirm" />
+                <label for="cl-confirm" style="text-transform:none;letter-spacing:0;font-weight:400;font-size:15px">I have reviewed the onboarding document and the cleaning checklist above, and I understand what's expected.</label>
+              </div>
+              <button type="submit" class="btn btn-primary" style="width:100%">Confirm review</button>
+              <p class="ob-msg" id="checklist-msg" aria-live="polite"></p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-bottom">
+      <div class="container">
+        <p>&copy; <span id="year"></span> North Columbus Cleaning Company &middot; <a href="/privacy">Privacy</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/script.js" defer></script>
+  <script>
+  (function () {
+    // ── Token: read from URL, then scrub it from the address bar/history. ──
+    var params = new URLSearchParams(location.search);
+    var TOKEN = params.get('t') || '';
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+
+    var loadingEl = document.getElementById('ob-loading');
+    var errorEl = document.getElementById('ob-error');
+    var mainEl = document.getElementById('ob-main');
+    var gateEl = document.getElementById('ob-gate');
+
+    function showError(msg) {
+      loadingEl.hidden = true;
+      mainEl.hidden = true;
+      if (gateEl) gateEl.hidden = true;
+      errorEl.hidden = false;
+      errorEl.innerHTML = '<p>' + msg + '</p>';
+    }
+
+    // ── Signature pad ──
+    function makeSigPad(canvas) {
+      var ctx = canvas.getContext('2d');
+      var drawing = false, dirty = false, last = null;
+      function resize() {
+        var ratio = window.devicePixelRatio || 1;
+        var rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * ratio;
+        canvas.height = rect.height * ratio;
+        ctx.scale(ratio, ratio);
+        ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#1a2b1f';
+      }
+      setTimeout(resize, 0);
+      window.addEventListener('resize', function () { /* keep simple: don't wipe on resize */ });
+      function pos(e) {
+        var rect = canvas.getBoundingClientRect();
+        var p = e.touches ? e.touches[0] : e;
+        return { x: p.clientX - rect.left, y: p.clientY - rect.top };
+      }
+      function start(e) { drawing = true; last = pos(e); e.preventDefault(); }
+      function move(e) {
+        if (!drawing) return;
+        var p = pos(e);
+        ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+        last = p; dirty = true; e.preventDefault();
+      }
+      function end() { drawing = false; }
+      canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move);
+      window.addEventListener('mouseup', end);
+      canvas.addEventListener('touchstart', start, { passive: false });
+      canvas.addEventListener('touchmove', move, { passive: false });
+      canvas.addEventListener('touchend', end);
+      return {
+        isEmpty: function () { return !dirty; },
+        clear: function () { ctx.clearRect(0, 0, canvas.width, canvas.height); dirty = false; },
+        dataUrl: function () { return dirty ? canvas.toDataURL('image/png') : ''; }
+      };
+    }
+    document.querySelectorAll('[data-clear]').forEach(function (btn) {
+      btn.addEventListener('click', function () { pads[btn.getAttribute('data-clear')].clear(); });
+    });
+    var pads = {
+      'w9-sig': makeSigPad(document.getElementById('w9-sig')),
+      'ag-sig': makeSigPad(document.getElementById('ag-sig'))
+    };
+
+    // ── Downscale a large image file to keep upload under the body cap ──
+    function readFileForUpload(file) {
+      return new Promise(function (resolve, reject) {
+        var isImage = /^image\//.test(file.type);
+        if (!isImage) {
+          var r = new FileReader();
+          r.onload = function () {
+            var s = String(r.result || ''); var c = s.indexOf(',');
+            resolve({ base64: c >= 0 ? s.slice(c + 1) : s, type: file.type || 'application/pdf' });
+          };
+          r.onerror = reject; r.readAsDataURL(file);
+          return;
+        }
+        var img = new Image();
+        img.onload = function () {
+          var max = 1600, w = img.width, h = img.height;
+          if (w > max || h > max) { var sc = Math.min(max / w, max / h); w = Math.round(w * sc); h = Math.round(h * sc); }
+          var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+          cv.getContext('2d').drawImage(img, 0, 0, w, h);
+          var url = cv.toDataURL('image/jpeg', 0.7);
+          resolve({ base64: url.slice(url.indexOf(',') + 1), type: 'image/jpeg' });
+        };
+        img.onerror = reject;
+        var fr = new FileReader();
+        fr.onload = function () { img.src = String(fr.result); };
+        fr.onerror = reject; fr.readAsDataURL(file);
+      });
+    }
+
+    function post(url, payload) {
+      return fetch(url, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.assign({ t: TOKEN }, payload))
+      }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); });
+    }
+
+    var STATE = null;
+
+    function renderTaskStatus(key) {
+      var done = STATE.tasks[key];
+      var card = document.getElementById('card-' + key);
+      var status = document.getElementById('status-' + key);
+      var pill = document.querySelector('[data-pill="' + key + '"]');
+      if (done) {
+        card.classList.add('done', 'ob-collapsed');
+        status.className = 'ob-status done'; status.textContent = '✓ Done';
+        pill.classList.add('done');
+      } else {
+        card.classList.remove('done', 'ob-collapsed');
+        status.className = 'ob-status pending'; status.textContent = 'Required';
+        pill.classList.remove('done');
+      }
+    }
+
+    function refreshAll() {
+      ['w9', 'agreement', 'checklist'].forEach(renderTaskStatus);
+      var allDone = STATE.tasks.w9 && STATE.tasks.agreement && STATE.tasks.checklist;
+      document.getElementById('ob-done-banner').hidden = !allDone;
+      if (allDone) document.getElementById('ob-done-banner').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function hydrate(data) {
+      STATE = data;
+      loadingEl.hidden = true; mainEl.hidden = false;
+      var name = data.contact.firstName || 'there';
+      document.getElementById('ob-greeting').textContent = 'Welcome, ' + name + '!';
+
+      // W-9 prefill + classifications
+      document.getElementById('w9-name').value = data.prefill.name || '';
+      document.getElementById('w9-signame').value = data.prefill.name || '';
+      document.getElementById('w9-address').value = data.prefill.address || '';
+      document.getElementById('w9-csz').value = data.prefill.cityStateZip || '';
+      var sel = document.getElementById('w9-class');
+      data.content.taxClassifications.forEach(function (c) {
+        var o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o);
+      });
+      document.getElementById('ag-name').value = data.prefill.name || '';
+
+      // Agreement + doc + checklist content
+      document.getElementById('agreement-text').textContent = data.content.agreement.text;
+      var docBox = document.getElementById('doc-text');
+      var docHtml = '<h2 style="margin-top:0">' + esc(data.content.onboardingDoc.title) + '</h2>';
+      data.content.onboardingDoc.sections.forEach(function (s) {
+        docHtml += '<h3>' + esc(s.heading) + '</h3><p>' + esc(s.body) + '</p>';
+      });
+      docBox.innerHTML = docHtml;
+      var ul = document.getElementById('checklist-items');
+      data.content.checklist.forEach(function (item) {
+        var li = document.createElement('li'); li.textContent = '• ' + item; ul.appendChild(li);
+      });
+
+      refreshAll();
+    }
+
+    function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+
+    function msg(el, text, kind) { el.className = 'ob-msg' + (kind ? ' ' + kind : ''); el.textContent = text || ''; }
+
+    // ── W-9 tab toggle ──
+    var fillForm = document.getElementById('w9-fill-form');
+    var upForm = document.getElementById('w9-upload-form');
+    var tabFill = document.getElementById('w9-tab-fill');
+    var tabUpload = document.getElementById('w9-tab-upload');
+    tabFill.addEventListener('click', function () {
+      tabFill.setAttribute('aria-pressed', 'true'); tabUpload.setAttribute('aria-pressed', 'false');
+      fillForm.hidden = false; upForm.hidden = true;
+    });
+    tabUpload.addEventListener('click', function () {
+      tabUpload.setAttribute('aria-pressed', 'true'); tabFill.setAttribute('aria-pressed', 'false');
+      upForm.hidden = false; fillForm.hidden = true;
+    });
+
+    // TIN placeholder hint by type
+    document.querySelectorAll('input[name="w9-tintype"]').forEach(function (r) {
+      r.addEventListener('change', function () {
+        document.getElementById('w9-tin').placeholder = r.value === 'EIN' ? 'XX-XXXXXXX' : 'XXX-XX-XXXX';
+      });
+    });
+
+    // ── Submit: W-9 fill ──
+    fillForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var m = document.getElementById('w9-fill-msg');
+      var tinType = document.querySelector('input[name="w9-tintype"]:checked').value;
+      var tin = document.getElementById('w9-tin').value.replace(/\D/g, '');
+      var signame = document.getElementById('w9-signame').value.trim();
+      if (tin.length !== 9) { return msg(m, 'Please enter a valid 9-digit ' + tinType + '.', 'err'); }
+      if (!signame) { return msg(m, 'Please type your legal name to sign.', 'err'); }
+      var btn = fillForm.querySelector('button[type=submit]');
+      btn.disabled = true; btn.textContent = 'Submitting…'; msg(m, 'Generating your W-9…');
+      post('/api/onboarding/w9', {
+        mode: 'fill',
+        name: document.getElementById('w9-name').value.trim(),
+        businessName: document.getElementById('w9-business').value.trim(),
+        taxClassification: document.getElementById('w9-class').value,
+        address: document.getElementById('w9-address').value.trim(),
+        cityStateZip: document.getElementById('w9-csz').value.trim(),
+        tinType: tinType, tin: tin,
+        signatureName: signame,
+        signaturePngBase64: pads['w9-sig'].dataUrl()
+      }).then(function (r) {
+        btn.disabled = false; btn.textContent = 'Submit W-9';
+        if (!r.ok) return msg(m, r.data.error || 'Something went wrong.', 'err');
+        STATE.tasks.w9 = true; msg(m, 'W-9 saved ✓', 'ok'); refreshAll();
+      }).catch(function () { btn.disabled = false; btn.textContent = 'Submit W-9'; msg(m, 'Network error. Please try again.', 'err'); });
+    });
+
+    // ── Submit: W-9 upload ──
+    upForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var m = document.getElementById('w9-upload-msg');
+      var file = document.getElementById('w9-file').files[0];
+      if (!file) return msg(m, 'Please choose a file.', 'err');
+      var btn = upForm.querySelector('button[type=submit]');
+      btn.disabled = true; btn.textContent = 'Uploading…'; msg(m, 'Checking your W-9…');
+      readFileForUpload(file).then(function (f) {
+        return post('/api/onboarding/w9', { mode: 'upload', fileBase64: f.base64, fileType: f.type });
+      }).then(function (r) {
+        btn.disabled = false; btn.textContent = 'Upload W-9';
+        if (!r.ok) return msg(m, r.data.error || 'Something went wrong.', 'err');
+        STATE.tasks.w9 = true; msg(m, 'W-9 received ✓', 'ok'); refreshAll();
+      }).catch(function () { btn.disabled = false; btn.textContent = 'Upload W-9'; msg(m, 'Could not read or upload that file.', 'err'); });
+    });
+
+    // ── Submit: agreement ──
+    document.getElementById('agreement-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var m = document.getElementById('agreement-msg');
+      var name = document.getElementById('ag-name').value.trim();
+      if (!name) return msg(m, 'Please type your full legal name.', 'err');
+      if (!document.getElementById('ag-confirm').checked) return msg(m, 'Please check the box to agree.', 'err');
+      if (pads['ag-sig'].isEmpty()) return msg(m, 'Please draw your signature.', 'err');
+      var btn = this.querySelector('button[type=submit]');
+      btn.disabled = true; btn.textContent = 'Signing…'; msg(m, 'Saving your signature…');
+      post('/api/onboarding/agreement', { name: name, signaturePngBase64: pads['ag-sig'].dataUrl() })
+        .then(function (r) {
+          btn.disabled = false; btn.textContent = 'Sign agreement';
+          if (!r.ok) return msg(m, r.data.error || 'Something went wrong.', 'err');
+          STATE.tasks.agreement = true; msg(m, 'Agreement signed ✓', 'ok'); refreshAll();
+        }).catch(function () { btn.disabled = false; btn.textContent = 'Sign agreement'; msg(m, 'Network error. Please try again.', 'err'); });
+    });
+
+    // ── Submit: checklist ──
+    document.getElementById('checklist-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var m = document.getElementById('checklist-msg');
+      if (!document.getElementById('cl-confirm').checked) return msg(m, 'Please confirm you have reviewed everything.', 'err');
+      var btn = this.querySelector('button[type=submit]');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      post('/api/onboarding/checklist', { confirmed: true })
+        .then(function (r) {
+          btn.disabled = false; btn.textContent = 'Confirm review';
+          if (!r.ok) return msg(m, r.data.error || 'Something went wrong.', 'err');
+          STATE.tasks.checklist = true; msg(m, 'Confirmed ✓', 'ok'); refreshAll();
+        }).catch(function () { btn.disabled = false; btn.textContent = 'Confirm review'; msg(m, 'Network error. Please try again.', 'err'); });
+    });
+
+    // ── boot: load state for a known token and show the task UI ──
+    function boot() {
+      gateEl.hidden = true;
+      loadingEl.hidden = false;
+      fetch('/api/onboarding/state?t=' + encodeURIComponent(TOKEN))
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+        .then(function (r) {
+          if (!r.ok) return showError(r.data.error || 'We could not load your onboarding.');
+          hydrate(r.data);
+        })
+        .catch(function () { showError('We could not load your onboarding. Please try again.'); });
+    }
+
+    // ── Email + OTP gate ──
+    function showGate() {
+      loadingEl.hidden = true;
+      gateEl.hidden = false;
+    }
+    var emailForm = document.getElementById('email-form');
+    var otpForm = document.getElementById('otp-form');
+    var emailMsg = document.getElementById('email-msg');
+    var otpMsg = document.getElementById('otp-msg');
+    var otpSent = document.getElementById('otp-sent');
+    var gateEmail = '';
+
+    emailForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var email = document.getElementById('g-email').value.trim();
+      if (!email) return msg(emailMsg, 'Please enter your email.', 'err');
+      var btn = emailForm.querySelector('button[type=submit]');
+      btn.disabled = true; btn.textContent = 'Sending…'; msg(emailMsg, '');
+      fetch('/api/onboarding/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email }) })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+        .then(function (r) {
+          btn.disabled = false; btn.textContent = 'Send my code';
+          if (!r.ok) return msg(emailMsg, r.data.error || 'Something went wrong.', 'err');
+          if (r.data.complete) return showError("You've already completed onboarding. You're all set — nothing more to do!");
+          if (!r.data.eligible) return msg(emailMsg, "We don't have you set up for onboarding yet. Please check the email address, or contact your manager.", 'err');
+          gateEmail = email;
+          var where = [];
+          if (r.data.maskedEmail) where.push(r.data.maskedEmail);
+          if (r.data.maskedPhone) where.push(r.data.maskedPhone);
+          otpSent.textContent = where.length ? ('We sent a 6-digit code to ' + where.join(' and ') + '. Enter it below.') : 'We sent you a 6-digit code. Enter it below.';
+          emailForm.hidden = true; otpForm.hidden = false;
+          document.getElementById('g-code').focus();
+        })
+        .catch(function () { btn.disabled = false; btn.textContent = 'Send my code'; msg(emailMsg, 'Network error. Please try again.', 'err'); });
+    });
+
+    document.getElementById('otp-back').addEventListener('click', function () {
+      otpForm.hidden = true; emailForm.hidden = false; msg(otpMsg, '');
+    });
+
+    otpForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var code = document.getElementById('g-code').value.replace(/\D/g, '');
+      if (code.length !== 6) return msg(otpMsg, 'Enter the 6-digit code.', 'err');
+      var btn = otpForm.querySelector('button[type=submit]');
+      btn.disabled = true; btn.textContent = 'Verifying…'; msg(otpMsg, '');
+      fetch('/api/onboarding/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: gateEmail, code: code }) })
+        .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+        .then(function (r) {
+          btn.disabled = false; btn.textContent = 'Verify & continue';
+          if (!r.ok || !r.data.token) {
+            var m = r.data.error || 'Incorrect code.';
+            if (typeof r.data.attemptsLeft === 'number') m += ' (' + r.data.attemptsLeft + ' left)';
+            return msg(otpMsg, m, 'err');
+          }
+          TOKEN = r.data.token;
+          boot();
+        })
+        .catch(function () { btn.disabled = false; btn.textContent = 'Verify & continue'; msg(otpMsg, 'Network error. Please try again.', 'err'); });
+    });
+
+    // ── Entry: token in URL (admin link) → boot directly; else show the gate ──
+    if (TOKEN) { boot(); } else { showGate(); }
+  })();
+  </script>
+</body>
+</html>
