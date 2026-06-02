@@ -70,7 +70,7 @@ const ASSIGNED_USER_ID =
 // Quoted           = e426851f-65f6-4bfe-8fe0-66b93a1309df
 // Booked           = a1df2c52-9211-4e13-a920-0c17ab00eff9
 // Won — One Time   = 9253419b-4c69-4f61-814b-ee27cd165f7a
-// Recurring        = (set STAGE_RECURRING_ID env var after creating in UI)
+// Recurring        = 24ef9398-abc2-472d-9f35-59b1d8a8f4f6
 // Lost             = 7eaafc3f-ab36-4ebe-b2c2-c64ab998897d
 
 // Map Retell post-call analysis enums to GHL tag names.

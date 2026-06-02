@@ -69,12 +69,11 @@ const SALES_PIPELINE_ID = "6YDehH2kNtHrdfJaEQfa";
 const STAGE_NEW_LEAD = "4bb733e7-d38d-4cb0-afb8-512406509144";
 const STAGE_BOOKED = "a1df2c52-9211-4e13-a920-0c17ab00eff9";
 const STAGE_WON_ONE_TIME = "9253419b-4c69-4f61-814b-ee27cd165f7a";
-// TODO: replace with the new "Recurring Customer" stage ID after the user
-// creates it in the GHL UI. Until then, recurring jobs land in the same
-// stage as one-time completions (the existing behaviour). Pass the new
-// ID via the STAGE_RECURRING_ID env var to override without a code push.
+// Recurring customers (weekly/biweekly/monthly bookings) route here so the
+// highest-LTV cohort is visible at a glance in the kanban view. Override
+// via STAGE_RECURRING_ID env var if the pipeline is ever rebuilt.
 const STAGE_RECURRING =
-  process.env.STAGE_RECURRING_ID || STAGE_WON_ONE_TIME;
+  process.env.STAGE_RECURRING_ID || "24ef9398-abc2-472d-9f35-59b1d8a8f4f6";
 const STAGE_LOST = "7eaafc3f-ab36-4ebe-b2c2-c64ab998897d";
 
 // Set of frequency values that imply an ongoing recurring relationship.
