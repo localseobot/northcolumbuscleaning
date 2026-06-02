@@ -71,6 +71,7 @@ import {
 } from "./_lib/email-templates/booking-confirmation.js";
 import { buildRescheduleNotice } from "./_lib/email-templates/reschedule-notice.js";
 import { buildProviderSmsFromBooking } from "./_lib/provider-sms.js";
+import { sendOpsAlert } from "./_lib/alerts.js";
 
 export const config = { runtime: "nodejs" };
 
@@ -959,7 +960,30 @@ async function handleCancelled(b, result) {
   result.contactId = contact.id;
   if (!contact.id) return;
 
-  await applyTags(contact.id, buildTags(b, ["cancelled"])).catch(
+  // Detect same-day cancellation by comparing appointment date to today.
+  // BK's appointment_datetime may be undefined for some cancel events
+  // (depending on what BK sends through Zapier); in that case we default
+  // to non-same-day so we don't false-alarm.
+  let sameDay = false;
+  if (b.appointment_datetime) {
+    try {
+      const apptMs = new Date(b.appointment_datetime).getTime();
+      const today = new Date();
+      const todayStart = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate(),
+      ).getTime();
+      const todayEnd = todayStart + 86400000;
+      sameDay = apptMs >= todayStart && apptMs < todayEnd;
+    } catch (_) {}
+  }
+  result.sameDayCancel = sameDay;
+
+  const extraTags = ["cancelled"];
+  if (sameDay) extraTags.push("same-day-cancel");
+
+  await applyTags(contact.id, buildTags(b, extraTags)).catch(
     (e) => (result.tagWarning = e.message),
   );
   await addNote(contact.id, buildNoteBody(b, "booking.cancelled")).catch(
@@ -973,6 +997,68 @@ async function handleCancelled(b, result) {
     result.action = "moved-opp-to-lost";
   } else {
     result.action = "no-open-opp-found-to-cancel";
+  }
+
+  // ── Same-day handling: alert cleaner + manager urgently ─────────────
+  if (sameDay) {
+    const phoneToCleaner = normPhone(s(b.provider_phone));
+    const providerName = s(b.provider_name);
+    const apptStr = (() => {
+      try {
+        const d = new Date(b.appointment_datetime);
+        if (!isNaN(d.getTime())) {
+          return d.toLocaleString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+          });
+        }
+      } catch (_) {}
+      return "today";
+    })();
+    const customerName =
+      [s(b.first_name || b.firstName), s(b.last_name || b.lastName)]
+        .filter(Boolean)
+        .join(" ") || "(unknown)";
+    const address = [s(b.address), s(b.city), s(b.state), s(b.zip)]
+      .filter(Boolean)
+      .join(", ");
+
+    // Cleaner SMS — don't drive out
+    if (phoneToCleaner) {
+      try {
+        const providerFirst = providerName.split(/\s+/)[0] || "";
+        const smsResult = await sendGhlSms({
+          to: phoneToCleaner,
+          message:
+            `🧼 NCC — Customer just cancelled today's ${apptStr} clean. ` +
+            `DO NOT DRIVE. We'll text you if a replacement job comes up. ` +
+            `Sorry for the change.`,
+          firstName: providerFirst || undefined,
+          fromNumber: INTERNAL_LINE,
+        });
+        result.cleanerAlert = smsResult.ok
+          ? { sent: true, messageId: smsResult.messageId }
+          : { sent: false, reason: smsResult.error };
+      } catch (e) {
+        result.cleanerAlert = { sent: false, error: e.message };
+      }
+    }
+
+    // Manager alert — three channels
+    const alertBody =
+      `Customer: ${customerName}\n` +
+      `Was scheduled: ${apptStr} today\n` +
+      `Service: ${s(b.service_type || b.service) || "(unknown)"}\n` +
+      (address ? `Address: ${address}\n` : "") +
+      `Cleaner assigned: ${providerName || "(none)"}${phoneToCleaner ? ` (${phoneToCleaner})` : ""}\n\n` +
+      `Cleaner has been told not to drive. Decide if this customer gets the fee — handled case-by-case per policy.`;
+    await sendOpsAlert({
+      title: `🚨 SAME-DAY CANCEL — ${customerName}`,
+      body: alertBody,
+    }).catch((e) => {
+      result.managerAlert = { error: e.message };
+    });
+    result.managerAlert = result.managerAlert || { sent: true };
   }
 }
 
