@@ -14,6 +14,7 @@ import { buildReviewRequest } from "../_lib/email-templates/review-request.js";
 import { buildRescheduleNotice } from "../_lib/email-templates/reschedule-notice.js";
 import { buildCancellationWinback } from "../_lib/email-templates/cancellation-winback.js";
 import { buildRetellFollowup } from "../_lib/email-templates/retell-followup.js";
+import { buildReactivation } from "../_lib/email-templates/reactivation.js";
 import { sendEmail } from "../_lib/resend.js";
 
 export const config = { runtime: "nodejs" };
@@ -79,6 +80,14 @@ const SAMPLE = {
       sqft: 1850,
       quotedPrice: 275,
       notes: "Pets at home (dog), gate code 4321",
+    },
+  },
+  "reactivation": {
+    builder: buildReactivation,
+    fixture: {
+      firstName: "Sarah",
+      lastServiceType: "deep",
+      daysSince: 30,
     },
   },
 };
