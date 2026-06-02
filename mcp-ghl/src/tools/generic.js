@@ -27,7 +27,20 @@ export const genericTools = [
         ),
     }),
     async handler(input) {
-      return ghl(input);
+      // Tool transports may serialize the body as a JSON string; parse it
+      // back into a value so the GHL client doesn't double-stringify.
+      const args = { ...input };
+      if (typeof args.body === "string") {
+        const trimmed = args.body.trim();
+        if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+          try {
+            args.body = JSON.parse(trimmed);
+          } catch {
+            // Leave as-is; let the server complain.
+          }
+        }
+      }
+      return ghl(args);
     },
   },
 ];

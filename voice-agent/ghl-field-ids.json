@@ -1,0 +1,64 @@
+{
+  "_comment": "GHL custom field IDs for North Columbus Cleaning. Generated 2026-06-02. Created via API; modify in GHL UI then re-export with /api/admin scripts.",
+  "locationId": "XIA5AmegWaylDoPVe3r8",
+  "opportunity": {
+    "service_type": {
+      "id": "E2Bh43nuHLeR7pLewBoU",
+      "dataType": "SINGLE_OPTIONS",
+      "options": ["Standard", "Deep", "Move In/Out", "Recurring", "Office"]
+    },
+    "frequency": {
+      "id": "Bq6J61VYXz1uVWV4GOT1",
+      "dataType": "SINGLE_OPTIONS",
+      "options": ["One-time", "Weekly", "Biweekly", "Every 3 weeks", "Monthly"]
+    },
+    "square_footage": {
+      "id": "w079jKRYalPH42AcpgP1",
+      "dataType": "NUMERICAL"
+    },
+    "bedrooms": {
+      "id": "vYkGR1dkB7ZjHjvC7yY4",
+      "dataType": "NUMERICAL"
+    },
+    "bathrooms": {
+      "id": "L1M8gcHUS1jLUNaLNpkU",
+      "dataType": "NUMERICAL"
+    },
+    "quoted_price": {
+      "id": "j5fbTWAKZFS2F9jwlYss",
+      "dataType": "MONETORY"
+    },
+    "appointment_date": {
+      "id": "f0kFsl9R7qqvH2NJonUf",
+      "dataType": "DATE"
+    },
+    "lead_source": {
+      "id": "f18VFRw0fSCjdH2aQHNx",
+      "dataType": "SINGLE_OPTIONS",
+      "options": ["Retell call", "Web form", "Booking Koala", "Referral", "Google", "Facebook", "Other"]
+    },
+    "lost_reason": {
+      "id": "3GuRvwNmfbdpxBwnlBNe",
+      "dataType": "STANDARD_FIELD",
+      "_note": "GHL built-in field — set via opportunity.lostReasonId on status=lost. Not a true custom field, do not include in opp customFields[] array."
+    }
+  },
+  "contact": {
+    "gate_code": {
+      "id": "N9nprluvSbdcAsMe5lzw",
+      "dataType": "LARGE_TEXT"
+    },
+    "pets_on_premise": {
+      "id": "ffaJWuTCjxbNr9I4ZBB8",
+      "dataType": "LARGE_TEXT"
+    },
+    "preferred_cleaner": {
+      "id": "kCUfiZjJJ8NqmtBbULLV",
+      "dataType": "TEXT"
+    },
+    "customer_ltv": {
+      "id": "8tGAElu4Z4GODFH9RF1h",
+      "dataType": "MONETORY"
+    }
+  }
+}

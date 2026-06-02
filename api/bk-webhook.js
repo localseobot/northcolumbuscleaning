@@ -46,6 +46,21 @@
 // can wire up Zapier with just the fields BK exposes and grow over time.
 
 import { ghl } from "./_lib/ghl.js";
+import {
+  OPP_SERVICE_TYPE,
+  OPP_FREQUENCY,
+  OPP_SQUARE_FOOTAGE,
+  OPP_BEDROOMS,
+  OPP_BATHROOMS,
+  OPP_QUOTED_PRICE,
+  OPP_APPOINTMENT_DATE,
+  OPP_LEAD_SOURCE,
+  LEAD_SOURCE_OPTIONS,
+  normalizeServiceType,
+  normalizeFrequency,
+  cfArray,
+  cf,
+} from "./_lib/ghl-fields.js";
 
 export const config = { runtime: "nodejs" };
 
@@ -243,6 +258,35 @@ function buildNoteBody(b, event) {
   return lines.filter((x) => x !== null).join("\n");
 }
 
+// Build the customFields[] array for an opportunity from the normalized
+// BK payload. cf() returns null when the value is empty, cfArray() filters
+// those out, so missing fields are simply not sent (preserving any existing
+// values on the opp instead of clobbering with blanks).
+function buildOppCustomFields(b) {
+  const svc = normalizeServiceType(b.service_type || b.service);
+  const freq = normalizeFrequency(b.frequency);
+  const sqft = num(b.sqft || b.square_feet);
+  const beds = num(b.bedrooms);
+  const baths = num(b.bathrooms);
+  const price = num(b.price_total || b.total || b.price);
+  // GHL DATE fields accept ISO date strings (YYYY-MM-DD) or epoch ms.
+  let apptDate = null;
+  if (b.appointment_datetime) {
+    const d = new Date(b.appointment_datetime);
+    if (!isNaN(d.getTime())) apptDate = d.toISOString().slice(0, 10);
+  }
+  return cfArray([
+    cf(OPP_SERVICE_TYPE, svc),
+    cf(OPP_FREQUENCY, freq),
+    cf(OPP_SQUARE_FOOTAGE, sqft || null),
+    cf(OPP_BEDROOMS, beds || null),
+    cf(OPP_BATHROOMS, baths || null),
+    cf(OPP_QUOTED_PRICE, price || null),
+    cf(OPP_APPOINTMENT_DATE, apptDate),
+    cf(OPP_LEAD_SOURCE, LEAD_SOURCE_OPTIONS.BOOKING_KOALA),
+  ]);
+}
+
 // ───────── Contact ops ─────────
 async function upsertContact(b) {
   const phone = normPhone(b.phone || b.callback_number);
@@ -314,31 +358,34 @@ async function findOpenOpp(contactId) {
   return opps[0];
 }
 
-async function createOpp({ contactId, name, monetaryValue, stageId }) {
+async function createOpp({ contactId, name, monetaryValue, stageId, customFields }) {
+  const body = {
+    locationId: process.env.GHL_LOCATION_ID,
+    pipelineId: SALES_PIPELINE_ID,
+    pipelineStageId: stageId,
+    name,
+    contactId,
+    monetaryValue: monetaryValue || undefined,
+    status: "open",
+    source: "Booking Koala",
+  };
+  if (customFields?.length) body.customFields = customFields;
   const res = await ghl({
     method: "POST",
     path: "/opportunities/",
-    body: {
-      locationId: process.env.GHL_LOCATION_ID,
-      pipelineId: SALES_PIPELINE_ID,
-      pipelineStageId: stageId,
-      name,
-      contactId,
-      monetaryValue: monetaryValue || undefined,
-      status: "open",
-      source: "Booking Koala",
-    },
+    body,
   });
   return res?.opportunity?.id || res?.id || null;
 }
 
-async function moveOpp(oppId, { stageId, status, name, monetaryValue }) {
+async function moveOpp(oppId, { stageId, status, name, monetaryValue, customFields }) {
   if (!oppId) return null;
   const body = {};
   if (stageId) body.pipelineStageId = stageId;
   if (status) body.status = status;
   if (name) body.name = name;
   if (monetaryValue !== undefined) body.monetaryValue = monetaryValue;
+  if (customFields?.length) body.customFields = customFields;
   const res = await ghl({
     method: "PUT",
     path: `/opportunities/${oppId}`,
@@ -368,11 +415,13 @@ async function handleCreated(b, result) {
   // if so, move it to Booked. Otherwise create new.
   const existing = await findOpenOpp(contact.id);
   const price = num(b.price_total || b.total || b.price);
+  const oppFields = buildOppCustomFields(b);
   if (existing) {
     await moveOpp(existing.id, {
       stageId: STAGE_BOOKED,
       name: buildOpportunityName(b),
       monetaryValue: price || undefined,
+      customFields: oppFields,
     });
     result.opportunityId = existing.id;
     result.action = "moved-existing-opp-to-booked";
@@ -382,10 +431,12 @@ async function handleCreated(b, result) {
       name: buildOpportunityName(b),
       monetaryValue: price,
       stageId: STAGE_BOOKED,
+      customFields: oppFields,
     });
     result.opportunityId = oppId;
     result.action = "created-new-opp-in-booked";
   }
+  result.opp_fields_set = oppFields.length;
 }
 
 async function handleRescheduled(b, result) {
@@ -402,7 +453,10 @@ async function handleRescheduled(b, result) {
 
   const opp = await findOpenOpp(contact.id);
   if (opp) {
-    await moveOpp(opp.id, { name: buildOpportunityName(b) });
+    await moveOpp(opp.id, {
+      name: buildOpportunityName(b),
+      customFields: buildOppCustomFields(b),
+    });
     result.opportunityId = opp.id;
     result.action = "updated-opp-name-with-new-date";
   } else {
@@ -452,6 +506,7 @@ async function handleCompleted(b, result) {
       stageId: STAGE_WON,
       status: "won",
       monetaryValue: price || undefined,
+      customFields: buildOppCustomFields(b),
     });
     result.opportunityId = opp.id;
     result.action = "moved-opp-to-won";

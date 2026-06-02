@@ -36,6 +36,20 @@ import { ghl } from "./_lib/ghl.js";
 import { sendGhlSms } from "./_lib/ghl-sms.js";
 import { calculateQuote } from "./_lib/pricing.js";
 import { buildCallBlocks, sendSlack } from "./_lib/slack.js";
+import {
+  OPP_SERVICE_TYPE,
+  OPP_FREQUENCY,
+  OPP_SQUARE_FOOTAGE,
+  OPP_BEDROOMS,
+  OPP_BATHROOMS,
+  OPP_QUOTED_PRICE,
+  OPP_LEAD_SOURCE,
+  LEAD_SOURCE_OPTIONS,
+  normalizeServiceType,
+  normalizeFrequency,
+  cf,
+  cfArray,
+} from "./_lib/ghl-fields.js";
 
 export const config = { runtime: "nodejs" };
 
@@ -480,22 +494,38 @@ export default async function handler(req, res) {
     const intent = s(extracted.intent).toLowerCase();
     if (BOOKING_INTENTS.has(intent)) {
       try {
+        // Build custom fields from Taylor's post-call extraction.
+        const oppFields = cfArray([
+          cf(OPP_SERVICE_TYPE, normalizeServiceType(extracted.service_type)),
+          cf(OPP_FREQUENCY, normalizeFrequency(extracted.frequency)),
+          cf(OPP_SQUARE_FOOTAGE, num(extracted.sqft) || null),
+          cf(OPP_BEDROOMS, num(extracted.bedrooms) || null),
+          cf(OPP_BATHROOMS, num(extracted.bathrooms) || null),
+          cf(OPP_QUOTED_PRICE, quote?.total || null),
+          cf(OPP_LEAD_SOURCE, LEAD_SOURCE_OPTIONS.RETELL_CALL),
+        ]);
+        const oppBody = {
+          locationId: process.env.GHL_LOCATION_ID,
+          pipelineId: SALES_PIPELINE_ID,
+          pipelineStageId: STAGE_NEW_LEAD,
+          name: buildOpportunityName(extracted, firstName, lastName),
+          contactId,
+          status: "open",
+          source: "Retell — Taylor",
+          assignedTo: ASSIGNED_USER_ID,
+        };
+        // monetaryValue gets a value if Taylor computed a quote, so the
+        // pipeline view shows real revenue projections instead of $0.
+        if (quote?.total) oppBody.monetaryValue = quote.total;
+        if (oppFields.length) oppBody.customFields = oppFields;
         const opp = await ghl({
           method: "POST",
           path: "/opportunities/",
-          body: {
-            locationId: process.env.GHL_LOCATION_ID,
-            pipelineId: SALES_PIPELINE_ID,
-            pipelineStageId: STAGE_NEW_LEAD,
-            name: buildOpportunityName(extracted, firstName, lastName),
-            contactId,
-            status: "open",
-            source: "Retell — Taylor",
-            assignedTo: ASSIGNED_USER_ID,
-          },
+          body: oppBody,
         });
         result.ghl.opportunityId = opp?.opportunity?.id || opp?.id || null;
         result.ghl.opportunityStage = "New Lead";
+        result.ghl.opportunityFieldsSet = oppFields.length;
       } catch (e) {
         result.ghl.opportunityError = e.message;
       }
