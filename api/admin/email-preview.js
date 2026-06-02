@@ -27,6 +27,7 @@ const SAMPLE = {
       sqft: 1850,
       priceTotal: 275,
       address: "1234 High St, Columbus, OH 43215",
+      bookingId: "28",
     },
   },
 };

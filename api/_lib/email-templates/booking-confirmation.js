@@ -65,6 +65,27 @@ function fmtServiceLine({ serviceType, frequency, bedrooms, bathrooms, sqft }) {
   return parts.join(" ");
 }
 
+function fmtServiceName(serviceType) {
+  if (!serviceType) return "Cleaning";
+  const s = String(serviceType).toLowerCase();
+  if (s.includes("deep")) return "Deep Cleaning";
+  if (s.includes("move")) return "Move In/Out Cleaning";
+  if (s.includes("office") || s.includes("commercial")) return "Office Cleaning";
+  if (s.includes("recur")) return "Recurring Cleaning";
+  return "Standard Cleaning";
+}
+
+function fmtFrequencyName(frequency) {
+  if (!frequency) return null;
+  const f = String(frequency).toLowerCase();
+  if (f.includes("week") && !f.includes("bi")) return "Weekly";
+  if (f.includes("bi")) return "Bi-Weekly";
+  if (f.includes("month")) return "Monthly";
+  if (f.includes("3")) return "Every 3 Weeks";
+  if (f.includes("one") || f === "once") return "One-Time";
+  return frequency;
+}
+
 /**
  * Build the booking confirmation email.
  *
@@ -78,6 +99,7 @@ function fmtServiceLine({ serviceType, frequency, bedrooms, bathrooms, sqft }) {
  * @param {number} [input.sqft]
  * @param {number} [input.priceTotal]
  * @param {string} [input.address]
+ * @param {string} [input.bookingId]
  * @returns {{ subject: string, html: string }}
  */
 export function buildBookingConfirmation({
@@ -90,16 +112,12 @@ export function buildBookingConfirmation({
   sqft,
   priceTotal,
   address,
+  bookingId,
 }) {
   const name = firstName || "there";
   const when = fmtDateTime(appointmentDateTime);
-  const serviceLine = fmtServiceLine({
-    serviceType,
-    frequency,
-    bedrooms,
-    bathrooms,
-    sqft,
-  });
+  const serviceName = fmtServiceName(serviceType);
+  const freqName = fmtFrequencyName(frequency);
   const priceLine =
     priceTotal && priceTotal > 0 ? `$${Number(priceTotal).toFixed(2)}` : null;
 
@@ -144,45 +162,121 @@ export function buildBookingConfirmation({
                 Hi ${name},
               </p>
               <p style="margin:0 0 16px;font-size:17px;line-height:1.55;color:${BRAND.text};">
-                Thanks for booking with us! We're looking forward to getting your space sparkling. Here are the details we have on file:
+                Thank you so much for booking with us! We're excited to make your space sparkle. Here's your invoice and appointment details:
               </p>
             </td>
           </tr>
 
-          <!-- Booking details card -->
+          <!-- Invoice / booking summary card -->
           <tr>
             <td style="padding:0 32px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND.bg};border:1px solid ${BRAND.border};border-radius:8px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND.bg};border:1px solid ${BRAND.border};border-radius:12px;overflow:hidden;">
+                <tr>
+                  <td style="padding:18px 24px;border-bottom:1px solid ${BRAND.border};background:#ffffff;">
+                    <div style="font-size:13px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:${BRAND.primary};">
+                      Booking Summary
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 24px 4px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      ${
+                        bookingId
+                          ? `<tr>
+                        <td style="padding:10px 0;font-size:14px;color:${BRAND.textMuted};width:40%;">Booking ID</td>
+                        <td style="padding:10px 0;font-size:15px;font-weight:600;color:${BRAND.text};">#${bookingId}</td>
+                      </tr>`
+                          : ""
+                      }
+                      ${
+                        when
+                          ? `<tr>
+                        <td style="padding:10px 0;font-size:14px;color:${BRAND.textMuted};">Date &amp; time</td>
+                        <td style="padding:10px 0;font-size:15px;font-weight:600;color:${BRAND.text};">${when}</td>
+                      </tr>`
+                          : ""
+                      }
+                      ${
+                        address
+                          ? `<tr>
+                        <td style="padding:10px 0;font-size:14px;color:${BRAND.textMuted};vertical-align:top;">Location</td>
+                        <td style="padding:10px 0;font-size:15px;color:${BRAND.text};">${address}</td>
+                      </tr>`
+                          : ""
+                      }
+                      <tr>
+                        <td style="padding:10px 0;font-size:14px;color:${BRAND.textMuted};">Service</td>
+                        <td style="padding:10px 0;font-size:15px;color:${BRAND.text};">${serviceName}</td>
+                      </tr>
+                      ${
+                        freqName
+                          ? `<tr>
+                        <td style="padding:10px 0;font-size:14px;color:${BRAND.textMuted};">Frequency</td>
+                        <td style="padding:10px 0;font-size:15px;color:${BRAND.text};">${freqName}</td>
+                      </tr>`
+                          : ""
+                      }
+                      ${
+                        bedrooms
+                          ? `<tr>
+                        <td style="padding:10px 0;font-size:14px;color:${BRAND.textMuted};">Bedrooms</td>
+                        <td style="padding:10px 0;font-size:15px;color:${BRAND.text};">${bedrooms}</td>
+                      </tr>`
+                          : ""
+                      }
+                      ${
+                        bathrooms
+                          ? `<tr>
+                        <td style="padding:10px 0;font-size:14px;color:${BRAND.textMuted};">Bathrooms</td>
+                        <td style="padding:10px 0;font-size:15px;color:${BRAND.text};">${bathrooms}</td>
+                      </tr>`
+                          : ""
+                      }
+                      ${
+                        sqft
+                          ? `<tr>
+                        <td style="padding:10px 0;font-size:14px;color:${BRAND.textMuted};">Square footage</td>
+                        <td style="padding:10px 0;font-size:15px;color:${BRAND.text};">${sqft.toLocaleString()} sq ft</td>
+                      </tr>`
+                          : ""
+                      }
+                    </table>
+                  </td>
+                </tr>
+                ${
+                  priceLine
+                    ? `<tr>
+                  <td style="padding:12px 24px 18px;border-top:2px solid ${BRAND.primary};background:#ffffff;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="font-size:14px;font-weight:900;letter-spacing:0.05em;text-transform:uppercase;color:${BRAND.textMuted};">Total</td>
+                        <td style="text-align:right;font-size:22px;font-weight:900;color:${BRAND.text};">${priceLine}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>`
+                    : ""
+                }
+              </table>
+            </td>
+          </tr>
+
+          <!-- Account / portal setup -->
+          <tr>
+            <td style="padding:28px 32px 4px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fffbeb;border:1px solid #fbbf24;border-radius:12px;">
                 <tr>
                   <td style="padding:20px 24px;">
-                    ${
-                      when
-                        ? `<div style="margin-bottom:14px;">
-                      <div style="font-size:12px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:${BRAND.textMuted};">When</div>
-                      <div style="margin-top:4px;font-size:17px;font-weight:600;color:${BRAND.text};">${when}</div>
-                    </div>`
-                        : ""
-                    }
-                    <div style="margin-bottom:14px;">
-                      <div style="font-size:12px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:${BRAND.textMuted};">Service</div>
-                      <div style="margin-top:4px;font-size:17px;color:${BRAND.text};">${serviceLine}</div>
+                    <div style="font-size:13px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#92400e;margin-bottom:6px;">
+                      📬 One more email coming
                     </div>
-                    ${
-                      address
-                        ? `<div style="margin-bottom:14px;">
-                      <div style="font-size:12px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:${BRAND.textMuted};">Where</div>
-                      <div style="margin-top:4px;font-size:17px;color:${BRAND.text};">${address}</div>
-                    </div>`
-                        : ""
-                    }
-                    ${
-                      priceLine
-                        ? `<div>
-                      <div style="font-size:12px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:${BRAND.textMuted};">Total</div>
-                      <div style="margin-top:4px;font-size:17px;font-weight:600;color:${BRAND.text};">${priceLine}</div>
-                    </div>`
-                        : ""
-                    }
+                    <p style="margin:0 0 6px;font-size:16px;font-weight:600;color:${BRAND.text};">
+                      Look for an email titled <em>"Set Up Your New Password"</em>
+                    </p>
+                    <p style="margin:0;font-size:14px;line-height:1.55;color:${BRAND.text};">
+                      That email contains a one-click link to create your customer portal login. Once you set your password, you can manage your booking, reschedule, or update details anytime.
+                    </p>
                   </td>
                 </tr>
               </table>
@@ -191,24 +285,21 @@ export function buildBookingConfirmation({
 
           <!-- Customer portal CTA -->
           <tr>
-            <td style="padding:24px 32px 4px;">
+            <td style="padding:20px 32px 4px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border:2px solid ${BRAND.primary};border-radius:12px;">
                 <tr>
                   <td style="padding:24px 24px 20px;text-align:center;">
                     <div style="font-size:13px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:${BRAND.primary};margin-bottom:8px;">
-                      ⚡ Manage your booking online
+                      ⚡ Already have an account?
                     </div>
-                    <h3 style="margin:0 0 8px;font-size:20px;font-weight:900;color:${BRAND.text};line-height:1.3;">
-                      Reschedule, add details, or update your info anytime
+                    <h3 style="margin:0 0 14px;font-size:18px;font-weight:900;color:${BRAND.text};line-height:1.3;">
+                      Open your customer portal
                     </h3>
-                    <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${BRAND.textMuted};">
-                      Your customer portal lets you handle everything self-serve — no phone tag needed.
-                    </p>
                     <a href="${BRAND.portalUrl}" style="display:inline-block;background:${BRAND.primary};color:${BRAND.accent};font-weight:900;font-size:15px;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;padding:14px 28px;border-radius:8px;">
                       Open my portal →
                     </a>
                     <p style="margin:14px 0 0;font-size:12px;color:${BRAND.textMuted};">
-                      Or visit <a href="${BRAND.portalUrl}" style="color:${BRAND.primary};text-decoration:underline;">northcolumbuscleaning.com/login</a>
+                      <a href="${BRAND.portalUrl}" style="color:${BRAND.primary};text-decoration:underline;">northcolumbuscleaning.com/login</a>
                     </p>
                   </td>
                 </tr>

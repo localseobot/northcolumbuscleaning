@@ -738,6 +738,7 @@ async function handleCreated(b, result) {
     address: [s(b.address), s(b.city), s(b.state), s(b.zip)]
       .filter(Boolean)
       .join(", "),
+    bookingId: s(b.booking_id),
   };
 
   // Branded confirmation email via Resend. No-op if env vars aren't set
