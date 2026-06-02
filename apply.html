@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Join our cleaning team — apply | North Columbus Cleaning</title>
+  <meta name="description" content="Apply to join the North Columbus Cleaning team. Upload your resume and tell us a little about yourself — it takes about a minute." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://northcolumbuscleaning.com/apply" />
+  <meta name="theme-color" content="#1a4d2e" />
+  <link rel="icon" href="/images/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://northcolumbuscleaning.com/apply" />
+  <meta property="og:title" content="Join our cleaning team — apply | North Columbus Cleaning" />
+  <meta property="og:description" content="Apply to join the North Columbus Cleaning team. Upload your resume — it takes about a minute." />
+  <meta property="og:image" content="https://northcolumbuscleaning.com/images/residential.jpg" />
+  <meta property="og:site_name" content="North Columbus Cleaning | House Cleaning Services" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Join our cleaning team — apply | North Columbus Cleaning" />
+  <meta name="twitter:description" content="Apply to join the North Columbus Cleaning team." />
+  <meta name="twitter:image" content="https://northcolumbuscleaning.com/images/residential.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    .apply-wrap { max-width: 640px; margin: 0 auto; }
+    .apply-form {
+      background: var(--off-white);
+      border: 1px solid var(--light-gray);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+    }
+    .field { margin-bottom: var(--space-3); }
+    .field label {
+      display: block;
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--charcoal);
+      margin-bottom: 6px;
+    }
+    .field input[type="text"],
+    .field input[type="email"],
+    .field input[type="tel"],
+    .field textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--light-gray);
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      font-family: inherit;
+      background: #fff;
+      color: var(--charcoal);
+    }
+    .field input:focus, .field textarea:focus {
+      outline: 2px solid var(--sage);
+      outline-offset: 1px;
+      border-color: var(--forest);
+    }
+    .field-file input[type="file"] { font-size: 15px; }
+    .field-hint { font-size: 13px; color: var(--charcoal); opacity: 0.7; margin-top: 4px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+    .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+    .apply-msg { margin-top: var(--space-3); font-size: 15px; }
+    .apply-msg.err { color: #c0392b; }
+    .apply-msg.ok { color: var(--sage); font-weight: 900; }
+    .apply-success {
+      text-align: center;
+      padding: var(--space-5);
+      background: rgba(45, 122, 74, 0.08);
+      border: 1px solid var(--sage);
+      border-radius: var(--radius-lg);
+    }
+    .apply-success h2 { color: var(--forest); margin-bottom: var(--space-2); }
+    @media (max-width: 540px) { .field-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <span class="topbar-item">Serving Columbus, OH and surrounding neighborhoods</span>
+      <span class="topbar-item"><a href="tel:+16143522588">(614) 352-2588</a></span>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/" class="logo-link" aria-label="North Columbus Cleaning Company home">
+        <img src="/images/logo-horizontal.svg" alt="North Columbus Cleaning Company" />
+      </a>
+      <div class="header-mobile-actions">
+        <a href="tel:+16143522588" class="header-call-btn" aria-label="Call (614) 352-2588">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+            <path d="M6.6 10.8c1.4 2.8 3.7 5.1 6.5 6.5l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1l-2.4 2.4z"/>
+          </svg>
+        </a>
+        <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+      <nav class="nav" id="nav" aria-label="Primary">
+        <a href="/services">Services</a>
+        <a href="/quote">Pricing</a>
+        <a href="/locations">Areas</a>
+        <a href="/#owner">About</a>
+        <a href="/#faq">FAQ</a>
+        <a href="tel:+16143522588" class="nav-call">(614) 352-2588</a>
+        <a href="/book-now" class="btn btn-primary nav-cta">Book now</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero hero-compact">
+    <div class="container hero-inner" style="grid-template-columns: 1fr; text-align: center;">
+      <div class="hero-text" style="margin: 0 auto;">
+        <span class="eyebrow">Now hiring</span>
+        <h1>Join our cleaning team</h1>
+        <p class="lead" style="margin: 0 auto var(--space-3);">We're looking for reliable, detail-oriented cleaners across the North Columbus area. Tell us a little about yourself and upload your resume — it takes about a minute.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="container">
+      <div class="apply-wrap">
+        <form class="apply-form" id="apply-form" novalidate>
+          <div class="field-row">
+            <div class="field">
+              <label for="firstName">First name</label>
+              <input type="text" id="firstName" name="firstName" autocomplete="given-name" required />
+            </div>
+            <div class="field">
+              <label for="lastName">Last name</label>
+              <input type="text" id="lastName" name="lastName" autocomplete="family-name" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" autocomplete="email" required />
+          </div>
+          <div class="field">
+            <label for="phone">Phone</label>
+            <input type="tel" id="phone" name="phone" autocomplete="tel" required />
+          </div>
+          <div class="field field-file">
+            <label for="resume">Resume (optional)</label>
+            <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+            <p class="field-hint">PDF, DOC, or DOCX — under 3 MB.</p>
+          </div>
+          <div class="field">
+            <label for="about">Anything you'd like us to know? (optional)</label>
+            <textarea id="about" name="about" rows="3"></textarea>
+          </div>
+          <!-- honeypot -->
+          <div class="hp" aria-hidden="true">
+            <label for="website">Website</label>
+            <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
+          </div>
+          <button type="submit" class="btn btn-primary" id="apply-submit" style="width: 100%;">Submit application</button>
+          <p class="apply-msg" id="apply-msg" role="status" aria-live="polite"></p>
+        </form>
+        <div class="apply-success" id="apply-success" hidden>
+          <h2>Application received 🎉</h2>
+          <p>Thanks for applying to North Columbus Cleaning. We'll review your information and reach out about next steps.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-col">
+        <img src="/images/logo-horizontal.svg" alt="North Columbus Cleaning Company" />
+        <p class="footer-tag">Residential and commercial cleaning serving North Columbus, Ohio.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Company</h5>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/quote">Pricing</a></li>
+          <li><a href="/checklist">Checklist</a></li>
+          <li><a href="/apply">Careers</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Contact &amp; legal</h5>
+        <ul>
+          <li><a href="tel:+16143522588">(614) 352-2588</a></li>
+          <li><a href="mailto:admin@northcolumbuscleaning.com">admin@northcolumbuscleaning.com</a></li>
+          <li><a href="/privacy">Privacy policy</a></li>
+          <li><a href="/sms-terms">SMS terms</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">
+        <p>&copy; <span id="year"></span> North Columbus Cleaning Company &middot; <a href="/privacy">Privacy</a> &middot; <a href="/sms-terms">SMS terms</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/script.js" defer></script>
+  <script>
+    (function () {
+      var form = document.getElementById('apply-form');
+      if (!form) return;
+      var msg = document.getElementById('apply-msg');
+      var btn = document.getElementById('apply-submit');
+      var successBox = document.getElementById('apply-success');
+      var MAX_BYTES = 3 * 1024 * 1024;
+
+      function fileToBase64(file) {
+        return new Promise(function (resolve, reject) {
+          var reader = new FileReader();
+          reader.onload = function () {
+            var res = String(reader.result || '');
+            var comma = res.indexOf(',');
+            resolve(comma >= 0 ? res.slice(comma + 1) : res);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        msg.className = 'apply-msg';
+        msg.textContent = '';
+
+        var payload = {
+          firstName: form.firstName.value.trim(),
+          lastName: form.lastName.value.trim(),
+          email: form.email.value.trim(),
+          phone: form.phone.value.trim(),
+          about: form.about.value.trim(),
+          website: form.website.value
+        };
+
+        if (!payload.firstName || !payload.email || !payload.phone) {
+          msg.className = 'apply-msg err';
+          msg.textContent = 'Please fill in your name, email, and phone.';
+          return;
+        }
+
+        var file = form.resume.files && form.resume.files[0];
+        if (file) {
+          if (file.size > MAX_BYTES) {
+            msg.className = 'apply-msg err';
+            msg.textContent = 'That resume is over 3 MB. Please upload a smaller file.';
+            return;
+          }
+          try {
+            payload.resumeBase64 = await fileToBase64(file);
+            payload.resumeName = file.name;
+            payload.resumeType = file.type || 'application/pdf';
+          } catch (err) {
+            msg.className = 'apply-msg err';
+            msg.textContent = 'Could not read that file. Try a different resume.';
+            return;
+          }
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Submitting…';
+        try {
+          var resp = await fetch('/api/apply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          var data = await resp.json().catch(function () { return {}; });
+          if (!resp.ok || data.ok === false) {
+            throw new Error(data.error || 'Something went wrong. Please try again.');
+          }
+          form.hidden = true;
+          successBox.hidden = false;
+          successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } catch (err) {
+          msg.className = 'apply-msg err';
+          msg.textContent = err.message || 'Something went wrong. Please try again.';
+          btn.disabled = false;
+          btn.textContent = 'Submit application';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
