@@ -369,13 +369,27 @@ async function createOpp({ contactId, name, monetaryValue, stageId, customFields
     status: "open",
     source: "Booking Koala",
   };
-  if (customFields?.length) body.customFields = customFields;
   const res = await ghl({
     method: "POST",
     path: "/opportunities/",
     body,
   });
-  return res?.opportunity?.id || res?.id || null;
+  const oppId = res?.opportunity?.id || res?.id || null;
+  // POST /opportunities/ silently drops customFields. We have to set them
+  // via PUT in a follow-up call.
+  if (oppId && customFields?.length) {
+    try {
+      await ghl({
+        method: "PUT",
+        path: `/opportunities/${oppId}`,
+        body: { customFields },
+      });
+    } catch (_) {
+      // Field update failure shouldn't kill the whole webhook — the opp
+      // exists and tags fired. We just won't have the structured data.
+    }
+  }
+  return oppId;
 }
 
 async function moveOpp(oppId, { stageId, status, name, monetaryValue, customFields }) {

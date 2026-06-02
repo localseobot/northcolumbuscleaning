@@ -517,15 +517,27 @@ export default async function handler(req, res) {
         // monetaryValue gets a value if Taylor computed a quote, so the
         // pipeline view shows real revenue projections instead of $0.
         if (quote?.total) oppBody.monetaryValue = quote.total;
-        if (oppFields.length) oppBody.customFields = oppFields;
         const opp = await ghl({
           method: "POST",
           path: "/opportunities/",
           body: oppBody,
         });
-        result.ghl.opportunityId = opp?.opportunity?.id || opp?.id || null;
+        const oppId = opp?.opportunity?.id || opp?.id || null;
+        result.ghl.opportunityId = oppId;
         result.ghl.opportunityStage = "New Lead";
-        result.ghl.opportunityFieldsSet = oppFields.length;
+        // POST /opportunities/ silently drops customFields[]; set them via PUT.
+        if (oppId && oppFields.length) {
+          try {
+            await ghl({
+              method: "PUT",
+              path: `/opportunities/${oppId}`,
+              body: { customFields: oppFields },
+            });
+            result.ghl.opportunityFieldsSet = oppFields.length;
+          } catch (e) {
+            result.ghl.opportunityFieldsError = e.message;
+          }
+        }
       } catch (e) {
         result.ghl.opportunityError = e.message;
       }
