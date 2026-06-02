@@ -79,7 +79,7 @@ export async function buildAgreementPdf({
   // Title
   draw(title, bold, 16);
   y -= 22;
-  draw(`North Columbus Cleaning Company  ·  ${version}`, font, 9, rgb(0.4, 0.4, 0.4));
+  draw(`North Columbus Cleaning LLC  ·  ${version}`, font, 9, rgb(0.4, 0.4, 0.4));
   y -= 22;
 
   // Body

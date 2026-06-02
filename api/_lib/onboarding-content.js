@@ -6,10 +6,10 @@
 // review AGREEMENT_TEXT before relying on it. Bump AGREEMENT_VERSION whenever
 // the text changes so signed PDFs record which version was accepted.
 
-export const AGREEMENT_VERSION = "2026-06-v1";
+export const AGREEMENT_VERSION = "2026-06-v2";
 export const AGREEMENT_TITLE = "Independent Contractor Agreement";
 
-export const AGREEMENT_TEXT = `This Independent Contractor Agreement ("Agreement") is entered into between North Columbus Cleaning Company ("Company") and the undersigned contractor ("Contractor") as of the date of signature below.
+export const AGREEMENT_TEXT = `This Independent Contractor Agreement ("Agreement") is entered into between North Columbus Cleaning LLC ("Company") and the undersigned contractor ("Contractor") as of the date of signature below.
 
 1. RELATIONSHIP OF THE PARTIES. Contractor is an independent contractor, not an employee, partner, or agent of Company. Contractor is responsible for their own federal, state, and local taxes, including self-employment tax. Company will not withhold taxes and will report payments on IRS Form 1099 where required. Nothing in this Agreement creates an employment, joint-venture, or partnership relationship.
 
@@ -17,9 +17,9 @@ export const AGREEMENT_TEXT = `This Independent Contractor Agreement ("Agreement
 
 3. SCHEDULING AND ACCEPTANCE. Contractor may accept or decline assignments. Once an assignment is accepted, Contractor agrees to complete it as scheduled or to provide reasonable advance notice if unable to do so.
 
-4. SUPPLIES AND EQUIPMENT. Unless otherwise agreed in writing, Contractor will supply their own basic equipment. Company may provide certain specialized products or branded materials, which remain Company property.
+4. SUPPLIES AND EQUIPMENT. Contractor provides their own cleaning supplies and equipment (including, without limitation, vacuum, mop, cloths, and cleaning products) for all assignments, at Contractor's own expense. Any specialized products or branded materials the Company elects to provide remain Company property.
 
-5. COMPENSATION. Company will pay Contractor the agreed per-job or hourly rate communicated at assignment. Payment is made on Company's regular pay cycle following completion and verification of the work.
+5. COMPENSATION. Company pays Contractor by the job at the per-job amount communicated at assignment (not by the hour). Following completion and verification of the work, pay is issued on Wednesday of the week after the week in which the work was completed; work weeks run Monday through Sunday. For example, jobs completed during the week of Monday, June 8 through Sunday, June 14 are paid on Wednesday, June 17.
 
 6. CONDUCT AND CONFIDENTIALITY. Contractor will treat clients, client property, and Company information with care and respect. Contractor will keep confidential all client information, access codes, and Company business information, during and after the term of this Agreement. Contractor will not solicit Company's clients for competing services for twelve (12) months after this Agreement ends.
 
@@ -41,11 +41,15 @@ export const ONBOARDING_DOC_TITLE = "Contractor Onboarding & Standards";
 export const ONBOARDING_DOC_SECTIONS = [
   {
     heading: "Welcome",
-    body: "Welcome to the North Columbus Cleaning team! This page gets you set up to take jobs. Please review everything below carefully — confirming means you understand how we work and what clients expect.",
+    body: "Welcome to the North Columbus Cleaning LLC team! This page gets you set up to take jobs. Please review everything below carefully — confirming means you understand how we work and what clients expect.",
   },
   {
     heading: "Quality standards",
     body: "Every job follows our published room-by-room checklist for the service tier booked (Standard, Deep, or Move-In/Out). Top-to-bottom, left-to-right, nothing skipped. A senior cleaner may spot-check work. Photos before/after are encouraged.",
+  },
+  {
+    heading: "Supplies & equipment",
+    body: "You are responsible for providing your own cleaning supplies and equipment (vacuum, mop, cloths, and professional-grade products) for every job, at your own expense. Choose products suited to each home so you can meet our standards.",
   },
   {
     heading: "Professionalism",
@@ -61,13 +65,15 @@ export const ONBOARDING_DOC_SECTIONS = [
   },
   {
     heading: "Getting paid",
-    body: "Payment follows completion and verification on our regular pay cycle. You are an independent contractor responsible for your own taxes — that's why we collect your W-9.",
+    body: "You're paid by the job, on Wednesday of the week after the work was completed (work weeks run Monday–Sunday). Example: jobs completed the week of Mon June 8 – Sun June 14 are paid on Wednesday, June 17. You're an independent contractor responsible for your own taxes — that's why we collect your W-9.",
   },
 ];
 
 // The checklist the contractor confirms they have reviewed.
 export const REVIEW_CHECKLIST = [
   "I have reviewed the room-by-room cleaning checklist for each service tier.",
+  "I will provide my own cleaning supplies and equipment for every job.",
+  "I understand I'm paid by the job on Wednesday of the week after the work is completed.",
   "I understand the professionalism and client-conduct expectations.",
   "I understand that access codes and client information are confidential.",
   "I understand the scheduling, cancellation, and communication expectations.",

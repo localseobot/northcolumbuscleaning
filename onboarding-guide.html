@@ -36,7 +36,17 @@
       border-radius: var(--radius-lg); padding: var(--space-4); margin-top: var(--space-3);
     }
     .guide-list { font-size: 17px; line-height: 1.7; color: var(--charcoal); padding-left: 1.2em; }
-    @media (max-width: 560px){ .guide-steps { grid-template-columns: 1fr; } }
+    .guide-link {
+      display: inline-block; font-weight: 900; font-size: 15px; line-height: 1.3;
+      color: var(--forest); background: rgba(45,122,74,.10); border: 1px solid var(--sage);
+      border-radius: var(--radius-sm); padding: 10px 16px; text-decoration: none; margin-right: 8px;
+    }
+    .guide-link:hover { background: rgba(45,122,74,.18); }
+    @media (max-width: 560px){
+      .guide-steps { grid-template-columns: 1fr; }
+      .guide-section h2 { font-size: 24px; }
+      .guide-link { display: block; text-align: center; margin: 0 0 8px; }
+    }
   </style>
 </head>
 <body>
@@ -64,7 +74,7 @@
       <div class="guide-section">
         <span class="guide-eyebrow">Welcome</span>
         <h2>You're in good company</h2>
-        <p>North Columbus Cleaning Company is a local, professional cleaning service for homes and businesses across the North Columbus, Ohio area. We believe a clean, organized space makes everyday life better — and we get it right the first time. We're glad to have you on board.</p>
+        <p>North Columbus Cleaning LLC is a local, professional cleaning service for homes and businesses across the North Columbus, Ohio area. We believe a clean, organized space makes everyday life better — and we get it right the first time. We're glad to have you on board.</p>
       </div>
 
       <div class="guide-section">
@@ -76,21 +86,36 @@
 
       <div class="guide-section">
         <span class="guide-eyebrow">Supplies</span>
-        <h2>Supplies &amp; equipment</h2>
-        <p>We trust you to choose the right products for each job. Our cleaning checklist covers what's included at each service level, so you can keep our clients' spaces clean to our standard.</p>
-        <p><a href="/checklist" class="btn btn-secondary" target="_blank" rel="noopener">View the cleaning checklist</a></p>
+        <h2>You provide your own supplies &amp; equipment</h2>
+        <p>As an independent contractor, <strong>you supply your own cleaning products and equipment</strong> (vacuum, mop, cloths, and professional-grade cleaners) for every job. Choose products suited to each home so you can meet our standards.</p>
+        <p>Our cleaning checklist shows exactly what's cleaned at each service level (Standard, Deep, Move-In/Out):</p>
+        <p><a href="/checklist" class="guide-link" target="_blank" rel="noopener">View the cleaning checklist ↗</a></p>
       </div>
 
       <div class="guide-section">
         <span class="guide-eyebrow">Your toolkit</span>
         <h2>Booking Koala</h2>
-        <p>Booking Koala keeps everything organized — your schedule, job details, and assignments, all in one place. Download the <strong>Booking Koala for Providers</strong> app from the Apple App Store or Google Play to manage your work: view your schedule, accept cleaning jobs, and track your progress.</p>
+        <p>Booking Koala keeps everything organized — your schedule, job details, and assignments, all in one place. Download the <strong>Booking Koala for Providers</strong> app to view your schedule, accept cleaning jobs, and track your progress:</p>
+        <p>
+          <a href="https://apps.apple.com/us/app/bookingkoala-for-providers/id1446530801" class="guide-link" target="_blank" rel="noopener">Download for iPhone (App Store) ↗</a>
+          <a href="https://play.google.com/store/apps/details?id=com.bookingkoala.bkforproviders" class="guide-link" target="_blank" rel="noopener">Download for Android (Google Play) ↗</a>
+        </p>
       </div>
 
       <div class="guide-section">
         <span class="guide-eyebrow">Policies</span>
         <h2>Our commitment to job completion</h2>
         <p>We're committed to completing every job to a high standard. We pay <strong>by the job, not by the hour</strong>, to keep the focus on thoroughness and quality. If a job is left incomplete or doesn't meet the checklist, the cleaner returns to finish it. That's how we keep our clients happy and our reputation solid.</p>
+      </div>
+
+      <div class="guide-section">
+        <span class="guide-eyebrow">Getting paid</span>
+        <h2>Pay schedule</h2>
+        <p>You're paid <strong>by the job</strong>, on <strong>Wednesday of the week after</strong> the work was completed. Work weeks run Monday–Sunday.</p>
+        <div class="guide-callout">
+          <p style="margin:0"><strong>Example:</strong> jobs you complete the week of <strong>Mon June 8 – Sun June 14</strong> are paid on <strong>Wednesday, June 17</strong>.</p>
+        </div>
+        <p style="margin-top:var(--space-2)">As an independent contractor you receive a 1099 and are responsible for your own taxes — that's why we collect your W-9.</p>
       </div>
 
       <div class="guide-section">
@@ -145,7 +170,7 @@
   <footer class="site-footer">
     <div class="footer-bottom">
       <div class="container">
-        <p>&copy; <span id="year"></span> North Columbus Cleaning Company &middot; <a href="/privacy">Privacy</a></p>
+        <p>&copy; <span id="year"></span> North Columbus Cleaning LLC &middot; <a href="/privacy">Privacy</a></p>
       </div>
     </div>
   </footer>

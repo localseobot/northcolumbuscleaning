@@ -89,7 +89,7 @@ export async function buildSubstituteW9(f) {
   );
   y -= 14;
   text(
-    "Collected by North Columbus Cleaning Company",
+    "Collected by North Columbus Cleaning LLC",
     MARGIN,
     9,
     font,
