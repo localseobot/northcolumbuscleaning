@@ -50,6 +50,7 @@ const SAMPLE = {
     fixture: {
       firstName: "Sarah",
       serviceType: "deep",
+      email: "sarah@example.com",
     },
   },
   "reschedule-notice": {

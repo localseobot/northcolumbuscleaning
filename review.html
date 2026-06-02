@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How was your cleaning? | North Columbus Cleaning</title>
+  <meta name="description" content="Share your feedback on your recent cleaning service from North Columbus Cleaning Company." />
+  <meta name="robots" content="noindex, follow" />
+  <link rel="icon" href="/images/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/svg+xml" href="/images/logo.svg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+  <meta name="theme-color" content="#1a4d2e" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    .review-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--off-white);
+    }
+    .review-hero {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-6) var(--space-3);
+    }
+    .review-card {
+      width: 100%;
+      max-width: 640px;
+      background: #ffffff;
+      border: 1px solid var(--light-gray);
+      border-radius: 24px;
+      padding: var(--space-8) var(--space-6);
+      box-shadow: 0 12px 32px rgba(13, 51, 32, 0.08);
+      text-align: center;
+    }
+    .review-logo {
+      height: 44px;
+      margin-bottom: var(--space-4);
+    }
+    .review-card h1 {
+      font-size: clamp(28px, 4vw, 38px);
+      margin-bottom: var(--space-2);
+      line-height: 1.2;
+    }
+    .review-card .lead {
+      font-size: 18px;
+      color: var(--charcoal);
+      opacity: 0.85;
+      margin-bottom: var(--space-5);
+    }
+    .smileys {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+      max-width: 480px;
+      margin: 0 auto var(--space-4);
+    }
+    .smiley-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4) var(--space-2);
+      background: var(--off-white);
+      border: 3px solid transparent;
+      border-radius: 20px;
+      cursor: pointer;
+      font: inherit;
+      text-decoration: none;
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .smiley-btn:hover {
+      transform: translateY(-3px);
+      text-decoration: none;
+    }
+    .smiley-btn.happy:hover { border-color: var(--sage); background: #f0fdf4; }
+    .smiley-btn.sad:hover { border-color: #d97706; background: #fffbeb; }
+    .smiley-emoji {
+      font-size: 80px;
+      line-height: 1;
+      margin-bottom: var(--space-2);
+      display: block;
+    }
+    .smiley-label {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--forest);
+      letter-spacing: 0.5px;
+    }
+    .review-foot {
+      font-size: 13px;
+      color: var(--charcoal);
+      opacity: 0.7;
+      margin-top: var(--space-3);
+    }
+    .review-foot a { color: var(--sage); font-weight: 700; }
+
+    /* Feedback form */
+    .feedback-form {
+      display: none;
+      text-align: left;
+    }
+    .feedback-form.is-visible { display: block; }
+    .smileys.is-hidden { display: none; }
+    .feedback-form .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--forest);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: var(--space-1);
+    }
+    .feedback-form input,
+    .feedback-form textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1.5px solid var(--light-gray);
+      border-radius: 10px;
+      font-size: 16px;
+      font-family: inherit;
+      color: var(--charcoal);
+      background: #ffffff;
+      margin-bottom: var(--space-3);
+      transition: border-color 0.15s ease;
+    }
+    .feedback-form input:focus,
+    .feedback-form textarea:focus {
+      outline: none;
+      border-color: var(--sage);
+    }
+    .feedback-form textarea {
+      min-height: 140px;
+      resize: vertical;
+    }
+    .feedback-form .form-actions {
+      display: flex;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+    .feedback-form .btn-back {
+      background: transparent;
+      color: var(--charcoal);
+      border: 1.5px solid var(--light-gray);
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 15px;
+    }
+    .feedback-form .btn-submit {
+      flex: 1;
+      min-width: 200px;
+    }
+    .feedback-success {
+      display: none;
+      padding: var(--space-4) 0;
+    }
+    .feedback-success.is-visible { display: block; }
+    .feedback-success .check {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: var(--sage);
+      color: #ffffff;
+      font-size: 36px;
+      line-height: 64px;
+      margin: 0 auto var(--space-3);
+    }
+    .form-error {
+      color: #b91c1c;
+      font-size: 14px;
+      margin: 0 0 var(--space-2);
+      display: none;
+    }
+    .form-error.is-visible { display: block; }
+
+    @media (max-width: 520px) {
+      .review-card { padding: var(--space-5) var(--space-3); border-radius: 18px; }
+      .smiley-emoji { font-size: 64px; }
+      .smileys { gap: var(--space-2); }
+    }
+  </style>
+</head>
+<body>
+  <div class="review-shell">
+    <div class="review-hero">
+      <div class="review-card">
+        <img src="/images/logo-horizontal.svg" alt="North Columbus Cleaning" class="review-logo" />
+
+        <div id="step-choose">
+          <h1 id="greeting">How was your cleaning?</h1>
+          <p class="lead">Your feedback helps us get better every visit.</p>
+
+          <div class="smileys" id="smileys">
+            <a href="#" class="smiley-btn happy" id="happy-btn" aria-label="Great experience">
+              <span class="smiley-emoji" aria-hidden="true">😊</span>
+              <span class="smiley-label">Great!</span>
+            </a>
+            <button type="button" class="smiley-btn sad" id="sad-btn" aria-label="Something was wrong">
+              <span class="smiley-emoji" aria-hidden="true">😞</span>
+              <span class="smiley-label">Not great</span>
+            </button>
+          </div>
+
+          <form class="feedback-form" id="feedback-form" novalidate>
+            <p style="font-size:17px; line-height:1.55; color:var(--charcoal); margin-bottom:var(--space-3);">
+              We're sorry to hear that — and we'd really like to make it right. Please share what went wrong:
+            </p>
+            <label class="form-label" for="fb-message">What happened?</label>
+            <textarea id="fb-message" name="message" placeholder="Tell us what we missed..." required></textarea>
+
+            <label class="form-label" for="fb-name">Your name</label>
+            <input type="text" id="fb-name" name="name" autocomplete="name" />
+
+            <label class="form-label" for="fb-email">Your email</label>
+            <input type="email" id="fb-email" name="email" autocomplete="email" />
+
+            <p class="form-error" id="fb-error"></p>
+
+            <div class="form-actions">
+              <button type="button" class="btn-back" id="fb-back">← Back</button>
+              <button type="submit" class="btn btn-primary btn-submit" id="fb-submit">Send feedback</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="feedback-success" id="feedback-success">
+          <div class="check">✓</div>
+          <h1>Thank you</h1>
+          <p class="lead">We received your feedback. The owner will personally reach out within one business day to make it right.</p>
+        </div>
+
+        <p class="review-foot">
+          North Columbus Cleaning · <a href="tel:+16143522588">(614) 352-2588</a> · <a href="mailto:admin@northcolumbuscleaning.com">admin@northcolumbuscleaning.com</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var name = (params.get('n') || '').trim();
+      var email = (params.get('e') || '').trim();
+
+      // Personalize greeting if we know who they are
+      if (name) {
+        var greeting = document.getElementById('greeting');
+        if (greeting) greeting.textContent = 'Hi ' + name + ', how was your cleaning?';
+      }
+
+      // Pre-fill feedback form
+      if (name) document.getElementById('fb-name').value = name;
+      if (email) document.getElementById('fb-email').value = email;
+
+      // Happy path: redirect to Google review.
+      // Place ID is injected at deploy via build-time env if available;
+      // we ship a sensible fallback to the business name search until then.
+      var GOOGLE_REVIEW_URL = window.NCC_GOOGLE_REVIEW_URL ||
+        'https://www.google.com/search?q=North+Columbus+Cleaning+Company+Columbus+OH';
+      document.getElementById('happy-btn').setAttribute('href', GOOGLE_REVIEW_URL);
+
+      // Sad path: reveal feedback form
+      document.getElementById('sad-btn').addEventListener('click', function () {
+        document.getElementById('smileys').classList.add('is-hidden');
+        document.getElementById('feedback-form').classList.add('is-visible');
+        setTimeout(function () { document.getElementById('fb-message').focus(); }, 100);
+      });
+
+      // Back button
+      document.getElementById('fb-back').addEventListener('click', function () {
+        document.getElementById('feedback-form').classList.remove('is-visible');
+        document.getElementById('smileys').classList.remove('is-hidden');
+      });
+
+      // Submit feedback
+      var form = document.getElementById('feedback-form');
+      var errEl = document.getElementById('fb-error');
+      var submitBtn = document.getElementById('fb-submit');
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        errEl.classList.remove('is-visible');
+        var message = document.getElementById('fb-message').value.trim();
+        var nameVal = document.getElementById('fb-name').value.trim();
+        var emailVal = document.getElementById('fb-email').value.trim();
+        if (!message) {
+          errEl.textContent = 'Please tell us what happened — even a sentence helps.';
+          errEl.classList.add('is-visible');
+          return;
+        }
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending…';
+        fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: message,
+            name: nameVal,
+            email: emailVal,
+            referrerEmail: email,  // original recipient email from URL param
+            referrerName: name,
+            source: 'review-gate',
+          }),
+        })
+          .then(function (r) { return r.json().catch(function () { return {}; }); })
+          .then(function (resp) {
+            if (resp && resp.ok) {
+              form.classList.remove('is-visible');
+              document.getElementById('feedback-success').classList.add('is-visible');
+              document.getElementById('step-choose').style.display = 'none';
+            } else {
+              throw new Error(resp && resp.error || 'Failed to send');
+            }
+          })
+          .catch(function (err) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Send feedback';
+            errEl.textContent = 'Something went wrong. Please call us at (614) 352-2588 — we want to make it right.';
+            errEl.classList.add('is-visible');
+          });
+      });
+    })();
+  </script>
+</body>
+</html>
