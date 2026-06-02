@@ -64,16 +64,18 @@ function mapsLink(address) {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
 }
 
-// Strip a contact note down to its first ~250 chars of cleaner-relevant
-// content. We skip our own webhook-generated notes ("Booking Koala event:
-// booking.created") since the cleaner doesn't need that meta.
+// Pull cleaner-relevant content from contact notes. Skip system-generated
+// notes (BK event meta, [DEBUG], ⚠️ negative-feedback). Prefer Retell call
+// "Special notes" because customers proactively shared those during the call.
 function extractCustomerNotesFromContactNotes(notes) {
   if (!Array.isArray(notes) || notes.length === 0) return null;
   for (const note of notes) {
     const body = String(note?.body || note?.bodyText || "").trim();
     if (!body) continue;
+    // Skip system/internal notes
     if (body.startsWith("Booking Koala event:")) continue;
     if (body.startsWith("[DEBUG]")) continue;
+    if (body.startsWith("⚠️") || body.includes("Negative-experience feedback")) continue;
     // Retell call notes — extract the "Special notes:" / "Summary:" snippets
     if (body.startsWith("Inbound call via")) {
       const specialMatch = body.match(/Special notes?:?\s*([^\n]+)/i);
@@ -122,9 +124,12 @@ export function buildProviderSms({
   const pets = getCf(ctCf, CONTACT_PETS);
 
   const customerName =
-    contact?.fullName ||
     [contact?.firstNameRaw, contact?.lastNameRaw].filter(Boolean).join(" ") ||
+    [contact?.firstName, contact?.lastName].filter(Boolean).join(" ") ||
+    contact?.fullNameLowerCase ||
     contact?.contactName ||
+    contact?.fullName ||
+    contact?.name ||
     "Customer";
   const customerPhone = contact?.phone || "";
 

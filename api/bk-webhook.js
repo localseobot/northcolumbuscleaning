@@ -582,11 +582,14 @@ function buildOppCustomFields(b) {
   const beds = num(b.bedrooms);
   const baths = num(b.bathrooms);
   const price = num(b.price_total || b.total || b.price);
-  // GHL DATE fields accept ISO date strings (YYYY-MM-DD) or epoch ms.
+  // GHL DATE fields accept full ISO datetime strings — they display as
+  // date in the UI but preserve the time in the underlying field value.
+  // We store the full ISO so downstream code (provider SMS, reminders)
+  // can show the actual appointment time, not just the date.
   let apptDate = null;
   if (b.appointment_datetime) {
     const d = new Date(b.appointment_datetime);
-    if (!isNaN(d.getTime())) apptDate = d.toISOString().slice(0, 10);
+    if (!isNaN(d.getTime())) apptDate = d.toISOString();
   }
   return cfArray([
     cf(OPP_SERVICE_TYPE, svc),
