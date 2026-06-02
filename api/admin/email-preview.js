@@ -15,6 +15,7 @@ import { buildRescheduleNotice } from "../_lib/email-templates/reschedule-notice
 import { buildCancellationWinback } from "../_lib/email-templates/cancellation-winback.js";
 import { buildRetellFollowup } from "../_lib/email-templates/retell-followup.js";
 import { buildReactivation } from "../_lib/email-templates/reactivation.js";
+import { buildRecurringPitch } from "../_lib/email-templates/recurring-pitch.js";
 import { sendEmail } from "../_lib/resend.js";
 
 export const config = { runtime: "nodejs" };
@@ -88,6 +89,14 @@ const SAMPLE = {
       firstName: "Sarah",
       lastServiceType: "deep",
       daysSince: 30,
+    },
+  },
+  "recurring-pitch": {
+    builder: buildRecurringPitch,
+    fixture: {
+      firstName: "Sarah",
+      lastServiceType: "deep",
+      lastPrice: 275,
     },
   },
 };

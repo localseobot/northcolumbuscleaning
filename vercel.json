@@ -5,6 +5,14 @@
     {
       "path": "/api/admin/audit-calls",
       "schedule": "0 14 * * 1"
+    },
+    {
+      "path": "/api/cron/recurring-pitch",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/reactivation",
+      "schedule": "0 15 * * *"
     }
   ]
 }
