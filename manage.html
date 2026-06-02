@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage your booking | North Columbus Cleaning</title>
+  <meta name="description" content="Reschedule, cancel, or update details for your North Columbus Cleaning booking." />
+  <meta name="robots" content="noindex, follow" />
+  <link rel="icon" href="/images/favicon.ico" sizes="any" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+  <meta name="theme-color" content="#1a4d2e" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    .manage-shell { min-height: 100vh; display: flex; flex-direction: column; background: var(--off-white); }
+    .manage-hero { flex: 1; display: flex; align-items: center; justify-content: center; padding: var(--space-6) var(--space-3); }
+    .manage-card { width: 100%; max-width: 600px; background: #fff; border: 1px solid var(--light-gray); border-radius: 24px; padding: var(--space-6) var(--space-5); box-shadow: 0 12px 32px rgba(13,51,32,0.08); }
+    .manage-logo { height: 44px; margin-bottom: var(--space-3); }
+    .manage-card h1 { font-size: clamp(28px,4vw,36px); margin-bottom: var(--space-2); line-height: 1.2; }
+    .manage-card p.lead { font-size: 17px; color: var(--charcoal); opacity: 0.85; margin-bottom: var(--space-4); }
+    .action-grid { display: grid; gap: var(--space-2); margin-bottom: var(--space-4); }
+    .action-card { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-3); background: var(--off-white); border: 2px solid transparent; border-radius: 16px; text-decoration: none; color: var(--forest); transition: border-color 0.15s ease, transform 0.15s ease; -webkit-tap-highlight-color: transparent; cursor: pointer; text-align: left; font: inherit; width: 100%; }
+    .action-card:hover { border-color: var(--sage); text-decoration: none; transform: translateY(-2px); }
+    .action-card.danger:hover { border-color: #b91c1c; }
+    .action-emoji { font-size: 32px; line-height: 1; flex-shrink: 0; }
+    .action-text { flex: 1; }
+    .action-title { font-size: 18px; font-weight: 900; color: var(--forest); display: block; }
+    .action-sub { font-size: 14px; color: var(--charcoal); opacity: 0.7; margin-top: 2px; display: block; }
+    .reschedule-form, .cancel-form { display: none; padding: var(--space-3); background: var(--off-white); border-radius: 16px; margin-bottom: var(--space-3); text-align: left; }
+    .reschedule-form.is-visible, .cancel-form.is-visible { display: block; }
+    .form-label { display: block; font-size: 13px; font-weight: 700; color: var(--forest); letter-spacing: 1px; text-transform: uppercase; margin-bottom: var(--space-1); }
+    textarea, input { width: 100%; padding: 14px 16px; border: 1.5px solid var(--light-gray); border-radius: 10px; font-size: 16px; font-family: inherit; color: var(--charcoal); background: #fff; margin-bottom: var(--space-2); }
+    textarea:focus, input:focus { outline: none; border-color: var(--sage); }
+    textarea { min-height: 100px; resize: vertical; }
+    .form-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-2); }
+    .form-actions .btn { flex: 1; min-width: 140px; }
+    .btn-back { background: transparent; color: var(--charcoal); border: 1.5px solid var(--light-gray); padding: 12px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 15px; font-family: inherit; }
+    .manage-foot { font-size: 13px; color: var(--charcoal); opacity: 0.7; margin-top: var(--space-2); text-align: center; }
+    .manage-foot a { color: var(--sage); font-weight: 700; }
+    .success { display: none; padding: var(--space-4); text-align: center; }
+    .success.is-visible { display: block; }
+    .success .check { width: 64px; height: 64px; border-radius: 50%; background: var(--sage); color: #fff; font-size: 36px; line-height: 64px; margin: 0 auto var(--space-3); }
+    .form-error { color: #b91c1c; font-size: 14px; margin: var(--space-1) 0 var(--space-2); display: none; }
+    .form-error.is-visible { display: block; }
+  </style>
+</head>
+<body>
+  <div class="manage-shell">
+    <div class="manage-hero">
+      <div class="manage-card">
+        <img src="/images/logo-horizontal.svg" alt="North Columbus Cleaning" class="manage-logo" />
+
+        <div id="step-choose">
+          <h1 id="greeting">Manage your booking</h1>
+          <p class="lead">What would you like to do?</p>
+
+          <div class="action-grid">
+            <a class="action-card" href="https://northcolumbuscleaning.bookingkoala.com/login" target="_blank" rel="noopener">
+              <span class="action-emoji" aria-hidden="true">📅</span>
+              <span class="action-text">
+                <span class="action-title">Reschedule online</span>
+                <span class="action-sub">Pick a new date and time in your portal — fastest option</span>
+              </span>
+            </a>
+            <button type="button" class="action-card" id="request-change-btn">
+              <span class="action-emoji" aria-hidden="true">✏️</span>
+              <span class="action-text">
+                <span class="action-title">Request a change</span>
+                <span class="action-sub">Update access, add notes, or ask about your booking</span>
+              </span>
+            </button>
+            <button type="button" class="action-card danger" id="cancel-btn">
+              <span class="action-emoji" aria-hidden="true">✕</span>
+              <span class="action-text">
+                <span class="action-title">Cancel my booking</span>
+                <span class="action-sub">We'll get back to you to confirm cancellation</span>
+              </span>
+            </button>
+            <a class="action-card" href="tel:+16143522588">
+              <span class="action-emoji" aria-hidden="true">📞</span>
+              <span class="action-text">
+                <span class="action-title">Call us — (614) 352-2588</span>
+                <span class="action-sub">M–Sa, 7am–7pm Eastern</span>
+              </span>
+            </a>
+          </div>
+
+          <!-- Request change form -->
+          <form class="reschedule-form" id="request-form" novalidate>
+            <h2 style="margin: 0 0 var(--space-2); font-size: 20px; color: var(--forest);">What would you like to change?</h2>
+            <label class="form-label" for="rc-message">Your request</label>
+            <textarea id="rc-message" name="message" placeholder="e.g. Add inside fridge cleaning, gate code is 4321, need to switch from Tuesday to Wednesday..." required></textarea>
+
+            <label class="form-label" for="rc-name">Your name</label>
+            <input type="text" id="rc-name" name="name" autocomplete="name" />
+
+            <label class="form-label" for="rc-email">Your email</label>
+            <input type="email" id="rc-email" name="email" autocomplete="email" />
+
+            <p class="form-error" id="rc-error"></p>
+
+            <div class="form-actions">
+              <button type="button" class="btn-back" data-back>← Back</button>
+              <button type="submit" class="btn btn-primary" id="rc-submit">Send request</button>
+            </div>
+          </form>
+
+          <!-- Cancel form -->
+          <form class="cancel-form" id="cancel-form" novalidate>
+            <h2 style="margin: 0 0 var(--space-2); font-size: 20px; color: var(--forest);">Cancel your booking</h2>
+            <p style="margin: 0 0 var(--space-2); font-size: 15px; color: var(--charcoal); opacity: 0.8;">
+              Sorry to hear you're cancelling! Drop a quick note if there's anything we could have done better — we'd love the feedback.
+            </p>
+            <label class="form-label" for="cn-message">Reason (optional but helpful)</label>
+            <textarea id="cn-message" name="message" placeholder="What's going on? (totally optional)"></textarea>
+
+            <label class="form-label" for="cn-name">Your name</label>
+            <input type="text" id="cn-name" name="name" autocomplete="name" />
+
+            <label class="form-label" for="cn-email">Your email</label>
+            <input type="email" id="cn-email" name="email" autocomplete="email" required />
+
+            <p class="form-error" id="cn-error"></p>
+
+            <div class="form-actions">
+              <button type="button" class="btn-back" data-back>← Back</button>
+              <button type="submit" class="btn btn-primary" id="cn-submit">Confirm cancellation</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="success" id="success">
+          <div class="check">✓</div>
+          <h1 id="success-title">Got it!</h1>
+          <p class="lead" id="success-message">Devyn will reach out shortly to confirm. Most requests are handled within one business day.</p>
+        </div>
+
+        <p class="manage-foot">
+          North Columbus Cleaning · <a href="tel:+16143522588">(614) 352-2588</a> · <a href="mailto:admin@northcolumbuscleaning.com">admin@northcolumbuscleaning.com</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var name = (params.get('n') || '').trim();
+      var email = (params.get('e') || '').trim();
+      var bookingId = (params.get('bid') || params.get('bookingId') || '').trim();
+
+      if (name) {
+        var greeting = document.getElementById('greeting');
+        if (greeting) greeting.textContent = 'Hi ' + name + ', what would you like to do?';
+      }
+      ['rc-name','cn-name'].forEach(function (id) { if (name) document.getElementById(id).value = name; });
+      ['rc-email','cn-email'].forEach(function (id) { if (email) document.getElementById(id).value = email; });
+
+      function show(id) {
+        document.querySelectorAll('.reschedule-form, .cancel-form').forEach(function (f) { f.classList.remove('is-visible'); });
+        document.querySelector('.action-grid').style.display = 'none';
+        document.getElementById(id).classList.add('is-visible');
+      }
+      function back() {
+        document.querySelectorAll('.reschedule-form, .cancel-form').forEach(function (f) { f.classList.remove('is-visible'); });
+        document.querySelector('.action-grid').style.display = '';
+      }
+
+      document.getElementById('request-change-btn').addEventListener('click', function () { show('request-form'); });
+      document.getElementById('cancel-btn').addEventListener('click', function () { show('cancel-form'); });
+      document.querySelectorAll('[data-back]').forEach(function (b) { b.addEventListener('click', back); });
+
+      function submitForm(formId, errId, submitId, kind, successTitle, successMsg) {
+        document.getElementById(formId).addEventListener('submit', function (e) {
+          e.preventDefault();
+          var errEl = document.getElementById(errId);
+          errEl.classList.remove('is-visible');
+          var prefix = kind === 'cancel' ? 'cn' : 'rc';
+          var msg = document.getElementById(prefix + '-message').value.trim();
+          var nm = document.getElementById(prefix + '-name').value.trim();
+          var em = document.getElementById(prefix + '-email').value.trim();
+          if (kind === 'cancel' && !em) {
+            errEl.textContent = 'Please include your email so we can confirm.';
+            errEl.classList.add('is-visible');
+            return;
+          }
+          if (kind === 'request' && !msg) {
+            errEl.textContent = 'Please describe what you would like to change.';
+            errEl.classList.add('is-visible');
+            return;
+          }
+          var btn = document.getElementById(submitId);
+          btn.disabled = true; btn.textContent = 'Sending...';
+          fetch('/api/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: msg || '(no message)',
+              name: nm, email: em,
+              referrerEmail: email, referrerName: name,
+              source: 'manage-' + kind + (bookingId ? ':' + bookingId : ''),
+            })
+          }).then(function (r) { return r.json().catch(function () { return {}; }); })
+            .then(function (data) {
+              if (data && data.ok) {
+                document.getElementById('step-choose').style.display = 'none';
+                document.getElementById('success-title').textContent = successTitle;
+                document.getElementById('success-message').textContent = successMsg;
+                document.getElementById('success').classList.add('is-visible');
+              } else {
+                throw new Error((data && data.error) || 'Failed');
+              }
+            }).catch(function () {
+              btn.disabled = false; btn.textContent = kind === 'cancel' ? 'Confirm cancellation' : 'Send request';
+              errEl.textContent = 'Something went wrong. Please call us at (614) 352-2588.';
+              errEl.classList.add('is-visible');
+            });
+        });
+      }
+
+      submitForm('request-form', 'rc-error', 'rc-submit', 'request',
+        'Got it!',
+        'We received your request. Devyn will get back to you within one business day. If it\'s urgent, call (614) 352-2588.');
+      submitForm('cancel-form', 'cn-error', 'cn-submit', 'cancel',
+        'Cancellation requested',
+        'We received your cancellation request. Devyn will confirm and follow up within a few hours. Sorry to see you go!');
+    })();
+  </script>
+</body>
+</html>

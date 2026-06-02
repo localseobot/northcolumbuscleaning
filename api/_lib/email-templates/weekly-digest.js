@@ -152,7 +152,7 @@ export function buildWeeklyDigest({
         <tr>
           ${kpiCard({ label: "Cancellations", value: curr.cancellations || 0, sub: curr.sameDayCancellations ? `${curr.sameDayCancellations} same-day` : "", prev: prev.cancellations, color: "#b91c1c" })}
           ${kpiCard({ label: "Avg ticket", value: fmtMoney(curr.avgTicket || 0), prev: prev.avgTicket })}
-          ${kpiCard({ label: "Reviews requested", value: curr.reviewsRequested || 0 })}
+          ${kpiCard({ label: "Reviews", value: `${curr.reviewsReceived || 0}/${curr.reviewsRequested || 0}`, sub: "received / requested", color: "#047857" })}
         </tr>
       </table>
     </div>

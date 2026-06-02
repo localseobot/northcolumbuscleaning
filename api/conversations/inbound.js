@@ -393,12 +393,52 @@ export default async function handler(req, res) {
     case "on_the_way":
     case "arrived":
     case "done": {
-      // Info-only manager update — Slack/email channels only (no SMS spam for status)
+      // Info-only manager update — Slack/email channels only (no SMS spam)
       await sendOpsAlert({
         title: `ℹ️ ${classification.intent.replace(/_/g, " ")} — ${cleanerName}`,
         body: `Cleaner sent: "${message}"\n\n${classification.summary}`,
         severity: "info",
       });
+
+      // For running_late + arrived, also text the customer if we can
+      // identify which job is being talked about. on_the_way is borderline
+      // (don't want to spam if they're early or mid-route); done would
+      // overlap with the post-job review-request cron — skip both.
+      const shouldNotifyCustomer =
+        classification.intent === "running_late" ||
+        classification.intent === "arrived";
+      if (shouldNotifyCustomer) {
+        // Pick the today job (default first if multiple)
+        const target = todayJobs[0];
+        if (target) {
+          try {
+            const customerSms =
+              classification.intent === "running_late"
+                ? `Hi ${target.customerName?.split(" ")[0] || "there"}, ${cleanerName.split(" ")[0]} from North Columbus Cleaning here — running a few minutes late but on the way. Sorry for the wait!`
+                : `Hi ${target.customerName?.split(" ")[0] || "there"}, ${cleanerName.split(" ")[0]} from North Columbus Cleaning just arrived at your place. We'll get to work!`;
+            // Look up the customer's contactId via the opp
+            const oppRes = await ghl({
+              method: "GET",
+              path: `/opportunities/${target.oppId}`,
+            }).catch(() => null);
+            const customerContactId = oppRes?.opportunity?.contactId;
+            if (customerContactId) {
+              await ghl({
+                method: "POST",
+                path: "/conversations/messages",
+                body: {
+                  type: "SMS",
+                  contactId: customerContactId,
+                  message: customerSms,
+                  fromNumber: CUSTOMER_LINE,
+                },
+              }).catch(() => null);
+              result.actions.customerNotified = true;
+            }
+          } catch (_) {}
+        }
+      }
+
       if (classification.suggested_reply) {
         await autoReply({
           contactId: contact.id,

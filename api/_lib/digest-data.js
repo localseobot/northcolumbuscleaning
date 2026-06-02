@@ -190,20 +190,38 @@ export async function gatherWeeklyDigestData({ weekStart, weekEnd }) {
   // the review-request-sent tag AND were updated this week. Imperfect but
   // useful as a trend indicator.
   let reviewsRequested = 0;
+  let reviewsReceived = 0;
   try {
-    const search = await ghl({
-      method: "POST",
-      path: "/contacts/search",
-      body: {
-        locationId: process.env.GHL_LOCATION_ID,
-        pageLimit: 100,
-        filters: [
-          { field: "tags", operator: "contains", value: "review-request-sent" },
-        ],
-        sort: [{ field: "dateUpdated", direction: "desc" }],
-      },
-    });
-    reviewsRequested = (search?.contacts || []).filter((c) =>
+    const [reqSearch, recSearch] = await Promise.all([
+      ghl({
+        method: "POST",
+        path: "/contacts/search",
+        body: {
+          locationId: process.env.GHL_LOCATION_ID,
+          pageLimit: 100,
+          filters: [
+            { field: "tags", operator: "contains", value: "review-request-sent" },
+          ],
+          sort: [{ field: "dateUpdated", direction: "desc" }],
+        },
+      }),
+      ghl({
+        method: "POST",
+        path: "/contacts/search",
+        body: {
+          locationId: process.env.GHL_LOCATION_ID,
+          pageLimit: 100,
+          filters: [
+            { field: "tags", operator: "contains", value: "left-google-review" },
+          ],
+          sort: [{ field: "dateUpdated", direction: "desc" }],
+        },
+      }),
+    ]);
+    reviewsRequested = (reqSearch?.contacts || []).filter((c) =>
+      inWindow(c.dateUpdated, weekStartMs, weekEndMs),
+    ).length;
+    reviewsReceived = (recSearch?.contacts || []).filter((c) =>
       inWindow(c.dateUpdated, weekStartMs, weekEndMs),
     ).length;
   } catch {}
@@ -233,6 +251,7 @@ export async function gatherWeeklyDigestData({ weekStart, weekEnd }) {
       sameDayCancellations,
       avgTicket,
       reviewsRequested,
+      reviewsReceived,
     },
     prev: {
       revenue: prevRevenue,
