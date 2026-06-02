@@ -64,12 +64,13 @@ import {
   cf,
 } from "./_lib/ghl-fields.js";
 import { sendEmail } from "./_lib/resend.js";
-import { sendGhlSms, CUSTOMER_LINE } from "./_lib/ghl-sms.js";
+import { sendGhlSms, CUSTOMER_LINE, INTERNAL_LINE } from "./_lib/ghl-sms.js";
 import {
   buildBookingConfirmation,
   buildBookingConfirmationSms,
 } from "./_lib/email-templates/booking-confirmation.js";
 import { buildRescheduleNotice } from "./_lib/email-templates/reschedule-notice.js";
+import { buildProviderSmsFromBooking } from "./_lib/provider-sms.js";
 
 export const config = { runtime: "nodejs" };
 
@@ -831,6 +832,38 @@ async function handleCreated(b, result) {
     }
   } else {
     result.confirmationSms = { sent: false, reason: "no phone on file" };
+  }
+
+  // ── Provider SMS — fires the instant a booking lands so the assigned
+  // cleaner can plan and ask questions before the day-before/morning-of
+  // crons hit. Only sends if BK passes us the provider's phone in the
+  // booking payload (normalized into b.provider_phone above).
+  const providerPhoneRaw = s(b.provider_phone);
+  const providerPhone = providerPhoneRaw ? normPhone(providerPhoneRaw) : "";
+  const providerName = s(b.provider_name);
+  if (providerPhone) {
+    try {
+      const providerFirst = providerName.split(/\s+/)[0] || "";
+      const message = buildProviderSmsFromBooking({
+        providerFirstName: providerFirst,
+        booking: b,
+        intro: "New booking just confirmed",
+      });
+      const smsResult = await sendGhlSms({
+        to: providerPhone,
+        message,
+        firstName: providerFirst || undefined,
+        tag: "internal:cleaner",
+        fromNumber: INTERNAL_LINE,
+      });
+      result.providerSms = smsResult.ok
+        ? { sent: true, messageId: smsResult.messageId, to: providerPhone }
+        : { sent: false, reason: smsResult.error };
+    } catch (e) {
+      result.providerSms = { sent: false, error: e.message };
+    }
+  } else {
+    result.providerSms = { sent: false, reason: "no provider phone in booking payload" };
   }
 }
 
