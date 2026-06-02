@@ -57,10 +57,26 @@ export default async function handler(req, res) {
   }
   body = body || {};
 
-  const firstName = String(body.firstName || "").trim().slice(0, 60);
-  const lastName = String(body.lastName || "").trim().slice(0, 60);
-  const email = String(body.email || "").trim().toLowerCase();
-  const phone = String(body.phone || "").trim().slice(0, 32);
+  // Accept the field under any common spelling — Booking Koala/Zapier send
+  // "Email Id", "First Name", "Phone Number", etc. This way the Zap works
+  // whether the body is custom-mapped or passes BK's raw field names through.
+  const pick = (keys) => {
+    for (const k of keys) {
+      const v = body[k];
+      if (v !== undefined && v !== null && String(v).trim() !== "") return String(v).trim();
+    }
+    return "";
+  };
+  const firstName = pick(["firstName", "first_name", "First Name", "FirstName", "fname"]).slice(0, 60);
+  const lastName = pick(["lastName", "last_name", "Last Name", "LastName", "lname"]).slice(0, 60);
+  const email = pick([
+    "email", "Email", "email_id", "emailId", "Email Id", "EmailId",
+    "Email Address", "email_address",
+  ]).toLowerCase();
+  const phone = pick([
+    "phone", "Phone", "phone_number", "phoneNumber", "Phone Number",
+    "Alt Phone Number", "alt_phone_number",
+  ]).slice(0, 32);
 
   if (!email || !EMAIL_RE.test(email)) {
     return res.status(400).json({ error: "A valid provider email is required." });
