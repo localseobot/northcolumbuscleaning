@@ -100,34 +100,23 @@ function isRecurringFrequency(raw) {
 }
 
 // ───────── Mapping tables ─────────
-const SERVICE_TAG = {
-  standard: "service:residential",
-  regular: "service:residential",
-  residential: "service:residential",
-  deep: "service:deep-clean",
-  "deep-clean": "service:deep-clean",
-  "deep cleaning": "service:deep-clean",
-  move_in_out: "service:move-in-out",
-  "move-in-out": "service:move-in-out",
-  "move in/out": "service:move-in-out",
-  "move-in/move-out": "service:move-in-out",
-  commercial: "service:commercial",
-  post_construction: "service:post-construction",
-  "post-construction": "service:post-construction",
+// Map canonical (normalized) service/frequency values to tag slugs. We use
+// the normalizers from ghl-fields.js so tag application and custom-field
+// population always agree on what a payload "means".
+const SERVICE_TAG_BY_CANONICAL = {
+  Standard: "service:residential",
+  Deep: "service:deep-clean",
+  "Move In/Out": "service:move-in-out",
+  Recurring: "service:residential",
+  Office: "service:commercial",
 };
 
-const FREQUENCY_TAG = {
-  one_time: "frequency:one-time",
-  "one-time": "frequency:one-time",
-  onetime: "frequency:one-time",
-  weekly: "frequency:weekly",
-  biweekly: "frequency:biweekly",
-  "every 2 weeks": "frequency:biweekly",
-  "every-2-weeks": "frequency:biweekly",
-  every_3_weeks: "frequency:every-3-weeks",
-  "every 3 weeks": "frequency:every-3-weeks",
-  "every-3-weeks": "frequency:every-3-weeks",
-  monthly: "frequency:monthly",
+const FREQUENCY_TAG_BY_CANONICAL = {
+  "One-time": "frequency:one-time",
+  Weekly: "frequency:weekly",
+  Biweekly: "frequency:biweekly",
+  "Every 3 weeks": "frequency:every-3-weeks",
+  Monthly: "frequency:monthly",
 };
 
 const EVENT_HANDLERS = {
@@ -479,10 +468,14 @@ function buildName(b) {
 }
 function buildTags(b, eventTags) {
   const tags = ["source:booking-koala"];
-  const svc = lower(b.service_type || b.service);
-  if (SERVICE_TAG[svc]) tags.push(SERVICE_TAG[svc]);
-  const freq = lower(b.frequency);
-  if (FREQUENCY_TAG[freq]) tags.push(FREQUENCY_TAG[freq]);
+  // Reuse the same canonicalization as buildOppCustomFields so tags + fields
+  // stay in lockstep regardless of how BK formats the raw value.
+  const svc = normalizeServiceType(b.service_type || b.service);
+  if (svc && SERVICE_TAG_BY_CANONICAL[svc])
+    tags.push(SERVICE_TAG_BY_CANONICAL[svc]);
+  const freq = normalizeFrequency(b.frequency);
+  if (freq && FREQUENCY_TAG_BY_CANONICAL[freq])
+    tags.push(FREQUENCY_TAG_BY_CANONICAL[freq]);
   if (Array.isArray(eventTags)) tags.push(...eventTags);
   return [...new Set(tags)];
 }
