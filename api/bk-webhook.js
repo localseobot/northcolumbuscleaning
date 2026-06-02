@@ -144,7 +144,12 @@ function s(v) {
   return String(v).trim();
 }
 function num(v) {
-  const n = Number(v);
+  if (v === null || v === undefined || v === "") return 0;
+  if (typeof v === "number") return Number.isFinite(v) ? v : 0;
+  // Strip currency symbols, thousand separators, percent signs etc. so
+  // "$1,234.56" / "$245" / "245.00" all parse the same.
+  const cleaned = String(v).replace(/[$,£€¥%\s]/g, "");
+  const n = Number(cleaned);
   return Number.isFinite(n) ? n : 0;
 }
 function normPhone(raw) {
@@ -158,65 +163,310 @@ function normPhone(raw) {
 function lower(v) {
   return s(v).toLowerCase();
 }
-// Normalize Zapier/BK field-name variations into the keys we use below.
-// Accepts: first_name/firstName/customer_first_name, customer_name (split),
-// email/customer_email, phone/customer_phone, etc.
+// Normalize Zapier/BK field-name variations into the canonical keys our
+// webhook expects. The strategy:
+//
+//   1. Build a lookup map keyed by `lowerCaseNoSpace(key)` for the whole
+//      incoming payload, including nested objects flattened by dot path.
+//      Lookups are then resilient to camelCase / snake_case / kebab-case /
+//      "Title Case With Spaces" variants — anything Zapier might surface.
+//   2. pickField() tries a list of canonical aliases, returns the first
+//      non-empty value (or the original payload key if nothing matched).
+//
+// This means we never have to know the EXACT field name BK uses — as long
+// as it contains some recognisable variant (e.g. "Number Of Bedrooms",
+// "num_bedrooms", "bedrooms", "beds", "bedroomCount") we'll find it.
 function normalizeBody(b) {
+  if (!b || typeof b !== "object") return {};
   const out = { ...b };
 
-  // First / last name — handle "customer_name" full name → split
-  const fullName = s(b.customer_name || b.full_name || b.name);
+  // Build a flat case-insensitive lookup over the whole payload, with
+  // nested objects accessible by dot path AND by their leaf name (when
+  // unique). Arrays are kept as-is, not flattened.
+  const lookup = {};
+  const norm = (k) => String(k).toLowerCase().replace(/[\s_\-./]+/g, "");
+  const walk = (obj, prefix = "") => {
+    if (!obj || typeof obj !== "object") return;
+    for (const [k, v] of Object.entries(obj)) {
+      const dotKey = prefix ? `${prefix}.${k}` : k;
+      const isObj = v && typeof v === "object" && !Array.isArray(v);
+      if (isObj) {
+        walk(v, dotKey);
+      } else if (v !== undefined && v !== null && v !== "") {
+        // Store under multiple normalized variants so any reasonable
+        // alias guess in pickField() will match.
+        lookup[norm(dotKey)] = v;
+        const leaf = norm(k);
+        if (!(leaf in lookup)) lookup[leaf] = v;
+      }
+    }
+  };
+  walk(b);
+
+  const pick = (...candidates) => {
+    for (const c of candidates) {
+      const nk = norm(c);
+      if (lookup[nk] !== undefined) return lookup[nk];
+    }
+    return undefined;
+  };
+
+  // ── Name ──────────────────────────────────────────────────────────
+  const fullName = s(
+    pick(
+      "customer_name",
+      "customer_full_name",
+      "customerfullname",
+      "full_name",
+      "name",
+    ),
+  );
   if (!out.first_name && !out.firstName && fullName) {
     const parts = fullName.split(/\s+/);
     out.first_name = parts[0];
     if (parts.length > 1) out.last_name = parts.slice(1).join(" ");
   }
-  if (!out.first_name && (b.customer_first_name || b.firstName))
-    out.first_name = b.customer_first_name || b.firstName;
-  if (!out.last_name && (b.customer_last_name || b.lastName))
-    out.last_name = b.customer_last_name || b.lastName;
+  if (!out.first_name)
+    out.first_name = pick(
+      "first_name",
+      "firstname",
+      "customer_first_name",
+      "customerfirstname",
+      "givenname",
+    );
+  if (!out.last_name)
+    out.last_name = pick(
+      "last_name",
+      "lastname",
+      "customer_last_name",
+      "customerlastname",
+      "familyname",
+      "surname",
+    );
 
-  // Email / phone
-  if (!out.email) out.email = b.customer_email || b.email_address || b.customerEmail;
+  // ── Contact ───────────────────────────────────────────────────────
+  if (!out.email)
+    out.email = pick(
+      "email",
+      "customer_email",
+      "customeremail",
+      "email_address",
+      "emailaddress",
+    );
   if (!out.phone)
-    out.phone = b.customer_phone || b.phone_number || b.customerPhone;
+    out.phone = pick(
+      "phone",
+      "customer_phone",
+      "customerphone",
+      "phone_number",
+      "phonenumber",
+      "mobile",
+      "mobile_number",
+      "mobilephone",
+      "cell",
+      "cellphone",
+    );
 
-  // Booking ID
+  // ── Booking ID ────────────────────────────────────────────────────
   if (!out.booking_id)
-    out.booking_id = b.id || b.booking_number || b.bookingId;
+    out.booking_id = pick(
+      "booking_id",
+      "bookingid",
+      "id",
+      "booking_number",
+      "bookingnumber",
+      "confirmation_code",
+      "confirmationcode",
+      "confirmation_number",
+      "confirmationnumber",
+      "order_id",
+      "orderid",
+    );
 
-  // Appointment date+time — combine BK's separate date + arrival fields
+  // ── Appointment date+time ─────────────────────────────────────────
   if (!out.appointment_datetime) {
-    const date = s(b.booking_date || b.appointment_date || b.service_date);
-    const time = s(b.arrival_time || b.appointment_time || b.start_time);
+    const date = s(
+      pick(
+        "appointment_datetime",
+        "appointmentdatetime",
+        "datetime",
+        "appointment_date",
+        "appointmentdate",
+        "booking_date",
+        "bookingdate",
+        "service_date",
+        "servicedate",
+        "scheduled_date",
+        "scheduleddate",
+        "date",
+      ),
+    );
+    const time = s(
+      pick(
+        "arrival_time",
+        "arrivaltime",
+        "appointment_time",
+        "appointmenttime",
+        "start_time",
+        "starttime",
+        "booking_time",
+        "bookingtime",
+        "scheduled_time",
+        "scheduledtime",
+        "time",
+      ),
+    );
     if (date && time) out.appointment_datetime = `${date} ${time}`;
     else if (date) out.appointment_datetime = date;
-    else if (b.datetime) out.appointment_datetime = b.datetime;
   }
 
-  // Service / frequency
+  // ── Service ───────────────────────────────────────────────────────
   if (!out.service_type)
-    out.service_type = b.service || b.service_name || b.cleaning_type;
+    out.service_type = pick(
+      "service_type",
+      "servicetype",
+      "service",
+      "service_name",
+      "servicename",
+      "cleaning_type",
+      "cleaningtype",
+      "service_category",
+      "servicecategory",
+    );
+
+  // ── Frequency ─────────────────────────────────────────────────────
   if (!out.frequency)
-    out.frequency = b.recurring || b.cadence || b.service_frequency;
+    out.frequency = pick(
+      "frequency",
+      "recurring",
+      "recurrence",
+      "cadence",
+      "service_frequency",
+      "servicefrequency",
+      "interval",
+      "schedule_type",
+      "scheduletype",
+    );
 
-  // Property details
-  if (!out.bedrooms) out.bedrooms = b.beds || b.bedroom_count || b.num_bedrooms;
+  // ── Property details ──────────────────────────────────────────────
+  if (!out.bedrooms)
+    out.bedrooms = pick(
+      "bedrooms",
+      "beds",
+      "bedroom_count",
+      "bedroomcount",
+      "num_bedrooms",
+      "numbedrooms",
+      "no_of_bedrooms",
+      "noofbedrooms",
+      "number_of_bedrooms",
+      "numberofbedrooms",
+    );
   if (!out.bathrooms)
-    out.bathrooms = b.baths || b.bathroom_count || b.num_bathrooms;
-  if (!out.sqft) out.sqft = b.square_feet || b.square_footage || b.sq_ft;
+    out.bathrooms = pick(
+      "bathrooms",
+      "baths",
+      "bathroom_count",
+      "bathroomcount",
+      "num_bathrooms",
+      "numbathrooms",
+      "no_of_bathrooms",
+      "noofbathrooms",
+      "number_of_bathrooms",
+      "numberofbathrooms",
+      "full_bathrooms",
+      "fullbathrooms",
+    );
+  if (!out.sqft)
+    out.sqft = pick(
+      "sqft",
+      "square_feet",
+      "squarefeet",
+      "square_footage",
+      "squarefootage",
+      "sq_ft",
+      "sq_footage",
+      "home_size",
+      "homesize",
+      "house_size",
+      "housesize",
+      "size",
+    );
 
-  // Price
+  // ── Price ─────────────────────────────────────────────────────────
   if (!out.price_total)
-    out.price_total = b.total || b.total_price || b.amount || b.price;
+    out.price_total = pick(
+      "price_total",
+      "pricetotal",
+      "total",
+      "total_price",
+      "totalprice",
+      "total_amount",
+      "totalamount",
+      "amount",
+      "price",
+      "pricing_total",
+      "pricingtotal",
+      "grand_total",
+      "grandtotal",
+      "final_price",
+      "finalprice",
+    );
 
-  // Notes
+  // ── Notes ─────────────────────────────────────────────────────────
   if (!out.notes)
-    out.notes = b.customer_notes || b.special_notes || b.special_instructions;
+    out.notes = pick(
+      "notes",
+      "customer_notes",
+      "customernotes",
+      "special_notes",
+      "specialnotes",
+      "special_instructions",
+      "specialinstructions",
+      "notes_to_provider",
+      "notestoprovider",
+      "booking_notes",
+      "bookingnotes",
+      "comments",
+    );
 
-  // Address parts (BK often gives a single address string)
-  if (!out.address) out.address = b.street_address || b.address_line_1;
-  if (!out.zip) out.zip = b.postal_code || b.zipcode || b.zip_code;
+  // ── Address ───────────────────────────────────────────────────────
+  if (!out.address)
+    out.address = pick(
+      "address",
+      "street_address",
+      "streetaddress",
+      "address_line_1",
+      "addressline1",
+      "address1",
+      "customer_address",
+      "customeraddress",
+      "service_address",
+      "serviceaddress",
+    );
+  if (!out.city) out.city = pick("city", "customer_city", "customercity", "address_city", "addresscity");
+  if (!out.state)
+    out.state = pick(
+      "state",
+      "region",
+      "customer_state",
+      "customerstate",
+      "address_state",
+      "addressstate",
+      "province",
+    );
+  if (!out.zip)
+    out.zip = pick(
+      "zip",
+      "zipcode",
+      "zip_code",
+      "postal_code",
+      "postalcode",
+      "customer_zip",
+      "customerzip",
+      "address_zip",
+      "addresszip",
+    );
 
   return out;
 }

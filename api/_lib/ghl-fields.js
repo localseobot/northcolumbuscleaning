@@ -63,29 +63,56 @@ export const LEAD_SOURCE_OPTIONS = {
 
 export function normalizeServiceType(raw) {
   if (!raw) return null;
-  const s = String(raw).toLowerCase().replace(/[\s_-]+/g, "");
+  const s = String(raw).toLowerCase().replace(/[\s_\-/]+/g, "");
+  // Order matters — check more specific terms before general ones.
   if (s.includes("deep")) return SERVICE_TYPE_OPTIONS.DEEP;
   if (s.includes("move")) return SERVICE_TYPE_OPTIONS.MOVE_IN_OUT;
   if (s.includes("office") || s.includes("commercial"))
     return SERVICE_TYPE_OPTIONS.OFFICE;
-  if (s.includes("recur") || s.includes("regular"))
+  if (s.includes("recur") || s.includes("regular") || s.includes("maintenance"))
     return SERVICE_TYPE_OPTIONS.RECURRING;
-  if (s.includes("standard") || s.includes("residential"))
+  // "Standard Cleaning", "Residential Cleaning", "House Cleaning", "Home Cleaning"
+  if (
+    s.includes("standard") ||
+    s.includes("residential") ||
+    s.includes("house") ||
+    s.includes("home") ||
+    s.includes("regular") ||
+    s.includes("basic")
+  )
     return SERVICE_TYPE_OPTIONS.STANDARD;
   return null;
 }
 
 export function normalizeFrequency(raw) {
   if (!raw) return null;
-  const s = String(raw).toLowerCase().replace(/[\s_-]+/g, "");
-  if (s.includes("week") && !s.includes("bi") && !s.includes("3"))
-    return FREQUENCY_OPTIONS.WEEKLY;
-  if (s.includes("bi") || s.includes("twoweek") || s.includes("2week"))
-    return FREQUENCY_OPTIONS.BIWEEKLY;
+  const s = String(raw).toLowerCase().replace(/[\s_\-/]+/g, "");
+  // Order matters — check biweekly + every-3-weeks before generic week.
   if (s.includes("3week") || s.includes("threeweek") || s.includes("every3"))
     return FREQUENCY_OPTIONS.EVERY_3_WEEKS;
-  if (s.includes("month")) return FREQUENCY_OPTIONS.MONTHLY;
-  if (s.includes("onetime") || s === "once") return FREQUENCY_OPTIONS.ONE_TIME;
+  if (
+    s.includes("biweekly") ||
+    s.includes("biweek") ||
+    s.includes("twoweek") ||
+    s.includes("2week") ||
+    s.includes("every2")
+  )
+    return FREQUENCY_OPTIONS.BIWEEKLY;
+  if (
+    s.includes("month") ||
+    s.includes("4week") ||
+    s.includes("every4")
+  )
+    return FREQUENCY_OPTIONS.MONTHLY;
+  if (s.includes("week")) return FREQUENCY_OPTIONS.WEEKLY;
+  if (
+    s.includes("onetime") ||
+    s.includes("once") ||
+    s.includes("single") ||
+    s.includes("oneoff") ||
+    s.includes("nonrecur")
+  )
+    return FREQUENCY_OPTIONS.ONE_TIME;
   return null;
 }
 
