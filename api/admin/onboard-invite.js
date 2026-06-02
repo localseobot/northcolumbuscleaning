@@ -143,6 +143,7 @@ export default async function handler(req, res) {
         <p style="margin:24px 0">
           <a href="${link}" style="background:#1a4d2e;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:bold">Start onboarding</a>
         </p>
+        <p style="font-size:14px">New to the team? Read the <a href="${siteBase()}/onboarding-guide">onboarding guide</a> to see how everything works.</p>
         <p style="font-size:13px;color:#666">If the button doesn't work, paste this link into your browser:<br>${link}</p>
         <p style="font-size:13px;color:#666">This link is personal to you and expires in 14 days.</p>
       </div>`;

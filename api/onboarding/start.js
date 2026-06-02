@@ -28,6 +28,9 @@ import {
 export const config = { runtime: "nodejs" };
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const GUIDE_URL =
+  (process.env.SITE_BASE_URL || "https://www.northcolumbuscleaning.com").replace(/\/$/, "") +
+  "/onboarding-guide";
 
 export default async function handler(req, res) {
   setOnboardCors(res);
@@ -85,6 +88,7 @@ export default async function handler(req, res) {
         <p>Hi ${escapeHtml(firstName)}, here's your code to continue onboarding with North Columbus Cleaning:</p>
         <p style="font-size:30px;font-weight:900;letter-spacing:6px;color:#1a4d2e">${code}</p>
         <p style="font-size:13px;color:#666">This code expires in 10 minutes. If you didn't request it, you can ignore this email.</p>
+        <p style="font-size:14px;margin-top:18px">New here? Read the <a href="${GUIDE_URL}">onboarding guide</a> first.</p>
       </div>`;
     const r = await sendEmail({
       to: contact.email,
