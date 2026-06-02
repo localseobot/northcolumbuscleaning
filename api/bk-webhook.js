@@ -62,7 +62,11 @@ import {
   cf,
 } from "./_lib/ghl-fields.js";
 import { sendEmail } from "./_lib/resend.js";
-import { buildBookingConfirmation } from "./_lib/email-templates/booking-confirmation.js";
+import { sendGhlSms } from "./_lib/ghl-sms.js";
+import {
+  buildBookingConfirmation,
+  buildBookingConfirmationSms,
+} from "./_lib/email-templates/booking-confirmation.js";
 
 export const config = { runtime: "nodejs" };
 
@@ -476,25 +480,29 @@ async function handleCreated(b, result) {
   }
   result.opp_fields_set = oppFields.length;
 
-  // Branded confirmation email via Resend. No-op if RESEND_API_KEY +
-  // RESEND_FROM aren't set in Vercel, so this deploys safely before
-  // the env vars exist. Errors don't break the webhook — email is
-  // best-effort, the GHL record is the source of truth.
+  // Customer-facing confirmation payload. Same inputs power both the
+  // branded HTML email (via Resend) and the short A2P-compliant SMS
+  // (via GHL on the verified business number).
+  const confirmInput = {
+    firstName: s(b.first_name || b.firstName),
+    appointmentDateTime: b.appointment_datetime,
+    serviceType: b.service_type || b.service,
+    frequency: b.frequency,
+    bedrooms: num(b.bedrooms),
+    bathrooms: num(b.bathrooms),
+    sqft: num(b.sqft || b.square_feet),
+    priceTotal: price,
+    address: [s(b.address), s(b.city), s(b.state), s(b.zip)]
+      .filter(Boolean)
+      .join(", "),
+  };
+
+  // Branded confirmation email via Resend. No-op if env vars aren't set
+  // in Vercel, so this deploys safely before the API key exists. Errors
+  // don't break the webhook — email is best-effort, GHL is source of truth.
   if (lower(b.email)) {
     try {
-      const { subject, html } = buildBookingConfirmation({
-        firstName: s(b.first_name || b.firstName),
-        appointmentDateTime: b.appointment_datetime,
-        serviceType: b.service_type || b.service,
-        frequency: b.frequency,
-        bedrooms: num(b.bedrooms),
-        bathrooms: num(b.bathrooms),
-        sqft: num(b.sqft || b.square_feet),
-        priceTotal: price,
-        address: [s(b.address), s(b.city), s(b.state), s(b.zip)]
-          .filter(Boolean)
-          .join(", "),
-      });
+      const { subject, html } = buildBookingConfirmation(confirmInput);
       const emailResult = await sendEmail({
         to: lower(b.email),
         subject,
@@ -509,6 +517,28 @@ async function handleCreated(b, result) {
     }
   } else {
     result.confirmationEmail = { sent: false, reason: "no email on file" };
+  }
+
+  // SMS confirmation via GHL's A2P-verified number. Sends to anyone with a
+  // phone number on file — booking is explicit consent. We respect prior
+  // opt-outs (sms-consent:no tag) defensively. Failure is non-fatal.
+  const phone = normPhone(b.phone);
+  if (phone) {
+    try {
+      const message = buildBookingConfirmationSms(confirmInput);
+      const smsResult = await sendGhlSms({
+        to: phone,
+        message,
+        firstName: confirmInput.firstName || undefined,
+      });
+      result.confirmationSms = smsResult.ok
+        ? { sent: true, messageId: smsResult.messageId }
+        : { sent: false, reason: smsResult.error };
+    } catch (e) {
+      result.confirmationSms = { sent: false, error: e.message };
+    }
+  } else {
+    result.confirmationSms = { sent: false, reason: "no phone on file" };
   }
 }
 

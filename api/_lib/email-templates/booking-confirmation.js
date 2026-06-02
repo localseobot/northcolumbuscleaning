@@ -8,15 +8,17 @@
 const BRAND = {
   name: "North Columbus Cleaning",
   shortName: "NCC",
-  primary: "#2563eb", // brand blue
-  primaryDark: "#1d4ed8",
-  bg: "#f8fafc",
+  primary: "#1a4d2e", // forest green (site brand)
+  primaryDark: "#0d3320",
+  accent: "#c9e265", // lime accent
+  bg: "#faf9f5",
   text: "#0f172a",
   textMuted: "#475569",
   border: "#e2e8f0",
   phone: "(614) 352-2588",
   phoneHref: "+16143522588",
   website: "https://www.northcolumbuscleaning.com",
+  portalUrl: "https://www.northcolumbuscleaning.com/login",
   email: "admin@northcolumbuscleaning.com",
   address: "Columbus, OH",
 };
@@ -126,11 +128,11 @@ export function buildBookingConfirmation({
           <!-- Header -->
           <tr>
             <td style="background:${BRAND.primary};padding:32px 32px 28px;text-align:center;">
-              <div style="color:#ffffff;font-size:14px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">
+              <div style="color:${BRAND.accent};font-size:13px;font-weight:900;letter-spacing:0.15em;text-transform:uppercase;">
                 North Columbus Cleaning
               </div>
-              <h1 style="margin:12px 0 0;color:#ffffff;font-size:28px;font-weight:700;line-height:1.2;">
-                You're booked! 🧼
+              <h1 style="margin:12px 0 0;color:#ffffff;font-size:30px;font-weight:900;line-height:1.2;letter-spacing:-0.5px;">
+                You're booked!
               </h1>
             </td>
           </tr>
@@ -187,6 +189,33 @@ export function buildBookingConfirmation({
             </td>
           </tr>
 
+          <!-- Customer portal CTA -->
+          <tr>
+            <td style="padding:24px 32px 4px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border:2px solid ${BRAND.primary};border-radius:12px;">
+                <tr>
+                  <td style="padding:24px 24px 20px;text-align:center;">
+                    <div style="font-size:13px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:${BRAND.primary};margin-bottom:8px;">
+                      ⚡ Manage your booking online
+                    </div>
+                    <h3 style="margin:0 0 8px;font-size:20px;font-weight:900;color:${BRAND.text};line-height:1.3;">
+                      Reschedule, add details, or update your info anytime
+                    </h3>
+                    <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${BRAND.textMuted};">
+                      Your customer portal lets you handle everything self-serve — no phone tag needed.
+                    </p>
+                    <a href="${BRAND.portalUrl}" style="display:inline-block;background:${BRAND.primary};color:${BRAND.accent};font-weight:900;font-size:15px;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;padding:14px 28px;border-radius:8px;">
+                      Open my portal →
+                    </a>
+                    <p style="margin:14px 0 0;font-size:12px;color:${BRAND.textMuted};">
+                      Or visit <a href="${BRAND.portalUrl}" style="color:${BRAND.primary};text-decoration:underline;">northcolumbuscleaning.com/login</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
           <!-- What to expect -->
           <tr>
             <td style="padding:28px 32px 8px;">
@@ -194,7 +223,7 @@ export function buildBookingConfirmation({
               <ul style="margin:0;padding:0 0 0 20px;font-size:16px;line-height:1.6;color:${BRAND.text};">
                 <li style="margin-bottom:8px;">We bring all our own supplies and equipment — you don't need to do anything to prep.</li>
                 <li style="margin-bottom:8px;">If you have pets, no need to crate them — our team is pet-friendly. Just let us know any quirks.</li>
-                <li style="margin-bottom:8px;">Need to update access notes, gate codes, or special instructions? Just reply to this email.</li>
+                <li style="margin-bottom:8px;">Need to update access notes, gate codes, or special instructions? Use the portal above or reply to this email.</li>
                 <li>Our cleaners are background-checked, insured, and trained to our checklist.</li>
               </ul>
             </td>
@@ -223,10 +252,10 @@ export function buildBookingConfirmation({
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
                 <tr>
                   <td style="padding-right:8px;">
-                    <a href="tel:${BRAND.phoneHref}" style="display:inline-block;background:${BRAND.primary};color:#ffffff;font-weight:600;font-size:15px;text-decoration:none;padding:12px 20px;border-radius:8px;">📞 Call ${BRAND.phone}</a>
+                    <a href="tel:${BRAND.phoneHref}" style="display:inline-block;background:${BRAND.primary};color:${BRAND.accent};font-weight:900;font-size:15px;letter-spacing:0.05em;text-decoration:none;padding:12px 22px;border-radius:8px;">📞 Call ${BRAND.phone}</a>
                   </td>
                   <td>
-                    <a href="mailto:${BRAND.email}" style="display:inline-block;background:#ffffff;color:${BRAND.primary};font-weight:600;font-size:15px;text-decoration:none;padding:12px 20px;border:1.5px solid ${BRAND.primary};border-radius:8px;">✉️ Email us</a>
+                    <a href="mailto:${BRAND.email}" style="display:inline-block;background:#ffffff;color:${BRAND.primary};font-weight:900;font-size:15px;letter-spacing:0.05em;text-decoration:none;padding:12px 22px;border:2px solid ${BRAND.primary};border-radius:8px;">✉️ Email us</a>
                   </td>
                 </tr>
               </table>
@@ -254,4 +283,25 @@ export function buildBookingConfirmation({
 </body>
 </html>`;
   return { subject, html };
+}
+
+/**
+ * Build the short SMS confirmation. Aims for 1–2 segments. Always includes
+ * STOP opt-out language to satisfy A2P 10DLC compliance.
+ *
+ * @param {object} input  same shape as buildBookingConfirmation
+ * @returns {string}
+ */
+export function buildBookingConfirmationSms({
+  firstName,
+  appointmentDateTime,
+}) {
+  const name = firstName || "there";
+  const when = fmtDateTime(appointmentDateTime);
+  const whenStr = when ? ` for ${when}` : "";
+  return (
+    `Hi ${name}, North Columbus Cleaning here — your cleaning is confirmed${whenStr}. ` +
+    `Manage your booking at northcolumbuscleaning.com/login. ` +
+    `Reply STOP to opt out.`
+  );
 }
