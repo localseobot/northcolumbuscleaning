@@ -299,9 +299,10 @@ export function buildBookingConfirmationSms({
   const name = firstName || "there";
   const when = fmtDateTime(appointmentDateTime);
   const whenStr = when ? ` for ${when}` : "";
+  // GHL automatically appends "Reply STOP to unsubscribe." to every outbound
+  // SMS for A2P 10DLC compliance, so we don't add our own opt-out language.
   return (
     `Hi ${name}, North Columbus Cleaning here — your cleaning is confirmed${whenStr}. ` +
-    `Manage your booking at northcolumbuscleaning.com/login. ` +
-    `Reply STOP to opt out.`
+    `Manage your booking at northcolumbuscleaning.com/login.`
   );
 }
