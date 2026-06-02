@@ -661,6 +661,19 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Invalid JSON" });
     }
   }
+  // Capture the raw payload before normalization so we can see exactly
+  // what Zapier sends. Helps debug field-name drift.
+  const rawKeys = Object.keys(body || {});
+  const rawSample = {};
+  for (const k of rawKeys) {
+    const v = body[k];
+    rawSample[k] =
+      typeof v === "string" && v.length > 200 ? v.slice(0, 200) + "…" : v;
+  }
+  // Email/phone are echoed back at the top level by normalizeBody, so
+  // don't include their raw values in the debug payload.
+  const debugRaw = JSON.stringify(rawSample, null, 2);
+
   body = normalizeBody(body || {});
 
   const event = lower(body.event || "booking.created");
@@ -682,6 +695,7 @@ export default async function handler(req, res) {
       error: `unknown event "${event}"`,
       hint:
         "Supported events: booking.created, booking.rescheduled, booking.cancelled, booking.completed",
+      received_keys: rawKeys,
     });
   }
 
@@ -690,7 +704,31 @@ export default async function handler(req, res) {
   } catch (e) {
     result.ok = false;
     result.error = e.message;
+    result.received_keys = rawKeys;
     return res.status(200).json(result); // Return 200 so Zapier doesn't retry forever
+  }
+
+  // Echo received keys + raw payload in the response so we can see what
+  // Zapier actually sent. Also drop a debug note on the contact for offline
+  // inspection. Both are gated by DEBUG_BK_PAYLOAD env var or query param
+  // so production responses stay clean once we've nailed the mapping.
+  const debugEnabled =
+    req.query?.debug === "1" || process.env.DEBUG_BK_PAYLOAD === "1";
+  if (debugEnabled || result.opp_fields_set < 5) {
+    result.received_keys = rawKeys;
+    result.received_sample = rawSample;
+    // Drop a hidden debug note on the contact (best-effort, swallow errors)
+    if (result.contactId) {
+      try {
+        await ghl({
+          method: "POST",
+          path: `/contacts/${result.contactId}/notes`,
+          body: {
+            body: `[DEBUG] BK→Zapier raw payload:\n\n${debugRaw}`,
+          },
+        });
+      } catch (_) {}
+    }
   }
 
   return res.status(200).json(result);
