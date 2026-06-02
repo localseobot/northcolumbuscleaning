@@ -67,6 +67,7 @@ import {
   buildBookingConfirmation,
   buildBookingConfirmationSms,
 } from "./_lib/email-templates/booking-confirmation.js";
+import { buildRescheduleNotice } from "./_lib/email-templates/reschedule-notice.js";
 
 export const config = { runtime: "nodejs" };
 
@@ -809,6 +810,68 @@ async function handleRescheduled(b, result) {
     result.action = "updated-opp-name-with-new-date";
   } else {
     result.action = "no-open-opp-found-to-reschedule";
+  }
+
+  // Send branded reschedule notice via email + SMS. We only have the new
+  // date in the BK payload; the previous date was captured in the prior
+  // note but we can't easily fetch it here, so the email shows the new
+  // date prominently without the strike-through.
+  const phone = normPhone(b.phone);
+  const rescheduleInput = {
+    firstName: s(b.first_name || b.firstName),
+    appointmentDateTime: b.appointment_datetime,
+    serviceType: b.service_type || b.service,
+    address: [s(b.address), s(b.city), s(b.state), s(b.zip)]
+      .filter(Boolean)
+      .join(", "),
+    bookingId: s(b.booking_id),
+  };
+  if (lower(b.email)) {
+    try {
+      const { subject, html } = buildRescheduleNotice(rescheduleInput);
+      const emailRes = await sendEmail({
+        to: lower(b.email),
+        subject,
+        html,
+        tags: ["reschedule-notice"],
+      });
+      result.rescheduleEmail = emailRes.id
+        ? { sent: true, id: emailRes.id }
+        : { sent: false, reason: emailRes.reason || emailRes.error };
+    } catch (e) {
+      result.rescheduleEmail = { sent: false, error: e.message };
+    }
+  }
+  if (phone) {
+    try {
+      const when = (() => {
+        try {
+          const d = new Date(b.appointment_datetime);
+          if (!isNaN(d.getTime())) {
+            return d.toLocaleString("en-US", {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            });
+          }
+        } catch (_) {}
+        return s(b.appointment_datetime) || "the new time";
+      })();
+      const name = s(b.first_name || b.firstName) || "there";
+      const smsResp = await sendGhlSms({
+        to: phone,
+        message: `Hi ${name}, North Columbus Cleaning here — your cleaning has been rescheduled to ${when}. Manage your booking at northcolumbuscleaning.com/login.`,
+        firstName: rescheduleInput.firstName || undefined,
+        fromNumber: CUSTOMER_LINE,
+      });
+      result.rescheduleSms = smsResp.ok
+        ? { sent: true, messageId: smsResp.messageId }
+        : { sent: false, reason: smsResp.error };
+    } catch (e) {
+      result.rescheduleSms = { sent: false, error: e.message };
+    }
   }
 }
 

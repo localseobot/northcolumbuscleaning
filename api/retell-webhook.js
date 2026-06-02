@@ -34,6 +34,8 @@
 
 import { ghl } from "./_lib/ghl.js";
 import { sendGhlSms, CUSTOMER_LINE, INTERNAL_LINE } from "./_lib/ghl-sms.js";
+import { sendEmail } from "./_lib/resend.js";
+import { buildRetellFollowup } from "./_lib/email-templates/retell-followup.js";
 import { calculateQuote } from "./_lib/pricing.js";
 import { buildCallBlocks, sendSlack } from "./_lib/slack.js";
 import {
@@ -595,6 +597,44 @@ export default async function handler(req, res) {
     result.managerSms.contactId = smsResp.contactId;
     result.managerSms.messageId = smsResp.messageId;
     if (!smsResp.ok) result.managerSms.error = smsResp.error;
+  }
+
+  // --- 6b. Branded follow-up email to the caller (booking/quote intent only) ---
+  // The auto-text from step 5 is great for "we got your number" — but email
+  // gives the caller a richer recap of the quote with a 1-click book link.
+  // We send to anyone with an email + booking/quote intent regardless of
+  // SMS consent (email is opt-in by virtue of them giving it).
+  result.customerEmail = { attempted: false };
+  if (BOOKING_INTENTS.has(intent) && email) {
+    result.customerEmail.attempted = true;
+    try {
+      const { subject, html } = buildRetellFollowup({
+        firstName,
+        serviceType: extracted.service_type,
+        frequency: extracted.frequency,
+        bedrooms: num(extracted.bedrooms),
+        bathrooms: num(extracted.bathrooms),
+        sqft: num(extracted.sqft),
+        quotedPrice: quote?.total || null,
+        notes: s(extracted.special_notes) || s(extracted.notes) || null,
+      });
+      const emailRes = await sendEmail({
+        to: email,
+        subject,
+        html,
+        tags: ["retell-followup"],
+      });
+      if (emailRes.id) {
+        result.customerEmail.ok = true;
+        result.customerEmail.id = emailRes.id;
+      } else {
+        result.customerEmail.ok = false;
+        result.customerEmail.reason = emailRes.reason || emailRes.error;
+      }
+    } catch (e) {
+      result.customerEmail.ok = false;
+      result.customerEmail.error = e.message;
+    }
   }
 
   // --- 7. Slack notification (optional — only if SLACK_WEBHOOK_URL is set) ---

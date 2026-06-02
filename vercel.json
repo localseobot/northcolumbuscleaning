@@ -13,6 +13,18 @@
     {
       "path": "/api/cron/reactivation",
       "schedule": "0 15 * * *"
+    },
+    {
+      "path": "/api/cron/review-request",
+      "schedule": "0 17 * * *"
+    },
+    {
+      "path": "/api/cron/cancellation-winback",
+      "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/cron/reminder-24h",
+      "schedule": "0 22 * * *"
     }
   ]
 }
