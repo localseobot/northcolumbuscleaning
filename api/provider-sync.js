@@ -42,15 +42,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Shared-secret guard (dedicated secret; same header convention as bk-webhook).
-  if (process.env.PROVIDER_SYNC_SECRET) {
-    const provided =
-      req.headers["x-webhook-secret"] ||
-      (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-    if (provided !== process.env.PROVIDER_SYNC_SECRET) {
-      return res.status(401).json({ error: "unauthorized" });
-    }
-  }
+  // No shared-secret guard: this endpoint is intentionally open so the Booking
+  // Koala Zap can POST without custom headers. Risk is low (it only upserts a
+  // GHL contact + sends a welcome email). If abuse ever appears, re-add a
+  // header/secret check here and set the X-Webhook-Secret header in the Zap.
 
   let body = req.body;
   if (typeof body === "string") {
