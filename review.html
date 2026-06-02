@@ -259,11 +259,10 @@
       if (name) document.getElementById('fb-name').value = name;
       if (email) document.getElementById('fb-email').value = email;
 
-      // Happy path: redirect to Google review.
-      // Place ID is injected at deploy via build-time env if available;
-      // we ship a sensible fallback to the business name search until then.
-      var GOOGLE_REVIEW_URL = window.NCC_GOOGLE_REVIEW_URL ||
-        'https://www.google.com/search?q=North+Columbus+Cleaning+Company+Columbus+OH';
+      // Happy path: direct Google review modal link (the short g.page URL
+      // works on both mobile and desktop and opens the review composer
+      // immediately, no extra clicks).
+      var GOOGLE_REVIEW_URL = 'https://g.page/r/CVq2-VaRu5iKEAI/review';
       document.getElementById('happy-btn').setAttribute('href', GOOGLE_REVIEW_URL);
 
       // Sad path: reveal feedback form

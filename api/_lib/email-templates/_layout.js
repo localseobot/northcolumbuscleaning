@@ -17,6 +17,8 @@ export const BRAND = {
   phoneHref: "+16143522588",
   website: "https://www.northcolumbuscleaning.com",
   portalUrl: "https://www.northcolumbuscleaning.com/login",
+  reviewGateUrl: "https://www.northcolumbuscleaning.com/review",
+  googleReviewUrl: "https://g.page/r/CVq2-VaRu5iKEAI/review",
   email: "admin@northcolumbuscleaning.com",
   address: "Columbus, OH",
 };
