@@ -10,7 +10,7 @@
 
 import { ghl } from "../_lib/ghl.js";
 import { uploadToDrive } from "../_lib/drive.js";
-import { buildSubstituteW9 } from "../_lib/w9-pdf.js";
+import { fillIrsW9, buildSubstituteW9 } from "../_lib/w9-pdf.js";
 import { verifyW9Tin } from "../_lib/anthropic-vision.js";
 import { completeIfDone } from "../_lib/onboarding-complete.js";
 import {
@@ -101,22 +101,28 @@ export default async function handler(req, res) {
       tinType === "EIN"
         ? `${tinDigits.slice(0, 2)}-${tinDigits.slice(2)}`
         : `${tinDigits.slice(0, 3)}-${tinDigits.slice(3, 5)}-${tinDigits.slice(5)}`;
+    const w9Fields = {
+      name,
+      businessName: String(body.businessName || "").slice(0, 120),
+      taxClassification: String(body.taxClassification || "Individual/sole proprietor").slice(0, 80),
+      address: String(body.address || "").slice(0, 160),
+      cityStateZip: String(body.cityStateZip || "").slice(0, 120),
+      tin: tinPretty,
+      tinType,
+      signatureName,
+      signaturePngBase64: stripDataUrl(body.signaturePngBase64),
+      timestamp,
+      ip,
+    };
+    // Fill the official IRS W-9; fall back to the substitute if that ever fails.
     try {
-      pdfBytes = await buildSubstituteW9({
-        name,
-        businessName: String(body.businessName || "").slice(0, 120),
-        taxClassification: String(body.taxClassification || "Individual/sole proprietor").slice(0, 80),
-        address: String(body.address || "").slice(0, 160),
-        cityStateZip: String(body.cityStateZip || "").slice(0, 120),
-        tin: tinPretty,
-        tinType,
-        signatureName,
-        signaturePngBase64: stripDataUrl(body.signaturePngBase64),
-        timestamp,
-        ip,
-      });
+      pdfBytes = await fillIrsW9(w9Fields);
     } catch (e) {
-      return res.status(500).json({ error: "Could not generate the W-9 PDF." });
+      try {
+        pdfBytes = await buildSubstituteW9(w9Fields);
+      } catch (_) {
+        return res.status(500).json({ error: "Could not generate the W-9 PDF." });
+      }
     }
     verified = "yes"; // TIN was validated as 9 digits and rendered.
   } else if (mode === "upload") {

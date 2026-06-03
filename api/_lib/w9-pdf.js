@@ -13,6 +13,109 @@
 // for an AcroForm fill against a committed fw9.pdf template — see plan notes.)
 
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { FW9_BASE64 } from "./assets/fw9-base64.js";
+
+// ── Official IRS Form W-9 (Rev. 3-2024) AcroForm fill ──────────────────────
+// Field names verified by enumerating the official fillable PDF.
+const W9P = "topmostSubform[0].Page1[0].";
+const W9B = W9P + "Boxes3a-b_ReadOrder[0].";
+const W9A = W9P + "Address_ReadOrder[0].";
+const W9F = {
+  name: W9P + "f1_01[0]",
+  business: W9P + "f1_02[0]",
+  llcLetter: W9B + "f1_03[0]",
+  address: W9A + "f1_07[0]",
+  cityStateZip: W9A + "f1_08[0]",
+  ssn1: W9P + "f1_11[0]", ssn2: W9P + "f1_12[0]", ssn3: W9P + "f1_13[0]",
+  ein1: W9P + "f1_14[0]", ein2: W9P + "f1_15[0]",
+};
+const W9_CLASS_BOX = (i) => `${W9B}c1_1[${i}]`;
+
+// Map our tax-classification dropdown value → line-3a checkbox index (+ LLC letter).
+// Per W-9 instructions, single-member disregarded LLCs check the individual box.
+function classifyW9(tc) {
+  const s = String(tc || "").toLowerCase();
+  if (s.includes("llc") && s.includes("c corp")) return { box: 5, llc: "C" };
+  if (s.includes("llc") && s.includes("s corp")) return { box: 5, llc: "S" };
+  if (s.includes("llc") && s.includes("partnership")) return { box: 5, llc: "P" };
+  if (s.includes("c corp")) return { box: 1 };
+  if (s.includes("s corp")) return { box: 2 };
+  if (s.includes("partnership")) return { box: 3 };
+  if (s.includes("trust") || s.includes("estate")) return { box: 4 };
+  if (s.includes("other")) return { box: 6 };
+  return { box: 0 }; // Individual/sole proprietor or single-member LLC
+}
+
+function mmddyyyy(ts) {
+  try {
+    const d = ts ? new Date(ts) : new Date();
+    return `${String(d.getUTCMonth() + 1).padStart(2, "0")}/${String(d.getUTCDate()).padStart(2, "0")}/${d.getUTCFullYear()}`;
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Fill the official IRS Form W-9 with the contractor's data and signature,
+ * then flatten it. Returns the PDF bytes. Same field contract as
+ * buildSubstituteW9. The TIN is rendered into the form (this is the W-9 of
+ * record) and never logged or written to GHL.
+ */
+export async function fillIrsW9(f) {
+  const doc = await PDFDocument.load(Buffer.from(FW9_BASE64, "base64"));
+  const form = doc.getForm();
+  const setText = (n, v) => {
+    if (v === undefined || v === null || v === "") return;
+    try { form.getTextField(n).setText(String(v)); } catch (_) {}
+  };
+  const check = (n) => { try { form.getCheckBox(n).check(); } catch (_) {} };
+
+  setText(W9F.name, f.name);
+  setText(W9F.business, f.businessName);
+  setText(W9F.address, f.address);
+  setText(W9F.cityStateZip, f.cityStateZip);
+
+  const cls = classifyW9(f.taxClassification);
+  check(W9_CLASS_BOX(cls.box));
+  if (cls.llc) setText(W9F.llcLetter, cls.llc);
+
+  const digits = String(f.tin || "").replace(/\D/g, "");
+  if (f.tinType === "EIN") {
+    setText(W9F.ein1, digits.slice(0, 2));
+    setText(W9F.ein2, digits.slice(2, 9));
+  } else {
+    setText(W9F.ssn1, digits.slice(0, 3));
+    setText(W9F.ssn2, digits.slice(3, 5));
+    setText(W9F.ssn3, digits.slice(5, 9));
+  }
+
+  // Signature + date on the "Sign Here" line (just above the printed labels).
+  const page = doc.getPages()[0];
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const SIG_Y = 219;
+  let drewImage = false;
+  if (f.signaturePngBase64) {
+    try {
+      const img = await doc.embedPng(Buffer.from(f.signaturePngBase64, "base64"));
+      const scale = Math.min(190 / img.width, 26 / img.height, 1);
+      page.drawImage(img, {
+        x: 118, y: SIG_Y - 6, width: img.width * scale, height: img.height * scale,
+      });
+      drewImage = true;
+    } catch (_) {}
+  }
+  if (!drewImage) {
+    page.drawText(`/s/ ${f.signatureName || f.name || ""}`, {
+      x: 120, y: SIG_Y, size: 11, font, color: rgb(0.05, 0.05, 0.5),
+    });
+  }
+  page.drawText(mmddyyyy(f.timestamp), {
+    x: 392, y: SIG_Y, size: 11, font, color: rgb(0.05, 0.05, 0.5),
+  });
+
+  form.flatten();
+  return doc.save();
+}
 
 const PAGE_W = 612;
 const PAGE_H = 792;
