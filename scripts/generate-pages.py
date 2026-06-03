@@ -489,6 +489,7 @@ def footer():
           <li>Mon&ndash;Sat, 7am&ndash;7pm</li>
           <li><a href="/privacy">Privacy policy</a></li>
           <li><a href="/sms-terms">SMS terms</a></li>
+          <li><a href="/apply">Careers &mdash; we're hiring</a></li>
         </ul>
       </div>
     </div>

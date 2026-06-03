@@ -65,7 +65,7 @@ export const ONBOARDING_DOC_SECTIONS = [
   },
   {
     heading: "Getting paid",
-    body: "You're paid by the job, on Wednesday of the week after the work was completed (work weeks run Monday–Sunday). Example: jobs completed the week of Mon June 8 – Sun June 14 are paid on Wednesday, June 17. You're an independent contractor responsible for your own taxes — that's why we collect your W-9.",
+    body: "You're paid by the job, on Wednesday of the week after the work was completed (work weeks run Monday–Sunday). Example: jobs completed the week of Mon June 8 – Sun June 14 are paid on Wednesday, June 17. Set up direct deposit in the Booking Koala for Providers app (Profile → Payments) by connecting your bank through Stripe. You're an independent contractor responsible for your own taxes — that's why we collect your W-9.",
   },
 ];
 
@@ -74,6 +74,7 @@ export const REVIEW_CHECKLIST = [
   "I have reviewed the room-by-room cleaning checklist for each service tier.",
   "I will provide my own cleaning supplies and equipment for every job.",
   "I understand I'm paid by the job on Wednesday of the week after the work is completed.",
+  "I know how to set up direct deposit — connect my bank via Stripe in the Booking Koala for Providers app.",
   "I understand the professionalism and client-conduct expectations.",
   "I understand that access codes and client information are confidential.",
   "I understand the scheduling, cancellation, and communication expectations.",

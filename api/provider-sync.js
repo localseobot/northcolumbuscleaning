@@ -165,6 +165,9 @@ export default async function handler(req, res) {
   }
   const link = `${siteBase()}/onboard?t=${encodeURIComponent(signToken({ contactId, nonce }))}`;
   const guide = `${siteBase()}/onboarding-guide`;
+  const checklist = `${siteBase()}/checklist`;
+  const APP_IOS = "https://apps.apple.com/us/app/bookingkoala-for-providers/id1446530801";
+  const APP_ANDROID = "https://play.google.com/store/apps/details?id=com.bookingkoala.bkforproviders";
   const greet = firstName || "there";
 
   if (email) {
@@ -180,7 +183,9 @@ export default async function handler(req, res) {
         <p style="margin:24px 0">
           <a href="${link}" style="background:#1a4d2e;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:bold">Start onboarding</a>
         </p>
-        <p style="font-size:14px">First, read the <a href="${guide}">onboarding guide</a> to see how everything works.</p>
+        <p style="font-size:14px">First, read the <a href="${guide}">onboarding guide</a> to see how everything works, and our <a href="${checklist}">cleaning checklist</a>.</p>
+        <p style="font-size:14px"><strong>Get the app:</strong> Booking Koala for Providers — <a href="${APP_IOS}">iPhone</a> or <a href="${APP_ANDROID}">Android</a>.</p>
+        <p style="font-size:14px"><strong>Set up direct deposit:</strong> in the Booking Koala for Providers app, open <em>Profile &rarr; Payments</em> and connect your bank through <strong>Stripe</strong> — that's how you get paid.</p>
         <p style="font-size:13px;color:#666">If the button doesn't work, paste this link into your browser:<br>${link}</p>
         <p style="font-size:13px;color:#666">This link is personal to you and expires in 14 days. You can also go to ${siteBase()}/onboard and enter this email to get a code.</p>
       </div>`;
@@ -200,7 +205,12 @@ export default async function handler(req, res) {
       to: phone,
       firstName,
       fromNumber: INTERNAL_LINE,
-      message: `Hi ${greet}, welcome to North Columbus Cleaning! Finish your onboarding (W-9, contractor agreement, quick review) here: ${link}`,
+      message:
+        `Hi ${greet}, welcome to North Columbus Cleaning!\n` +
+        `1) Finish onboarding (W-9, agreement, review): ${link}\n` +
+        `2) Get the Booking Koala for Providers app — iPhone: ${APP_IOS} | Android: ${APP_ANDROID}\n` +
+        `3) How we work + set up direct deposit (Stripe): ${guide}\n` +
+        `4) What we clean (checklist): ${checklist}`,
     });
     result.sms = sr.ok ? "sent" : sr.error;
   }
