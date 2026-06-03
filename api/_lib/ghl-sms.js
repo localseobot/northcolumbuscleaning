@@ -13,6 +13,10 @@ import { ghl } from "./ghl.js";
 // come from the internal line.
 export const CUSTOMER_LINE = "+16143522588"; // "North Columbus Cleaning - Customer Line" (A2P-verified)
 export const INTERNAL_LINE = "+16147143794"; // "Internal Phone Number - Cleaners and Recruitment"
+// Dedicated number for COLD B2B outreach — keep it separate from the customer
+// line so spam-filtering/complaints never poison the number customers know.
+// Set OUTREACH_LINE in Vercel; falls back to the internal line if unset.
+export const OUTREACH_LINE = process.env.OUTREACH_LINE || INTERNAL_LINE;
 
 /**
  * Send an SMS via GHL to a phone number. Creates/finds the recipient contact
