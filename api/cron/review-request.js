@@ -22,7 +22,7 @@ const STAGE_RECURRING =
 // daily run (with 4h slack so customers who just finished get time to
 // look around before we ask for feedback). Skip anyone older than 48h
 // to avoid pinging stale data.
-const LOOK_BACK_HOURS = 28;
+const LOOK_BACK_HOURS = 336; // temporarily widened to 14 days to catch backlog
 const MIN_AGE_HOURS = 4;
 const SENT_TAG = "review-request-sent";
 
