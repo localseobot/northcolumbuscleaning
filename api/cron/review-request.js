@@ -69,8 +69,8 @@ export default async function handler(req, res) {
       method: "POST",
       path: "/opportunities/search",
       body: {
-        location_id: process.env.GHL_LOCATION_ID,
-        pipeline_id: SALES_PIPELINE_ID,
+        locationId: process.env.GHL_LOCATION_ID,
+        pipelineId: SALES_PIPELINE_ID,
         status: "won",
         limit: 100,
       },

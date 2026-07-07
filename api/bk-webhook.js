@@ -665,8 +665,8 @@ async function findOpenOpp(contactId) {
     path: "/opportunities/search",
     query: {
       location_id: process.env.GHL_LOCATION_ID,
-      pipeline_id: SALES_PIPELINE_ID,
-      contact_id: contactId,
+      pipelineId: SALES_PIPELINE_ID,
+      contactId,
       status: "open",
       limit: 10,
     },
@@ -1078,10 +1078,6 @@ async function handleCompleted(b, result) {
   const opp = await findOpenOpp(contact.id);
   if (opp) {
     const price = num(b.price_total || b.total || b.price);
-    // Recurring customers route to a dedicated terminal stage so they're
-    // visible at a glance in the kanban view (10× LTV of one-time clients).
-    // Falls back to STAGE_WON_ONE_TIME when the Recurring stage doesn't
-    // exist yet, so behaviour is unchanged until the user creates it.
     const recurring = isRecurringFrequency(b.frequency);
     const wonStage = recurring ? STAGE_RECURRING : STAGE_WON_ONE_TIME;
     await moveOpp(opp.id, {
