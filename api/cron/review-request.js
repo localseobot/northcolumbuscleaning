@@ -79,8 +79,7 @@ export default async function handler(req, res) {
     const opps = (search?.opportunities || []).filter((o) => {
       const stage = o.pipelineStageId;
       if (stage !== STAGE_WON_ONE_TIME && stage !== STAGE_RECURRING) return false;
-      const t = new Date(o.lastStatusChangeAt || o.updatedAt || 0).getTime();
-      return t >= sinceMs && t <= untilMs;
+      return true; // TEMP: skip time filter to catch backlog — restore after backfill
     });
 
     result.candidates = opps.length;
