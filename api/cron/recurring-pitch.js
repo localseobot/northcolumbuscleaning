@@ -63,10 +63,9 @@ export default async function handler(req, res) {
       method: "POST",
       path: "/opportunities/search",
       body: {
-        location_id: process.env.GHL_LOCATION_ID,
-        pipeline_id: SALES_PIPELINE_ID,
-        // "Won - One Time" stage
-        pipeline_stage_id: "9253419b-4c69-4f61-814b-ee27cd165f7a",
+        locationId: process.env.GHL_LOCATION_ID,
+        pipelineId: SALES_PIPELINE_ID,
+        pipelineStageId: "9253419b-4c69-4f61-814b-ee27cd165f7a",
         status: "won",
         limit: 100,
       },
