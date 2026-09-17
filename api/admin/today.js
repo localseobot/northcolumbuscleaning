@@ -76,9 +76,9 @@ async function gatherToday() {
     method: "POST",
     path: "/opportunities/search",
     body: {
-      location_id: process.env.GHL_LOCATION_ID,
-      pipeline_id: SALES_PIPELINE_ID,
-      pipeline_stage_id: STAGE_BOOKED,
+      locationId: process.env.GHL_LOCATION_ID,
+      pipelineId: SALES_PIPELINE_ID,
+      pipelineStageId: STAGE_BOOKED,
       status: "open",
       limit: 100,
       getCustomFields: true,
