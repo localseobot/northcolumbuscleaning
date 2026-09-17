@@ -79,6 +79,7 @@ the GHL UI, so nothing has to be clicked through settings before this works.
 | `lead:web` / `lead:phone` | Which channel produced it |
 | `lead:duplicate` | Repeat contact inside the dedupe window — delivered, not billed |
 | `lead:credited` | We approved a dispute; not billed |
+| `lead:test` | TEST / demo seed. Shows on `/dashboard`, not billed |
 | `dispute:open` / `:approved` / `:denied` | Dispute state |
 
 ## The buyer dashboard
@@ -114,6 +115,26 @@ curl -X POST "https://www.northcolumbuscleaning.com/api/admin/resolve-dispute?to
 
 Approving credits the lead: it drops out of the month's total and out of the
 cost-per-lead figure the buyer sees.
+
+### Backfill today's tests onto `/dashboard`
+
+The dashboard only shows opportunities whose contact has `lead:delivered`.
+A form or call that created a GHL opportunity without going through
+`recordLead()` will not appear until we tag it.
+
+```sh
+# Preview today's Sales Pipeline opps (America/New_York)
+curl "https://www.northcolumbuscleaning.com/api/admin/backfill-leads?token=$ADMIN_TOKEN"
+
+# Tag any of those missing lead:delivered (marks them lead:test — not billed)
+curl -X POST "https://www.northcolumbuscleaning.com/api/admin/backfill-leads?token=$ADMIN_TOKEN"
+
+# If today has no sales opps at all, also seed 2 labeled TEST leads
+curl -X POST "https://www.northcolumbuscleaning.com/api/admin/backfill-leads?token=$ADMIN_TOKEN&createTest=1"
+```
+
+This does **not** invent rows when real today's opportunities exist. Prefer
+the preview, then POST. `createTest=1` is only for an empty day.
 
 ## Pricing
 

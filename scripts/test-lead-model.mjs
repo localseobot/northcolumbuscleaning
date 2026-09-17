@@ -26,7 +26,7 @@ process.env.LEAD_MONTHLY_INCLUDED = "10";
 process.env.BUYER_SECRET = "test-secret-not-a-real-one";
 
 const { priceLeads, getPricing } = await import("../api/_lib/buyer.js");
-const { groupByMonth, outcomeLabel, OUTCOME_KEYS } = await import("../api/_lib/lead-ledger.js");
+const { groupByMonth, outcomeLabel, OUTCOME_KEYS, localDayKey, leadIsBillable, TAG } = await import("../api/_lib/lead-ledger.js");
 const { signBuyerToken, verifyBuyerToken } = await import("../api/_lib/buyer-token.js");
 const { parseGhlCallEvent, classifyGhlCall, selectCallerPhone } = await import("../api/_lib/ghl-call.js");
 const { toE164, formatUsDisplay, getTrackingNumber, FALLBACK_TRACKING_E164 } = await import("../api/_lib/phone.js");
@@ -106,6 +106,22 @@ console.log("\nmonth grouping");
     ]);
     assert.equal(g.length, 1);
     assert.equal(g[0][1].length, 1);
+  });
+}
+
+console.log("\nledger tags + local day");
+{
+  test("duplicates, credits, and TEST tags are not billable", () => {
+    assert.equal(leadIsBillable([TAG.delivered]), true);
+    assert.equal(leadIsBillable([TAG.delivered, TAG.duplicate]), false);
+    assert.equal(leadIsBillable([TAG.delivered, TAG.credited]), false);
+    assert.equal(leadIsBillable([TAG.delivered, TAG.test]), false);
+  });
+  test("localDayKey is YYYY-MM-DD in America/New_York", () => {
+    assert.equal(localDayKey("2026-09-17T16:00:00Z"), "2026-09-17");
+    // 11pm ET on the 16th is 03:00 UTC on the 17th
+    assert.equal(localDayKey("2026-09-17T03:00:00Z"), "2026-09-16");
+    assert.equal(localDayKey("not a date"), null);
   });
 }
 

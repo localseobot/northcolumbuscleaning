@@ -38,10 +38,31 @@ export const TAG = {
   phone: "lead:phone",
   duplicate: "lead:duplicate",
   credited: "lead:credited",
+  test: "lead:test",
   disputeOpen: "dispute:open",
   disputeApproved: "dispute:approved",
   disputeDenied: "dispute:denied",
 };
+
+// Buyer is in Columbus, OH. "Today" on the dashboard means their local day.
+export const BUYER_TIMEZONE = "America/New_York";
+
+export function localDayKey(iso, timeZone = BUYER_TIMEZONE) {
+  const d = iso instanceof Date ? iso : new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+}
+
+/** Delivered but free: duplicates, credits, and labeled TEST / demo seeds. */
+export function leadIsBillable(tags) {
+  const list = Array.isArray(tags) ? tags.map((t) => String(t).toLowerCase()) : [];
+  return !list.includes(TAG.duplicate) && !list.includes(TAG.credited) && !list.includes(TAG.test);
+}
 
 const CHANNEL_TAG = { web: TAG.web, phone: TAG.phone };
 
@@ -312,8 +333,8 @@ function toLead(opp, contact) {
         ? "open"
         : null;
 
-  // Credited and duplicate leads are delivered but free.
-  const billable = !tags.includes(TAG.duplicate) && !tags.includes(TAG.credited);
+  // Credited, duplicate, and TEST / demo leads are delivered but free.
+  const billable = leadIsBillable(tags);
 
   const channel = tags.includes(TAG.phone) && !tags.includes(TAG.web)
     ? "phone"
@@ -339,6 +360,7 @@ function toLead(opp, contact) {
     billable,
     duplicate: tags.includes(TAG.duplicate),
     credited: tags.includes(TAG.credited),
+    test: tags.includes(TAG.test),
     dispute: disputeState,
   };
 }
@@ -499,4 +521,183 @@ export function groupByMonth(leads) {
     months.get(key).push(l);
   }
   return [...months.entries()].sort((a, b) => b[0].localeCompare(a[0]));
+}
+
+const TEST_SEEDS = [
+  {
+    channel: "web",
+    name: "TEST Web Lead",
+    email: "test+dashboard.web@northcolumbuscleaning.com",
+    detail: "TEST / demo seed so the buyer dashboard is not empty. Not a real job.",
+    sourceLabel: "TEST seed",
+    leadSource: "Web form",
+  },
+  {
+    channel: "phone",
+    name: "TEST Phone Lead",
+    email: "test+dashboard.phone@northcolumbuscleaning.com",
+    detail: "TEST / demo seed (phone). Not a real job.",
+    sourceLabel: "TEST seed",
+    leadSource: "Other",
+  },
+];
+
+function inferChannel(opp, contact) {
+  const tags = tagsOf(contact);
+  if (tags.includes(TAG.phone) && !tags.includes(TAG.web)) return "phone";
+  if (tags.includes(TAG.web)) return "web";
+  const source = s(getCf(opp?.customFields, OPP_LEAD_SOURCE)).toLowerCase();
+  if (source.includes("call") || source.includes("phone")) return "phone";
+  return "web";
+}
+
+function looksLikeTest(opp, contact) {
+  const blob = [
+    opp?.name,
+    contact?.contactName,
+    contact?.firstName,
+    contact?.lastName,
+    contact?.email,
+    contact?.source,
+  ]
+    .map((v) => s(v).toLowerCase())
+    .join(" ");
+  return /\btest\b|\bdemo\b/.test(blob);
+}
+
+async function loadSalesOpportunities({ limit = 250 } = {}) {
+  const res = await ghl({
+    method: "POST",
+    path: "/opportunities/search",
+    body: {
+      locationId: process.env.GHL_LOCATION_ID,
+      pipelineId: SALES_PIPELINE_ID,
+      limit,
+      getCustomFields: true,
+    },
+  });
+  const opps = res?.opportunities || [];
+  const cache = new Map();
+  for (const o of opps) {
+    if (o.contact?.id && Array.isArray(o.contact.tags)) cache.set(o.contact.id, o.contact);
+  }
+  const missing = [...new Set(opps.map((o) => o.contactId).filter((id) => id && !cache.has(id)))];
+  await Promise.all(
+    missing.map(async (id) => {
+      const r = await ghl({ method: "GET", path: `/contacts/${id}` }).catch(() => null);
+      if (r?.contact) cache.set(id, r.contact);
+    }),
+  );
+  return opps.map((o) => ({ opp: o, contact: cache.get(o.contactId) || o.contact || null }));
+}
+
+function summarizeRow(opp, contact) {
+  const tags = tagsOf(contact);
+  return {
+    id: opp?.id || null,
+    contactId: opp?.contactId || contact?.id || null,
+    name: opp?.name || contact?.contactName || "(no name)",
+    email: contact?.email || null,
+    phone: contact?.phone || null,
+    receivedAt: opp?.createdAt || null,
+    delivered: tags.includes(TAG.delivered),
+    test: tags.includes(TAG.test),
+  };
+}
+
+/**
+ * Today's Sales Pipeline opportunities (buyer-local day) and whether each
+ * already carries `lead:delivered`. Used to put inbound test activity on
+ * `/dashboard` without inventing rows when real GHL opportunities exist.
+ *
+ * @param {object} [o]
+ * @param {string} [o.day]              YYYY-MM-DD in America/New_York. Default today.
+ * @param {boolean} [o.dryRun]          Preview only. Default true.
+ * @param {boolean} [o.markTest]        Tag backfilled / seeded rows `lead:test` (not billed). Default true.
+ * @param {boolean} [o.createTestIfEmpty] Seed 2 labeled TEST leads if today has no sales opps.
+ */
+export async function backfillTodayLeads({
+  day = localDayKey(new Date()),
+  dryRun = true,
+  markTest = true,
+  createTestIfEmpty = false,
+} = {}) {
+  const rows = await loadSalesOpportunities({ limit: 250 });
+  const todayRows = rows.filter(({ opp }) => localDayKey(opp?.createdAt) === day);
+
+  const existing = todayRows.map(({ opp, contact }) => {
+    const summary = summarizeRow(opp, contact);
+    const shouldMarkTest = markTest || looksLikeTest(opp, contact);
+    return {
+      ...summary,
+      action: summary.delivered ? "already_on_dashboard" : dryRun ? "would_tag" : "pending",
+      markTest: shouldMarkTest,
+    };
+  });
+
+  const out = {
+    ok: true,
+    day,
+    timezone: BUYER_TIMEZONE,
+    dryRun,
+    found: existing.length,
+    alreadyOnDashboard: existing.filter((r) => r.delivered).length,
+    missing: existing.filter((r) => !r.delivered).length,
+    results: existing,
+    seeded: [],
+  };
+
+  if (dryRun) {
+    if (!todayRows.length && createTestIfEmpty) {
+      out.seeded = TEST_SEEDS.map((seed) => ({
+        action: "would_seed",
+        name: seed.name,
+        email: seed.email,
+        channel: seed.channel,
+        markTest: true,
+      }));
+    }
+    return out;
+  }
+
+  for (const row of todayRows) {
+    const item = existing.find((r) => r.id === row.opp.id);
+    if (!item || item.delivered) continue;
+    const recorded = await recordLead({
+      channel: inferChannel(row.opp, row.contact),
+      contactId: row.opp.contactId || row.contact?.id,
+      opportunityId: row.opp.id,
+      name: item.name,
+      email: item.email || undefined,
+      phone: item.phone || undefined,
+      detail: "Backfilled onto the buyer dashboard from today's inbound / test activity.",
+    });
+    if (item.markTest && recorded.contactId) {
+      await addTags(recorded.contactId, [TAG.test]).catch(() => {});
+    }
+    item.action = recorded.ok ? "tagged" : "failed";
+    item.leadId = recorded.leadId || row.opp.id;
+    item.error = recorded.error || null;
+  }
+
+  if (!todayRows.length && createTestIfEmpty) {
+    for (const seed of TEST_SEEDS) {
+      const recorded = await recordLead(seed);
+      if (recorded.contactId) {
+        await addTags(recorded.contactId, [TAG.test]).catch(() => {});
+      }
+      out.seeded.push({
+        action: recorded.ok ? "seeded" : "failed",
+        name: seed.name,
+        email: seed.email,
+        channel: seed.channel,
+        leadId: recorded.leadId,
+        contactId: recorded.contactId,
+        markTest: true,
+        error: recorded.error || null,
+      });
+    }
+  }
+
+  return out;
 }
