@@ -22,15 +22,18 @@ Phone call ───┘        (GHL)            └─→ Row on the buyer's das
 | Quote form on any page | `POST /api/lead` | `api/lead.js` |
 | Price calculator on `/quote` | `POST /api/lead` | `api/lead.js` |
 | Inbound call (GHL → buyer phone) | GHL inbound-call / call-status webhook | `api/ghl-call-webhook.js` |
-| Inbound call (Retell → "Taylor") | Retell post-call webhook | `api/retell-webhook.js` step 4b |
 
 Both paths converge on `recordLead()` in `api/_lib/lead-ledger.js` and then
 `deliverLead()` in `api/_lib/lead-delivery.js`.
 
-The live phone path is **GoHighLevel call forwarding**, not Retell. A homeowner
-dials the tracking number on the site; GHL forwards that call to the buyer's
-phone; this app records it when GHL posts the webhook. Retell stays wired for
-any call that still lands on Taylor — booking/quote intents only.
+Calls are **not answered by us**. A homeowner dials the tracking number on the
+site, GoHighLevel forwards that call straight to the buyer's phone, and the
+buyer answers it as their own company. This app never joins the call — it
+learns the call happened when GHL posts the webhook, and that is what makes it
+a tracked, billable lead.
+
+There is no AI receptionist. The previous Retell voice agent ("Taylor") and
+its `/api/voice-agent/*` tool endpoints have been removed.
 
 ### Phone leads: what is billable
 
@@ -173,8 +176,7 @@ GHL only has to forward and post.
      Solution, `740-971-2907` → `BUYER_PHONE=+17409712907`
 3. **GHL phone → forward-to.** Location `XIA5AmegWaylDoPVe3r8` → Phone
    numbers → the tracking line → call forwarding **to the buyer's phone**
-   (the same number as `BUYER_PHONE`). Do not forward the live path to
-   Retell.
+   (the same number as `BUYER_PHONE`).
 4. **GHL webhook.** Settings → Integrations → Webhooks, or a workflow
    action, POST to:
    `https://www.northcolumbuscleaning.com/api/ghl-call-webhook`
@@ -187,15 +189,17 @@ GHL only has to forward and post.
    buyer's. The buyer should ring. Within a minute: a row on `/dashboard`,
    a buyer SMS, a buyer email. A hang-up before answer should not bill.
 
-Retell (`/api/retell-webhook`) is left in place. Any call that still reaches
-Taylor is recorded on booking/quote intents only.
+Once forwarding is live, cancel the Retell subscription — nothing in this repo
+calls it any more.
 
 ## Scheduled jobs
 
 | Cron | Schedule | What it does |
 |---|---|---|
 | `/api/cron/lead-digest` | Mon 13:00 UTC | Weekly owner summary: leads by channel, owed month-to-date, open disputes |
-| `/api/admin/audit-calls` | Mon 14:00 UTC | Call-quality audit — how well the phone is capturing leads |
+
+The weekly AI call-quality audit was removed along with the voice agent — with
+the buyer answering the calls, there is no transcript of ours to audit.
 
 ## Tests
 

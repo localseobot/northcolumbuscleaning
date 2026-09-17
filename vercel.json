@@ -3,21 +3,45 @@
   "trailingSlash": false,
   "crons": [
     {
-      "path": "/api/admin/audit-calls",
-      "schedule": "0 14 * * 1"
-    },
-    {
       "path": "/api/cron/lead-digest",
       "schedule": "0 13 * * 1"
     }
   ],
   "redirects": [
-    { "source": "/book-now", "destination": "/quote", "permanent": true },
-    { "source": "/apply", "destination": "/", "permanent": true },
-    { "source": "/checklist", "destination": "/", "permanent": true },
-    { "source": "/onboard", "destination": "/", "permanent": true },
-    { "source": "/onboarding-guide", "destination": "/", "permanent": true },
-    { "source": "/manage", "destination": "/quote", "permanent": true },
-    { "source": "/login", "destination": "/quote", "permanent": true }
+    {
+      "source": "/book-now",
+      "destination": "/quote",
+      "permanent": true
+    },
+    {
+      "source": "/apply",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/checklist",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/onboard",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/onboarding-guide",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/manage",
+      "destination": "/quote",
+      "permanent": true
+    },
+    {
+      "source": "/login",
+      "destination": "/quote",
+      "permanent": true
+    }
   ]
 }

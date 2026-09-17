@@ -4,9 +4,9 @@
 // call to the buyer's phone. This endpoint hears about the call and runs it
 // through the same recordLead → deliverLead path as the website form.
 //
-// Retell ("Taylor") is unchanged: if a call still lands on her number, the
-// existing /api/retell-webhook records booking/quote intents. The live path
-// is GHL forwarding, not Retell.
+// This is the ONLY phone lead source. Calls are no longer answered by an AI
+// agent — GHL forwards them straight to the buyer's line, and this webhook is
+// how we learn the call happened.
 //
 // Wire this in GHL (see README go-live checklist):
 //   POST https://www.northcolumbuscleaning.com/api/ghl-call-webhook

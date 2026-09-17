@@ -165,7 +165,7 @@ async function hasRecentLead(contactId, withinDays, excludeOpportunityId) {
  * Record a lead and return the ledger entry.
  *
  * Callers that have already upserted the contact and created the opportunity
- * (the Retell webhook does both) pass `contactId` / `opportunityId` and this
+ * (the GHL call webhook does both) pass `contactId` / `opportunityId` and this
  * only applies ledger state. Callers starting from raw form input (the website)
  * leave them out and this creates both.
  *
@@ -235,7 +235,7 @@ export async function recordLead(o) {
     if (o.service) customFields.push(cf(OPP_SERVICE_TYPE, o.service));
     if (o.value) customFields.push(cf(OPP_QUOTED_PRICE, String(o.value)));
     customFields.push(
-      cf(OPP_LEAD_SOURCE, o.leadSource || (channel === "web" ? "Web form" : "Retell call")),
+      cf(OPP_LEAD_SOURCE, o.leadSource || (channel === "web" ? "Web form" : "Other")),
     );
     try {
       const opp = await ghl({
