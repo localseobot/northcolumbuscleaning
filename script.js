@@ -1,3 +1,33 @@
+// Click-to-call tracking number. HTML is baked with a fallback; if Vercel
+// has TRACKING_NUMBER (or GHL_FROM_NUMBER) set, rewrite every tel: link so
+// a number change does not require regenerating pages.
+window.__NCC_TRACKING_DISPLAY = '(614) 352-2588';
+(function () {
+  function applyTracking(href, display) {
+    if (!href || !display) return;
+    window.__NCC_TRACKING_DISPLAY = display;
+    var phoneLike = /\+?1?[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/;
+    document.querySelectorAll('a[href^="tel:"]').forEach(function (a) {
+      a.setAttribute('href', href);
+      if (phoneLike.test(a.textContent)) {
+        a.textContent = a.textContent.replace(phoneLike, display);
+      }
+      var label = a.getAttribute('aria-label');
+      if (label && phoneLike.test(label)) {
+        a.setAttribute('aria-label', label.replace(phoneLike, display));
+      }
+    });
+  }
+
+  fetch('/api/site-config')
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (cfg) {
+      if (!cfg || !cfg.trackingHref || !cfg.trackingDisplay) return;
+      applyTracking(cfg.trackingHref, cfg.trackingDisplay);
+    })
+    .catch(function () {});
+})();
+
 // Mobile nav toggle + backdrop overlay
 (function () {
   var toggle = document.getElementById('nav-toggle');
@@ -100,7 +130,7 @@
       .catch(function (err) {
         note.textContent = (err && err.message && err.message !== 'Bad response')
           ? err.message
-          : 'Something went wrong. Please call us at (614) 352-2588.';
+          : 'Something went wrong. Please call us at ' + (window.__NCC_TRACKING_DISPLAY || '(614) 352-2588') + '.';
         note.className = 'form-note error';
       })
       .then(function () {

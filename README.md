@@ -21,10 +21,38 @@ Phone call ───┘        (GHL)            └─→ Row on the buyer's das
 |---|---|---|
 | Quote form on any page | `POST /api/lead` | `api/lead.js` |
 | Price calculator on `/quote` | `POST /api/lead` | `api/lead.js` |
+| Inbound call (GHL → buyer phone) | GHL inbound-call / call-status webhook | `api/ghl-call-webhook.js` |
 | Inbound call (Retell → "Taylor") | Retell post-call webhook | `api/retell-webhook.js` step 4b |
 
 Both paths converge on `recordLead()` in `api/_lib/lead-ledger.js` and then
 `deliverLead()` in `api/_lib/lead-delivery.js`.
+
+The live phone path is **GoHighLevel call forwarding**, not Retell. A homeowner
+dials the tracking number on the site; GHL forwards that call to the buyer's
+phone; this app records it when GHL posts the webhook. Retell stays wired for
+any call that still lands on Taylor — booking/quote intents only.
+
+### Phone leads: what is billable
+
+Forwarded calls are sold when they were **connected / answered**. That is
+deliberate: a ring that nobody picked up is not a lead the buyer can work.
+
+| GHL / Twilio status | Recorded as a sold lead? |
+|---|---|
+| `answered`, `completed`, `connected`, `in-progress` | Yes (subject to the 30-day dedupe window) |
+| Duration > 0 with no conflicting status | Yes |
+| `missed`, `no-answer`, `busy`, `failed`, `canceled`, `voicemail` | No |
+| `ringing`, `initiated`, `queued` | No — wait for a terminal event |
+| Completed with duration `0` | No |
+| Workflow "Inbound Call" payload with **no** status | Yes, so tracking is live once forwarding is on. Set `GHL_CALL_REQUIRE_ANSWERED=1` to skip these, and filter the GHL workflow to Call Status = completed / answered. |
+
+Outbound calls and SMS/email conversation events posted at this URL are ignored.
+
+The click-to-call number on the site is env-driven: `GET /api/site-config`
+returns `TRACKING_NUMBER` (else `GHL_FROM_NUMBER`, else the number already
+printed in the HTML). `script.js` rewrites every `tel:` link to match. That
+number is the GHL tracking line homeowners dial — never the buyer's personal
+phone.
 
 ## The ledger
 
@@ -115,7 +143,12 @@ Set in Vercel → Settings → Environment Variables.
 | `LEAD_DEDUPE_DAYS` | Repeat-contact grace window (default 30) |
 | `OWNER_EMAIL` | Weekly lead digest recipient |
 | `ADMIN_TOKEN` | Gates every `/api/admin/*` endpoint |
-| `GHL_PIT`, `GHL_LOCATION_ID` | GoHighLevel API |
+| `GHL_PIT`, `GHL_LOCATION_ID` | GoHighLevel API. Sub-account id is `XIA5AmegWaylDoPVe3r8`. |
+| `TRACKING_NUMBER` | Public click-to-call number in E.164 (the GHL line on the site). |
+| `GHL_FROM_NUMBER` | Fallback for `TRACKING_NUMBER` if unset; also the SMS from-number. |
+| `GHL_CALL_WEBHOOK_SECRET` | Optional. If set, GHL must send it as `X-Webhook-Secret`. |
+| `GHL_CALL_REQUIRE_ANSWERED` | If `1`, skip inbound-call payloads that have no connected/answered signal. |
+| `GHL_CALL_MIN_DURATION` | Optional minimum connected seconds (default 0). |
 | `RESEND_API_KEY`, `RESEND_FROM` | Transactional email |
 | `SITE_BASE_URL` | Canonical origin; used for CORS and link building |
 | `CRON_SECRET` | Optional. If set, crons require `Authorization: Bearer` |
@@ -123,6 +156,39 @@ Set in Vercel → Settings → Environment Variables.
 Nothing here is required for the site to serve. Missing config degrades
 rather than breaks: with no `RESEND_API_KEY` the alert email is skipped, with
 no `BUYER_PHONE` the text is skipped, and the lead is still recorded.
+
+## Go-live checklist (phone tracking)
+
+Do these in order. Tracking is live in code the moment this deploy is up;
+GHL only has to forward and post.
+
+1. **Deploy this branch** to Vercel (Production). Confirm
+   `https://www.northcolumbuscleaning.com/api/ghl-call-webhook` returns
+   `{ "ok": true, "endpoint": "ghl-call-webhook" }`.
+2. **Vercel → Settings → Environment Variables** (Production), then redeploy:
+   - `GHL_PIT`, `GHL_LOCATION_ID=XIA5AmegWaylDoPVe3r8`
+   - `TRACKING_NUMBER` — the GHL number printed on the site, E.164
+   - `BUYER_NAME`, `BUYER_EMAIL`, `BUYER_PHONE`, `BUYER_SECRET`, `BUYER_ACCESS_NONCE`
+   - Suggested buyer (set in Vercel, not in this repo): Lukas / All Cleans
+     Solution, `740-971-2907` → `BUYER_PHONE=+17409712907`
+3. **GHL phone → forward-to.** Location `XIA5AmegWaylDoPVe3r8` → Phone
+   numbers → the tracking line → call forwarding **to the buyer's phone**
+   (the same number as `BUYER_PHONE`). Do not forward the live path to
+   Retell.
+4. **GHL webhook.** Settings → Integrations → Webhooks, or a workflow
+   action, POST to:
+   `https://www.northcolumbuscleaning.com/api/ghl-call-webhook`
+   Prefer Inbound Message (CALL) or Call Status = completed / answered.
+   If you use a bare "Inbound Call" trigger, payloads with no status still
+   count unless `GHL_CALL_REQUIRE_ANSWERED=1`. Optional header:
+   `X-Webhook-Secret` = `GHL_CALL_WEBHOOK_SECRET`.
+   Do not also create an opportunity in that workflow — this app does that.
+5. **Smoke test.** Call the tracking number from a cell that is not the
+   buyer's. The buyer should ring. Within a minute: a row on `/dashboard`,
+   a buyer SMS, a buyer email. A hang-up before answer should not bill.
+
+Retell (`/api/retell-webhook`) is left in place. Any call that still reaches
+Taylor is recorded on booking/quote intents only.
 
 ## Scheduled jobs
 
@@ -138,8 +204,10 @@ node scripts/test-lead-model.mjs
 ```
 
 Covers the billing arithmetic in both pricing modes, month grouping, the
-outcome vocabulary shared between the ledger and the dashboard, and dashboard
-token signing, expiry and revocation.
+outcome vocabulary shared between the ledger and the dashboard, dashboard
+token signing, expiry and revocation, GHL call-webhook parsing / billable
+rules, and tracking-number formatting. No live GoHighLevel account is
+required.
 
 ## Stack
 

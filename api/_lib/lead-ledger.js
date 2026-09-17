@@ -180,6 +180,7 @@ async function hasRecentLead(contactId, withinDays, excludeOpportunityId) {
  * @param {string} [o.detail]         Free text from the visitor / call summary
  * @param {number} [o.value]          Estimated job value, for the opportunity
  * @param {string} [o.sourceLabel]    Human-readable source for GHL's Source field
+ * @param {string} [o.leadSource]     Opportunity Source dropdown value (must match GHL)
  * @returns {Promise<{ok, leadId, contactId, billable, duplicate, error?}>}
  */
 export async function recordLead(o) {
@@ -233,7 +234,9 @@ export async function recordLead(o) {
     const customFields = [];
     if (o.service) customFields.push(cf(OPP_SERVICE_TYPE, o.service));
     if (o.value) customFields.push(cf(OPP_QUOTED_PRICE, String(o.value)));
-    customFields.push(cf(OPP_LEAD_SOURCE, channel === "web" ? "Web form" : "Retell call"));
+    customFields.push(
+      cf(OPP_LEAD_SOURCE, o.leadSource || (channel === "web" ? "Web form" : "Retell call")),
+    );
     try {
       const opp = await ghl({
         method: "POST",

@@ -21,7 +21,14 @@ Picks up inbound calls when the team is busy or out. She:
 - Promise refunds, discounts, or make-goods
 - Pretend to be human (asks → "I'm Taylor, the AI assistant")
 
-## Call flow
+## Live lead-sales path
+
+The number on the website is a GHL tracking line. GHL **forwards that call
+to the buyer's phone**. Tracking is `POST /api/ghl-call-webhook` — see the
+README go-live checklist. Taylor (below) is unchanged and still handles any
+call that is forwarded to her Retell number.
+
+## Call flow (Retell / Taylor, fallback)
 
 ```
 Customer dials GHL number
