@@ -162,15 +162,40 @@ no `BUYER_PHONE` the text is skipped, and the lead is still recorded.
 
 ## Go-live checklist (phone tracking)
 
-Confirmed buyer: **All Clean Sol**. Website forms and buyer alerts go to
-`contact@allcleansol.com`. GHL forwards the tracking line to `740-971-2907`
-(`+17409712907`). Copy `.env.example` into Vercel — destinations are listed
-there as comments/defaults; `BUYER_SECRET` / `GHL_PIT` stay secrets.
+Site `tel:` / `TRACKING_NUMBER` is the **GHL LC line homeowners dial**, not
+the buyer's phone. Forward-to is All Clean Sol.
+
+| | Value |
+|---|---|
+| GHL location | `XIA5AmegWaylDoPVe3r8` |
+| Tracking number (on the site, LC Phone) | `+16143522588` / `(614) 352-2588` |
+| Forward-to (buyer) | `+17409712907` / `(740) 971-2907` |
+| Buyer alerts + form leads | `contact@allcleansol.com` |
+| Buyer SMS | `+17409712907` |
+| Production webhook | `POST https://www.northcolumbuscleaning.com/api/ghl-call-webhook` |
+
+Copy `.env.example` into Vercel. Destinations are comments/defaults;
+`BUYER_SECRET` / `GHL_PIT` stay secrets.
+
+### What GHL looks like today (inspected)
+
+- LC Phone is present; the number on the site is `+1 614-352-2588` (there may
+  be more lines — do not put those on `tel:` links).
+- Published workflow **After-Hours Call Routing** currently Connect-Calls
+  **externally to `(614) 762-9409`**. That is the old Retell number. Change
+  it to `(740) 971-2907`.
+- Draft workflow **Call Routing 24/7** has an Incoming Call trigger and **no
+  actions**. Either finish and publish it (Connect Call + Webhook) if calls
+  should route 24/7, or keep After-Hours as the live path after the
+  destination change.
+- No Retell in the GHL phone path. **No call webhook is attached yet.**
+
+### Operator steps
 
 1. **Deploy this branch** to Vercel (Production). Confirm
    `https://www.northcolumbuscleaning.com/api/ghl-call-webhook` returns
    `{ "ok": true, "endpoint": "ghl-call-webhook" }`.
-2. **Vercel → Settings → Environment Variables** (Production), then redeploy:
+2. **Vercel env** (Production), then redeploy:
    ```
    BUYER_NAME=All Clean Sol
    BUYER_EMAIL=contact@allcleansol.com
@@ -181,24 +206,26 @@ there as comments/defaults; `BUYER_SECRET` / `GHL_PIT` stay secrets.
    GHL_LOCATION_ID=XIA5AmegWaylDoPVe3r8
    TRACKING_NUMBER=+16143522588
    ```
-3. **GHL forward-to (already pointed at the buyer).** Location
-   `XIA5AmegWaylDoPVe3r8`, customer line `+16143522588`, workflow
-   **After-Hours Call Routing** → Connect Call to `+17409712907`.
-4. **GHL webhook (still needed).** On that same **After-Hours Call Routing**
-   workflow, add a Webhook action alongside Connect Call:
+3. **Change the forward-to.** Location `XIA5AmegWaylDoPVe3r8` → Automations →
+   **After-Hours Call Routing** → Connect Call: replace `+16147629409` with
+   `+17409712907`. Save / republish. (If you instead finish **Call Routing
+   24/7**, give it the same Connect Call destination and publish it.)
+4. **Attach the webhook** (nothing in GHL posts to us yet). On the same
+   published workflow, add a Webhook action alongside Connect Call:
    - URL: `https://www.northcolumbuscleaning.com/api/ghl-call-webhook`
    - Method: `POST`
-   - Events / trigger: Inbound Call, plus Call Status completed/answered
-     if the workflow builder exposes it. Native alternative: Settings →
-     Integrations → Webhooks → Inbound Message (`messageType=CALL`).
+   - Body: the workflow's default contact/call payload is enough
+   - Events: Incoming Call. If the builder can filter or add a second
+     action on Call Status **completed / answered**, do that — those are
+     the billable events. Native alternative: Settings → Integrations →
+     Webhooks → Inbound Message (`messageType=CALL`).
    - Optional header: `X-Webhook-Secret` = `GHL_CALL_WEBHOOK_SECRET`
-   - Do **not** also create an opportunity in that workflow — this app does
-     that via `recordLead()`, so the call shows on `/dashboard` as
-     `channel=phone` with caller ID, timestamp, and billable/dedupe flags.
+   - Do **not** also create an opportunity in that workflow — `recordLead()`
+     does that so the call appears on `/dashboard` as `channel=phone`.
 5. **Smoke test.** Call `+16143522588` from a cell that is not the buyer's.
-   All Clean Sol should ring at `740-971-2907`. Within a minute: a phone-lead
-   row on `/dashboard`, SMS to `+17409712907`, email to
-   `contact@allcleansol.com`. A hang-up before answer should not bill.
+   All Clean Sol should ring at `740-971-2907` — not `614-762-9409`. Within
+   a minute: a phone-lead row on `/dashboard`, SMS to `+17409712907`, email
+   to `contact@allcleansol.com`. A hang-up before answer should not bill.
 
 Once forwarding is live, cancel the Retell subscription — nothing in this repo
 calls it any more.
