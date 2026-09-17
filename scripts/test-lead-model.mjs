@@ -30,6 +30,7 @@ const { groupByMonth, outcomeLabel, OUTCOME_KEYS } = await import("../api/_lib/l
 const { signBuyerToken, verifyBuyerToken } = await import("../api/_lib/buyer-token.js");
 const { parseGhlCallEvent, classifyGhlCall, selectCallerPhone } = await import("../api/_lib/ghl-call.js");
 const { toE164, formatUsDisplay, getTrackingNumber, FALLBACK_TRACKING_E164 } = await import("../api/_lib/phone.js");
+const { digestSubject, parseEmailList, resolveDigestRecipients } = await import("../api/_lib/digest-recipients.js");
 const ghlCallWebhook = (await import("../api/ghl-call-webhook.js")).default;
 
 const leads = (n, billable = true) => Array.from({ length: n }, () => ({ billable }));
@@ -360,6 +361,77 @@ function mockRes() {
   };
   r.end = () => r;
   return r;
+}
+
+console.log("\nweekly digest recipients");
+{
+  test("OWNER_EMAIL + BUYER_EMAIL both get a To: copy", () => {
+    const rec = resolveDigestRecipients({
+      OWNER_EMAIL: "devyn@localseobot.com",
+      BUYER_EMAIL: "contact@allcleansol.com",
+    });
+    assert.deepEqual(rec, [
+      { email: "devyn@localseobot.com", role: "owner" },
+      { email: "contact@allcleansol.com", role: "buyer" },
+    ]);
+  });
+  test("dedupes when owner and buyer somehow match", () => {
+    const rec = resolveDigestRecipients({
+      OWNER_EMAIL: "Devyn@LocalSeoBot.com",
+      BUYER_EMAIL: "devyn@localseobot.com",
+    });
+    assert.equal(rec.length, 1);
+    assert.equal(rec[0].role, "owner");
+  });
+  test("falls back to RESEND_BCC_OPS for the owner copy", () => {
+    const rec = resolveDigestRecipients({
+      RESEND_BCC_OPS: "ops@localseobot.com",
+      BUYER_EMAIL: "contact@allcleansol.com",
+    });
+    assert.deepEqual(rec.map((r) => r.email), [
+      "ops@localseobot.com",
+      "contact@allcleansol.com",
+    ]);
+  });
+  test("DIGEST_EMAILS overrides the default pair", () => {
+    const rec = resolveDigestRecipients({
+      OWNER_EMAIL: "devyn@localseobot.com",
+      BUYER_EMAIL: "contact@allcleansol.com",
+      DIGEST_EMAILS: "ops@localseobot.com, extra@localseobot.com",
+    });
+    assert.deepEqual(rec.map((r) => r.email), [
+      "ops@localseobot.com",
+      "extra@localseobot.com",
+    ]);
+  });
+  test("DIGEST_EMAILS still tags owner and buyer roles", () => {
+    const rec = resolveDigestRecipients({
+      OWNER_EMAIL: "devyn@localseobot.com",
+      BUYER_EMAIL: "contact@allcleansol.com",
+      DIGEST_EMAILS: "contact@allcleansol.com,devyn@localseobot.com",
+    });
+    assert.equal(rec[0].role, "buyer");
+    assert.equal(rec[1].role, "owner");
+  });
+  test("empty env skips the digest", () => {
+    assert.deepEqual(resolveDigestRecipients({}), []);
+  });
+  test("parseEmailList ignores junk and splits on commas", () => {
+    assert.deepEqual(parseEmailList("a@b.com, not-an-email; c@d.com"), [
+      "a@b.com",
+      "c@d.com",
+    ]);
+  });
+  test("buyer subject is customer-facing; owner keeps ops language", () => {
+    assert.equal(
+      digestSubject({ role: "buyer", weekCount: 4, mtdLabel: "$140" }),
+      "Your North Columbus Cleaning leads this week · 4 delivered",
+    );
+    assert.equal(
+      digestSubject({ role: "owner", weekCount: 4, mtdLabel: "$140" }),
+      "Lead week: 4 delivered · $140 MTD",
+    );
+  });
 }
 
 console.log("\nGHL call webhook handler (no live GHL)");
