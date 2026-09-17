@@ -83,6 +83,16 @@
     .quote-result .discount { color: var(--lime); }
     .quote-result .flags { margin-top: var(--space-2); font-size: 13px; opacity: 0.85; background: rgba(255,255,255,0.08); padding: 10px 12px; border-radius: var(--radius-sm); }
     .quote-result .btn { width: 100%; justify-content: center; text-align: center; margin-top: var(--space-2); }
+    .quote-capture { margin-top: var(--space-3); text-align: left; }
+    .quote-capture-lede { font-size: 14px; margin: 0 0 12px; opacity: .85; }
+    .quote-capture label { display: block; font-size: 13px; font-weight: 600; margin: 10px 0 4px; }
+    .quote-capture label .opt { font-weight: 400; opacity: .7; }
+    .quote-capture input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(0,0,0,.18); font: inherit; font-size: 15px; }
+    .quote-capture-note { font-size: 13.5px; margin: 10px 0 0; min-height: 1.2em; }
+    .quote-capture-note.error { color: #b42318; }
+    .quote-capture-note.success { color: #1a7f4f; }
+    .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+    [hidden] { display: none !important; }
     .quote-fine {
       font-size: 13px; text-align: center;
       color: var(--charcoal); opacity: 0.7;
@@ -133,7 +143,7 @@
         <a href="/#owner">About</a>
         <a href="/#faq">FAQ</a>
         <a href="tel:+16143522588" class="nav-call">(614) 352-2588</a>
-        <a href="/book-now" class="btn btn-primary nav-cta">Book now</a>
+        <a href="/quote" class="btn btn-primary nav-cta">Get a quote</a>
       </nav>
     </div>
   </header>
@@ -223,8 +233,27 @@
           </div>
           <ul class="breakdown" id="q-breakdown"></ul>
           <div class="flags" id="q-flags" hidden></div>
-          <a href="/book-now" class="btn btn-secondary btn-block" id="q-book">Book this clean</a>
+          <button type="button" class="btn btn-secondary btn-block" id="q-book">Book this clean</button>
           <a href="tel:+16143522588" class="btn btn-outline-light btn-block" style="margin-top:8px;">Or call (614) 352-2588</a>
+
+          <!-- Revealed by "Book this clean". The calculator is the strongest
+               moment of intent on the whole site, so it has to end in a lead,
+               not a link to another page the visitor may never load. -->
+          <form class="quote-capture" id="q-capture" hidden novalidate>
+            <p class="quote-capture-lede">Leave your details and we&rsquo;ll call you back to lock this in.</p>
+            <label for="q-name">Name</label>
+            <input type="text" id="q-name" name="name" required autocomplete="name" />
+            <label for="q-phone">Phone</label>
+            <input type="tel" id="q-phone" name="phone" required autocomplete="tel" />
+            <label for="q-email">Email <span class="opt">(optional)</span></label>
+            <input type="email" id="q-email" name="email" autocomplete="email" />
+            <div class="hp-field" aria-hidden="true">
+              <label for="q-website">Website</label>
+              <input type="text" id="q-website" name="website" tabindex="-1" autocomplete="off" />
+            </div>
+            <button type="submit" class="btn btn-secondary btn-block">Request a call back</button>
+            <p class="quote-capture-note" id="q-capture-note" role="status" aria-live="polite"></p>
+          </form>
         </aside>
       </div>
 
@@ -258,7 +287,6 @@
           <li><a href="/#faq">FAQ</a></li>
           <li><a href="/privacy">Privacy policy</a></li>
           <li><a href="/sms-terms">SMS terms</a></li>
-          <li><a href="/apply">Careers &mdash; we're hiring</a></li>
         </ul>
       </div>
       <div class="footer-col">
@@ -341,6 +369,74 @@
       form.addEventListener('input', quote);
       form.addEventListener('change', quote);
       quote(); // initial price on load
+
+      // ---- Capture ----------------------------------------------------
+      // Someone who has configured a quote has told us exactly what they
+      // want. Carry that straight through to the lead so whoever calls them
+      // back already knows the job and the number they were shown.
+      var bookBtn = document.getElementById('q-book');
+      var capture = document.getElementById('q-capture');
+      var captureNote = document.getElementById('q-capture-note');
+
+      bookBtn.addEventListener('click', function () {
+        capture.hidden = false;
+        bookBtn.hidden = true;
+        var first = capture.querySelector('input');
+        if (first) first.focus();
+      });
+
+      capture.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var name = capture.name.value.trim();
+        var phone = capture.phone.value.trim();
+        var email = capture.email.value.trim();
+
+        if (!name || !phone) {
+          captureNote.textContent = 'Please give us your name and a phone number.';
+          captureNote.className = 'quote-capture-note error';
+          return;
+        }
+
+        var btn = capture.querySelector('button[type="submit"]');
+        captureNote.textContent = 'Sending\u2026';
+        captureNote.className = 'quote-capture-note';
+        if (btn) btn.disabled = true;
+
+        fetch('/api/lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: name,
+            phone: phone,
+            email: email,
+            service: form.service.options[form.service.selectedIndex].text,
+            message: 'Used the price calculator. Quoted ' + totalEl.textContent +
+              ' per visit for a ' + form.bedrooms.value + ' bed / ' + form.bathrooms.value +
+              ' bath, ' + (form.frequency.options[form.frequency.selectedIndex].text) + '.',
+            sqft: form.sqft.value,
+            bedrooms: form.bedrooms.value,
+            bathrooms: form.bathrooms.value,
+            page: '/quote',
+            website: capture.website.value
+          })
+        })
+          .then(function (r) {
+            return r.json().catch(function () { return {}; }).then(function (data) {
+              if (!r.ok) throw new Error(data.error || 'Bad response');
+              return data;
+            });
+          })
+          .then(function () {
+            capture.innerHTML = '<p class="quote-capture-note success">Got it \u2014 we\u2019ll call you shortly to confirm and book you in.</p>';
+          })
+          .catch(function (err) {
+            captureNote.textContent = (err && err.message && err.message !== 'Bad response')
+              ? err.message
+              : 'Something went wrong. Please call (614) 352-2588.';
+            captureNote.className = 'quote-capture-note error';
+            if (btn) btn.disabled = false;
+          });
+      });
     })();
   </script>
 </body>

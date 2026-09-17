@@ -1,5 +1,5 @@
 // GHL custom field IDs for North Columbus Cleaning.
-// Source of truth: voice-agent/ghl-field-ids.json
+// Source of truth: docs/ghl-field-ids.json
 //
 // Naming convention: SCREAMING_SNAKE for the field-key constants,
 // grouped by model ("OPP_*" or "CONTACT_*").
@@ -54,8 +54,10 @@ export const FREQUENCY_OPTIONS = {
   MONTHLY: "Monthly",
 };
 
+// NOTE: the GHL dropdown still contains a "Retell call" option and historical
+// opportunities still carry it. We just never write it any more — forwarded
+// calls are recorded as "Other" until a "Phone call" option is added in GHL.
 export const LEAD_SOURCE_OPTIONS = {
-  RETELL_CALL: "Retell call",
   WEB_FORM: "Web form",
   BOOKING_KOALA: "Booking Koala",
   REFERRAL: "Referral",

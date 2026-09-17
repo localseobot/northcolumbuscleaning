@@ -3,40 +3,45 @@
   "trailingSlash": false,
   "crons": [
     {
-      "path": "/api/admin/audit-calls",
-      "schedule": "0 14 * * 1"
-    },
-    {
-      "path": "/api/cron/recurring-pitch",
-      "schedule": "0 14 * * *"
-    },
-    {
-      "path": "/api/cron/reactivation",
-      "schedule": "0 15 * * *"
-    },
-    {
-      "path": "/api/cron/review-request",
-      "schedule": "0 17 * * *"
-    },
-    {
-      "path": "/api/cron/cancellation-winback",
-      "schedule": "0 18 * * *"
-    },
-    {
-      "path": "/api/cron/reminder-24h",
-      "schedule": "0 22 * * *"
-    },
-    {
-      "path": "/api/cron/provider-reminder-evening",
-      "schedule": "0 23 * * *"
-    },
-    {
-      "path": "/api/cron/provider-reminder-morning",
-      "schedule": "0 12 * * *"
-    },
-    {
-      "path": "/api/cron/weekly-digest",
+      "path": "/api/cron/lead-digest",
       "schedule": "0 13 * * 1"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/book-now",
+      "destination": "/quote",
+      "permanent": true
+    },
+    {
+      "source": "/apply",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/checklist",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/onboard",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/onboarding-guide",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/manage",
+      "destination": "/quote",
+      "permanent": true
+    },
+    {
+      "source": "/login",
+      "destination": "/quote",
+      "permanent": true
     }
   ]
 }

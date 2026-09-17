@@ -1,4 +1,9 @@
 User-agent: *
 Allow: /
 
+# The buyer's dashboard and its API are private — the signed link is the
+# credential, and none of it should ever appear in a search result.
+Disallow: /dashboard
+Disallow: /api/buyer/
+
 Sitemap: https://northcolumbuscleaning.com/sitemap.xml

@@ -8,6 +8,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
 
+# Public click-to-call fallback baked into generated HTML. Runtime overlay
+# in /script.js replaces this when TRACKING_NUMBER is set in Vercel.
+PHONE_E164 = "+16143522588"
+PHONE_DISPLAY = "(614) 352-2588"
+PHONE_SCHEMA = "+1-614-352-2588"
+
 # ============ DATA ============
 NEIGHBORHOODS = [
     {
@@ -353,7 +359,7 @@ def local_business_jsonld(canonical_path, area_served=None, service_name=None):
     if service_name:
         offer_block = f""","makesOffer":{{"@type":"Offer","itemOffered":{{"@type":"Service","name":"{service_name}"}}}}"""
     return f"""  <script type="application/ld+json">
-  {{"@context":"https://schema.org","@type":"HouseholdCleaningService","name":"North Columbus Cleaning Company","image":"https://northcolumbuscleaning.com/images/logo.svg","url":"{canonical}","telephone":"+1-740-913-3693","email":"admin@northcolumbuscleaning.com","priceRange":"$$","address":{{"@type":"PostalAddress","addressLocality":"Columbus","addressRegion":"OH","addressCountry":"US"}},"areaServed":{area_served_json},"openingHours":"Mo-Sa 07:00-19:00"{offer_block}}}
+  {{"@context":"https://schema.org","@type":"HouseholdCleaningService","name":"North Columbus Cleaning Company","image":"https://northcolumbuscleaning.com/images/logo.svg","url":"{canonical}","telephone":"{PHONE_SCHEMA}","email":"admin@northcolumbuscleaning.com","priceRange":"$$","address":{{"@type":"PostalAddress","addressLocality":"Columbus","addressRegion":"OH","addressCountry":"US"}},"areaServed":{area_served_json},"openingHours":"Mo-Sa 07:00-19:00"{offer_block}}}
   </script>"""
 
 
@@ -394,10 +400,10 @@ def head(title, description, canonical_path, og_image="/images/hero.jpg"):
 <body>"""
 
 
-TOPBAR = """  <div class="topbar">
+TOPBAR = f"""  <div class="topbar">
     <div class="container topbar-inner">
       <span class="topbar-item">Serving Columbus, OH and surrounding neighborhoods</span>
-      <span class="topbar-item"><a href="tel:+17409133693">(740) 913-3693</a></span>
+      <span class="topbar-item"><a href="tel:{PHONE_E164}">{PHONE_DISPLAY}</a></span>
     </div>
   </div>"""
 
@@ -417,7 +423,7 @@ HEADER = """  <header class="site-header">
         <a href="/#gallery">Our work</a>
         <a href="/#faq">FAQ</a>
         <a href="/login">Login</a>
-        <a href="/book-now" class="btn btn-primary nav-cta">Book now</a>
+        <a href="/quote" class="btn btn-primary nav-cta">Get a quote</a>
       </nav>
     </div>
   </header>"""
@@ -446,7 +452,7 @@ def footer():
             <span itemprop="addressRegion">OH</span>
             <span itemprop="postalCode">43074</span>
           </address>
-          <p><strong>Phone</strong> <a href="tel:+17409133693" itemprop="telephone">(740) 913-3693</a></p>
+          <p><strong>Phone</strong> <a href="tel:{PHONE_E164}" itemprop="telephone">{PHONE_DISPLAY}</a></p>
           <p><strong>Web</strong> <a href="https://www.northcolumbuscleaning.com/" itemprop="url">northcolumbuscleaning.com</a></p>
           <p class="footer-location-description" itemprop="description">Residential and commercial cleaning services in Worthington, Clintonville, Westerville, Dublin, Powell, Upper Arlington, New Albany, Gahanna, Polaris, Lewis Center, Delaware &amp; Hilliard, OH.</p>
           <meta itemprop="foundingDate" content="2026-04-23" />
@@ -484,12 +490,11 @@ def footer():
       <div class="footer-col">
         <h5>Contact &amp; legal</h5>
         <ul>
-          <li><a href="tel:+17409133693">(740) 913-3693</a></li>
+          <li><a href="tel:{PHONE_E164}">{PHONE_DISPLAY}</a></li>
           <li><a href="mailto:admin@northcolumbuscleaning.com">admin@northcolumbuscleaning.com</a></li>
           <li>Mon&ndash;Sat, 7am&ndash;7pm</li>
           <li><a href="/privacy">Privacy policy</a></li>
           <li><a href="/sms-terms">SMS terms</a></li>
-          <li><a href="/apply">Careers &mdash; we're hiring</a></li>
         </ul>
       </div>
     </div>
@@ -505,7 +510,7 @@ def footer():
 """
 
 
-CTA_BLOCK = """  <section class="section section-cta">
+CTA_BLOCK = f"""  <section class="section section-cta">
     <div class="container cta-inline">
       <div>
         <span class="eyebrow light">Ready to book</span>
@@ -514,7 +519,7 @@ CTA_BLOCK = """  <section class="section section-cta">
       </div>
       <div class="cta-buttons">
         <a href="/#quote" class="btn btn-secondary">Request a quote</a>
-        <a href="tel:+17409133693" class="btn btn-outline-light">(740) 913-3693</a>
+        <a href="tel:{PHONE_E164}" class="btn btn-outline-light">{PHONE_DISPLAY}</a>
       </div>
     </div>
   </section>"""
@@ -536,7 +541,7 @@ def combo_page(s, n):
     title = base + brand if len(base + brand) <= 60 else base
     desc = (
         f"{s['name']} in {n['name']}, OH by a local, insured, bonded crew. Flat-rate quotes, "
-        f"satisfaction guarantee. Call (740) 913-3693."
+        f"satisfaction guarantee. Call {PHONE_DISPLAY}."
     )
     canonical = f"/services/{s['slug']}/{n['slug']}"
 
@@ -572,7 +577,7 @@ def combo_page(s, n):
     "name": "North Columbus Cleaning Company",
     "image": "https://northcolumbuscleaning.com/images/logo.svg",
     "url": "https://northcolumbuscleaning.com{canonical}",
-    "telephone": "+1-740-913-3693",
+    "telephone": "{PHONE_SCHEMA}",
     "areaServed": {{
       "@type": "City",
       "name": "{n['name']}, OH"
@@ -617,7 +622,7 @@ def combo_page(s, n):
         <p>{sub}</p>
         <div class="hero-cta">
           <a href="/#quote" class="btn btn-primary">Get a quote</a>
-          <a href="tel:+17409133693" class="btn btn-outline">(740) 913-3693</a>
+          <a href="tel:{PHONE_E164}" class="btn btn-outline">{PHONE_DISPLAY}</a>
         </div>
 {TRUST_LIST}
       </div>
@@ -694,7 +699,7 @@ def location_page(n):
     title = base + brand if len(base + brand) <= 60 else base
     desc = (
         f"Residential and commercial cleaning in {n['name']}, OH by a local, insured, bonded crew. "
-        f"Flat-rate quotes, satisfaction guarantee. Call (740) 913-3693."
+        f"Flat-rate quotes, satisfaction guarantee. Call {PHONE_DISPLAY}."
     )
     zips_line = ", ".join(n['zips'])
 
@@ -725,7 +730,7 @@ def location_page(n):
         <p class="lead">{n['blurb']}</p>
         <div class="hero-cta">
           <a href="/#quote" class="btn btn-primary">Get a quote</a>
-          <a href="tel:+17409133693" class="btn btn-outline">(740) 913-3693</a>
+          <a href="tel:{PHONE_E164}" class="btn btn-outline">{PHONE_DISPLAY}</a>
         </div>
 {TRUST_LIST}
       </div>
@@ -790,7 +795,7 @@ def service_page(s):
     title = base + brand if len(base + brand) <= 60 else base
     desc = (
         f"{s['name']} services in Columbus, OH by a local, insured, bonded crew. {s['short']} "
-        f"Flat-rate quotes. Call (740) 913-3693."
+        f"Flat-rate quotes. Call {PHONE_DISPLAY}."
     )
 
     included_items = "\n".join(f"        <li>{item}</li>" for item in s['included'])
@@ -820,7 +825,7 @@ def service_page(s):
         <p class="lead">{s['intro']}</p>
         <div class="hero-cta">
           <a href="/#quote" class="btn btn-primary">Get a quote</a>
-          <a href="tel:+17409133693" class="btn btn-outline">(740) 913-3693</a>
+          <a href="tel:{PHONE_E164}" class="btn btn-outline">{PHONE_DISPLAY}</a>
         </div>
 {TRUST_LIST}
       </div>
@@ -888,7 +893,7 @@ def locations_hub():
     title = "Cleaning Service Areas in North Columbus, OH"
     desc = (
         "Cleaning services across 12 North Columbus, OH neighborhoods &mdash; Worthington, "
-        "Dublin, Westerville, New Albany, Powell, and more. Call (740) 913-3693."
+        f"Dublin, Westerville, New Albany, Powell, and more. Call {PHONE_DISPLAY}."
     )
     cards = "\n".join(f"""        <a class="area-card" href="/locations/{n['slug']}">
           <h3>{n['name']}</h3>
@@ -929,7 +934,7 @@ def services_hub():
     title = "Cleaning Services in Columbus, OH | North Columbus Cleaning"
     desc = (
         "Residential, commercial, deep, recurring, move-in/out, and Airbnb cleaning "
-        "services in North Columbus, OH. Flat-rate quotes. Call (740) 913-3693."
+        f"services in North Columbus, OH. Flat-rate quotes. Call {PHONE_DISPLAY}."
     )
     cards = "\n".join(f"""        <a class="service-card service-card-link" href="/services/{s['slug']}">
           <div class="service-img"><img src="{s['hero_img']}" alt="{s['name']}" loading="lazy" /></div>
@@ -975,7 +980,6 @@ def sitemap():
     base = "https://northcolumbuscleaning.com"
     urls = [
         (base + "/", "1.0", "weekly"),
-        (base + "/book-now", "0.9", "weekly"),
         (base + "/services", "0.9", "weekly"),
         (base + "/locations", "0.9", "weekly"),
         (base + "/privacy", "0.3", "yearly"),

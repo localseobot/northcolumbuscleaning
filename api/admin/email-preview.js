@@ -6,14 +6,13 @@
 //   GET /api/admin/email-preview?template=booking-confirmation&token=...&send=you@example.com
 //     → sends a real email to that address (uses Resend; respects env vars)
 //
-// Token-gated via ADMIN_TOKEN (same as /api/admin/calls).
+// Token-gated via ADMIN_TOKEN.
 
 import { buildBookingConfirmation } from "../_lib/email-templates/booking-confirmation.js";
 import { buildReminder24h } from "../_lib/email-templates/reminder-24h.js";
 import { buildReviewRequest } from "../_lib/email-templates/review-request.js";
 import { buildRescheduleNotice } from "../_lib/email-templates/reschedule-notice.js";
 import { buildCancellationWinback } from "../_lib/email-templates/cancellation-winback.js";
-import { buildRetellFollowup } from "../_lib/email-templates/retell-followup.js";
 import { buildReactivation } from "../_lib/email-templates/reactivation.js";
 import { buildRecurringPitch } from "../_lib/email-templates/recurring-pitch.js";
 import { sendEmail } from "../_lib/resend.js";
@@ -69,19 +68,6 @@ const SAMPLE = {
   "cancellation-winback": {
     builder: buildCancellationWinback,
     fixture: { firstName: "Sarah" },
-  },
-  "retell-followup": {
-    builder: buildRetellFollowup,
-    fixture: {
-      firstName: "Sarah",
-      serviceType: "deep",
-      frequency: "biweekly",
-      bedrooms: 3,
-      bathrooms: 2,
-      sqft: 1850,
-      quotedPrice: 275,
-      notes: "Pets at home (dog), gate code 4321",
-    },
   },
   "reactivation": {
     builder: buildReactivation,

@@ -105,7 +105,7 @@
         <a href="/#owner">About</a>
         <a href="/#faq">FAQ</a>
         <a href="tel:+16143522588" class="nav-call">(614) 352-2588</a>
-        <a href="/book-now" class="btn btn-primary nav-cta">Book now</a>
+        <a href="/quote" class="btn btn-primary nav-cta">Get a quote</a>
       </nav>
     </div>
   </header>
@@ -462,7 +462,7 @@
         </ul>
       </div>
 
-      <form class="quote-form" id="quote-form" action="https://formspree.io/f/YOUR_ID_HERE" method="POST" novalidate>
+      <form class="quote-form" id="quote-form" action="/api/lead" method="POST" novalidate>
         <div class="form-row">
           <label for="name">Name</label>
           <input type="text" id="name" name="name" required autocomplete="name" />
@@ -493,6 +493,10 @@
         <div class="form-row">
           <label for="message">Tell us about the space</label>
           <textarea id="message" name="message" rows="4" placeholder="e.g. 3 bed / 2 bath in Clintonville, bi-weekly"></textarea>
+        </div>
+        <div class="hp-field" aria-hidden="true">
+          <label for="website">Website</label>
+          <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
         </div>
         <button type="submit" class="btn btn-secondary btn-block">Request quote</button>
         <p class="form-note" id="form-note" role="status" aria-live="polite"></p>
@@ -597,7 +601,6 @@
           <li><a href="#services">Deep cleaning</a></li>
           <li><a href="#services">Recurring</a></li>
           <li><a href="#services">Move-in / Move-out</a></li>
-          <li><a href="/checklist">Checklist</a></li>
         </ul>
       </div>
 
@@ -611,7 +614,6 @@
           <li><a href="#faq">FAQ</a></li>
           <li><a href="/privacy">Privacy policy</a></li>
           <li><a href="/sms-terms">SMS terms</a></li>
-          <li><a href="/apply">Careers &mdash; we're hiring</a></li>
         </ul>
       </div>
 

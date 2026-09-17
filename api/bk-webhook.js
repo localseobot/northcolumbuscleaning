@@ -75,7 +75,7 @@ import { sendOpsAlert } from "./_lib/alerts.js";
 
 export const config = { runtime: "nodejs" };
 
-// ───────── Pipeline + stage IDs (same as retell-webhook.js) ─────────
+// ───────── Pipeline + stage IDs (shared with _lib/lead-ledger.js) ─────────
 const SALES_PIPELINE_ID = "6YDehH2kNtHrdfJaEQfa";
 const STAGE_NEW_LEAD = "4bb733e7-d38d-4cb0-afb8-512406509144";
 const STAGE_BOOKED = "a1df2c52-9211-4e13-a920-0c17ab00eff9";
