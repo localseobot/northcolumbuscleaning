@@ -143,9 +143,9 @@ async function hasRecentLead(contactId, withinDays, excludeOpportunityId) {
     method: "POST",
     path: "/opportunities/search",
     body: {
-      location_id: process.env.GHL_LOCATION_ID,
-      pipeline_id: SALES_PIPELINE_ID,
-      contact_id: contactId,
+      locationId: process.env.GHL_LOCATION_ID,
+      pipelineId: SALES_PIPELINE_ID,
+      contactId,
       limit: 20,
     },
   }).catch(() => null);
@@ -358,8 +358,8 @@ export async function listLeads({ limit = 250 } = {}) {
     method: "POST",
     path: "/opportunities/search",
     body: {
-      location_id: process.env.GHL_LOCATION_ID,
-      pipeline_id: SALES_PIPELINE_ID,
+      locationId: process.env.GHL_LOCATION_ID,
+      pipelineId: SALES_PIPELINE_ID,
       limit,
       getCustomFields: true,
     },
