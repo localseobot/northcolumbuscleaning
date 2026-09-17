@@ -162,93 +162,81 @@ no `BUYER_PHONE` the text is skipped, and the lead is still recorded.
 
 ## Go-live checklist (phone tracking)
 
-Site `tel:` / `TRACKING_NUMBER` is the **GHL LC line homeowners dial**, not
-the buyer's phone. Forward-to is All Clean Sol.
+**Forwarding is live.** Customer line `+16143522588` Connect-Calls to
+`+17409712907` on published workflow **After-Hours Call Routing**. The only
+GHL step left is attaching the webhook so those calls appear on `/dashboard`.
 
 | | Value |
 |---|---|
 | GHL location | `XIA5AmegWaylDoPVe3r8` |
-| Tracking number (on the site, LC Phone) | `+16143522588` / `(614) 352-2588` |
-| Forward-to (buyer) | `+17409712907` / `(740) 971-2907` |
-| Buyer alerts + form leads | `contact@allcleansol.com` |
+| Tracking number (on the site) | `+16143522588` / `(614) 352-2588` |
+| Forward-to (done) | `+17409712907` / `(740) 971-2907` |
+| Buyer email (forms + alerts) | `contact@allcleansol.com` |
 | Buyer SMS | `+17409712907` |
-| Production webhook | `POST https://www.northcolumbuscleaning.com/api/ghl-call-webhook` |
 
-### Exact GHL attach (copy this)
+### Add this webhook (copy-paste)
 
-This is what puts the call on `/dashboard` the same way a website form does
-(`recordLead` → `deliverLead` → SMS to `+17409712907`, email to
-`contact@allcleansol.com`). GHL call logs alone are not enough.
+On **After-Hours Call Routing**, add a **Webhook** action alongside Connect Call.
 
-| | |
+```
+URL:     https://www.northcolumbuscleaning.com/api/ghl-call-webhook
+Method:  POST
+Event:   Incoming Call  (the workflow's existing trigger — no extra trigger)
+```
+
+Optional shared secret (only if `GHL_CALL_WEBHOOK_SECRET` is set in Vercel):
+
+```
+Header:  X-Webhook-Secret: <same value as GHL_CALL_WEBHOOK_SECRET>
+```
+
+**Body:** leave GHL's default contact payload. We read `contact.id` /
+`contact_id`, `contact.phone` / `phone`, `first_name`, `last_name`, `email`,
+and when present `callStatus` / `callDuration`. Caller ID is the homeowner
+(`contact.phone`), not the tracking line or `+17409712907`.
+
+**Events we handle** (same URL for all of them):
+
+| GHL sends | What we do |
 |---|---|
-| URL | `https://www.northcolumbuscleaning.com/api/ghl-call-webhook` |
-| Method | `POST` |
-| Header (optional) | `X-Webhook-Secret: <GHL_CALL_WEBHOOK_SECRET>` |
-| **Best event (billable = answered)** | Settings → Integrations → Webhooks → **Inbound Message**, `messageType=CALL`, `callStatus=completed` / `answered` |
-| **Workflow event (minimum to see rows)** | Automations → **After-Hours Call Routing** → action **Webhook**, trigger already **Incoming Call**. Add it next to Connect Call. |
-| Body | Default contact payload is enough (`contact.id`, `contact.phone`, `first_name`). Caller ID is taken from `contact.phone`, never from our tracking line or the buyer's number. |
+| Incoming Call (workflow default, often no status) | Record + deliver a phone lead on `/dashboard` |
+| Inbound Message `messageType=CALL` with `callStatus=completed` / `answered` | Same, and marked **billable** (preferred) |
+| `missed` / `no-answer` / `voicemail` / `busy` / `failed` / ringing | 200 OK, **not** a dashboard lead |
+| SMS / email / outbound | Ignored |
 
-Billable rule used by the dashboard (same function as the webhook):
+Do **not** also create an opportunity in the workflow — `recordLead()` does
+that. GHL call logs alone do not show on `/dashboard`.
 
-- **Bill:** `answered` / `completed` / `connected` / `in-progress`, or duration > 0
-- **Do not bill:** `missed` / `no-answer` / `voicemail` / `busy` / `failed` / `canceled`, ringing-only, duration 0
-- Incoming Call with **no** status still records a row so tracking is live; set `GHL_CALL_REQUIRE_ANSWERED=1` once the Inbound Message (CALL) webhook is attached if you want unanswered rings dropped.
+Confirm the endpoint is up: open
+`https://www.northcolumbuscleaning.com/api/ghl-call-webhook` — it should
+return `{ "ok": true, "endpoint": "ghl-call-webhook" }`.
 
-Form leads already POST `/api/lead` and email `BUYER_EMAIL` (set to `contact@allcleansol.com`).
+**Billable on the dashboard:** answered / completed / connected / duration > 0.
+Not billed: missed, voicemail, hang-up before answer. Incoming Call with no
+status still creates a row so tracking works the moment you add the action.
 
-Copy `.env.example` into Vercel. Destinations are comments/defaults;
-`BUYER_SECRET` / `GHL_PIT` stay secrets.
+### Vercel env (then redeploy)
 
-### What GHL looks like today (inspected)
+```
+BUYER_NAME=All Clean Sol
+BUYER_EMAIL=contact@allcleansol.com
+BUYER_PHONE=+17409712907
+BUYER_SECRET=<generate a long random string>
+BUYER_ACCESS_NONCE=v1
+GHL_PIT=<Private Integration Token>
+GHL_LOCATION_ID=XIA5AmegWaylDoPVe3r8
+TRACKING_NUMBER=+16143522588
+```
 
-- LC Phone is present; the number on the site is `+1 614-352-2588` (there may
-  be more lines — do not put those on `tel:` links).
-- Published workflow **After-Hours Call Routing** currently Connect-Calls
-  **externally to `(614) 762-9409`**. That is the old Retell number. Change
-  it to `(740) 971-2907`.
-- Draft workflow **Call Routing 24/7** has an Incoming Call trigger and **no
-  actions**. Either finish and publish it (Connect Call + Webhook) if calls
-  should route 24/7, or keep After-Hours as the live path after the
-  destination change.
-- No Retell in the GHL phone path. **No call webhook is attached yet.**
+Optional: `GHL_CALL_WEBHOOK_SECRET`, `RESEND_API_KEY`, `RESEND_FROM`.
 
-### Operator steps
+Website quote forms already `POST /api/lead` and email `BUYER_EMAIL`.
 
-1. **Deploy this branch** to Vercel (Production). Confirm
-   `https://www.northcolumbuscleaning.com/api/ghl-call-webhook` returns
-   `{ "ok": true, "endpoint": "ghl-call-webhook" }`.
-2. **Vercel env** (Production), then redeploy:
-   ```
-   BUYER_NAME=All Clean Sol
-   BUYER_EMAIL=contact@allcleansol.com
-   BUYER_PHONE=+17409712907
-   BUYER_SECRET=<generate a long random string>
-   BUYER_ACCESS_NONCE=v1
-   GHL_PIT=<Private Integration Token>
-   GHL_LOCATION_ID=XIA5AmegWaylDoPVe3r8
-   TRACKING_NUMBER=+16143522588
-   ```
-3. **Change the forward-to.** Location `XIA5AmegWaylDoPVe3r8` → Automations →
-   **After-Hours Call Routing** → Connect Call: replace `+16147629409` with
-   `+17409712907`. Save / republish. (If you instead finish **Call Routing
-   24/7**, give it the same Connect Call destination and publish it.)
-4. **Attach the webhook** (nothing in GHL posts to us yet). On the same
-   published workflow, add a Webhook action alongside Connect Call:
-   - URL: `https://www.northcolumbuscleaning.com/api/ghl-call-webhook`
-   - Method: `POST`
-   - Body: the workflow's default contact/call payload is enough
-   - Events: Incoming Call. If the builder can filter or add a second
-     action on Call Status **completed / answered**, do that — those are
-     the billable events. Native alternative: Settings → Integrations →
-     Webhooks → Inbound Message (`messageType=CALL`).
-   - Optional header: `X-Webhook-Secret` = `GHL_CALL_WEBHOOK_SECRET`
-   - Do **not** also create an opportunity in that workflow — `recordLead()`
-     does that so the call appears on `/dashboard` as `channel=phone`.
-5. **Smoke test.** Call `+16143522588` from a cell that is not the buyer's.
-   All Clean Sol should ring at `740-971-2907` — not `614-762-9409`. Within
-   a minute: a phone-lead row on `/dashboard`, SMS to `+17409712907`, email
-   to `contact@allcleansol.com`. A hang-up before answer should not bill.
+### Smoke test
+
+Call `+16143522588` from a cell that is not the buyer's. All Clean Sol rings
+at `740-971-2907`. Within a minute: phone-lead row on `/dashboard`, SMS to
+`+17409712907`, email to `contact@allcleansol.com`.
 
 Once forwarding is live, cancel the Retell subscription — nothing in this repo
 calls it any more.

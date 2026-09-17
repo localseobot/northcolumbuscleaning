@@ -10,16 +10,11 @@
 //
 // Wire this in GHL (see README go-live checklist):
 //   POST https://www.northcolumbuscleaning.com/api/ghl-call-webhook
-//   Published workflow "After-Hours Call Routing" currently Connect-Calls
-//   +16147629409 (old Retell). Change Connect Call to +17409712907
-//   (All Clean Sol), then add this Webhook action alongside it.
-//   Draft "Call Routing 24/7" has an Incoming Call trigger and no actions
-//   — only use it if you finish Connect Call + Webhook and publish it.
-// Preferred trigger: Inbound Message (CALL) or Call Status = completed.
-// Fallback: Workflow "Inbound Call" → Webhook. Payloads with no status are
-// treated as leads unless GHL_CALL_REQUIRE_ANSWERED=1.
-//
-// Optional header: X-Webhook-Secret: <GHL_CALL_WEBHOOK_SECRET>
+//   Published workflow "After-Hours Call Routing" already Connect-Calls
+//   +17409712907. Add a Webhook action alongside Connect Call.
+// Incoming Call (no status) still records a dashboard row. Call Status
+// completed/answered is preferred for billing. Optional header:
+//   X-Webhook-Secret: <GHL_CALL_WEBHOOK_SECRET>
 
 import { ghl } from "./_lib/ghl.js";
 import { recordLead } from "./_lib/lead-ledger.js";
