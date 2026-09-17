@@ -6,5 +6,6 @@ node_modules
 .env
 .env.local
 
-# All env files
+# All env files except the committed example
 .env*
+!.env.example

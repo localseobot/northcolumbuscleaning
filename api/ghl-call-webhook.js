@@ -10,6 +10,8 @@
 //
 // Wire this in GHL (see README go-live checklist):
 //   POST https://www.northcolumbuscleaning.com/api/ghl-call-webhook
+//   Add a Webhook action on workflow "After-Hours Call Routing"
+//   alongside Connect Call → +17409712907 (All Clean Sol).
 // Preferred trigger: Inbound Message (CALL) or Call Status = completed.
 // Fallback: Workflow "Inbound Call" → Webhook. Payloads with no status are
 // treated as leads unless GHL_CALL_REQUIRE_ANSWERED=1.

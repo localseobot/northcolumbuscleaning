@@ -6,9 +6,9 @@
 // a code change or a redeploy of logic.
 //
 // Env vars (Vercel → Settings → Environment Variables):
-//   BUYER_NAME              Display name, e.g. "Buckeye Clean Co."
-//   BUYER_EMAIL             Where lead alerts + the dashboard link are sent
-//   BUYER_PHONE             E.164, where lead alert texts go, e.g. "+16145551234"
+//   BUYER_NAME              Display name. Confirmed: "All Clean Sol"
+//   BUYER_EMAIL             Lead alerts (forms + calls). Confirmed: contact@allcleansol.com
+//   BUYER_PHONE             Alert SMS + GHL forward-to. Confirmed: +17409712907
 //   BUYER_SECRET            Long random string; signs dashboard links.
 //                           Falls back to ONBOARDING_SECRET if unset.
 //   BUYER_ACCESS_NONCE      Bump this to kill every outstanding dashboard link.
