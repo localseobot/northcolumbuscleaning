@@ -135,7 +135,7 @@ Set in Vercel → Settings → Environment Variables.
 | Var | Purpose |
 |---|---|
 | `BUYER_NAME` | Shown on the dashboard. Confirmed: All Clean Sol |
-| `BUYER_EMAIL` | Lead alert emails (forms + calls). Confirmed: `contact@allcleansol.com` |
+| `BUYER_EMAIL` | Lead alert emails (forms + calls) and the Monday digest buyer copy. Confirmed: `contact@allcleansol.com` |
 | `BUYER_PHONE` | Lead alert texts + GHL call forward-to. Confirmed: `+17409712907` |
 | `BUYER_SECRET` | Signs dashboard links. Falls back to `ONBOARDING_SECRET` |
 | `BUYER_ACCESS_NONCE` | Change to revoke every issued dashboard link |
@@ -144,7 +144,8 @@ Set in Vercel → Settings → Environment Variables.
 | `LEAD_FLAT_MONTHLY` | Flat monthly price (default 200) |
 | `LEAD_MONTHLY_INCLUDED` | Leads included in the flat rate (default 10) |
 | `LEAD_DEDUPE_DAYS` | Repeat-contact grace window (default 30) |
-| `OWNER_EMAIL` | Weekly lead digest recipient |
+| `OWNER_EMAIL` | Weekly lead digest owner copy. Set to `devyn@localseobot.com` |
+| `DIGEST_EMAILS` | Optional comma-separated override of digest recipients. `OWNER_EMAIL` + `BUYER_EMAIL` work without this. |
 | `ADMIN_TOKEN` | Gates every `/api/admin/*` endpoint |
 | `GHL_PIT`, `GHL_LOCATION_ID` | GoHighLevel API. Sub-account id is `XIA5AmegWaylDoPVe3r8`. |
 | `TRACKING_NUMBER` | Public click-to-call number in E.164. Confirmed GHL LC line: `+16143522588` |
@@ -223,12 +224,15 @@ BUYER_EMAIL=contact@allcleansol.com
 BUYER_PHONE=+17409712907
 BUYER_SECRET=<generate a long random string>
 BUYER_ACCESS_NONCE=v1
+OWNER_EMAIL=devyn@localseobot.com
 GHL_PIT=<Private Integration Token>
 GHL_LOCATION_ID=XIA5AmegWaylDoPVe3r8
 TRACKING_NUMBER=+16143522588
 ```
 
 Optional: `GHL_CALL_WEBHOOK_SECRET`, `RESEND_API_KEY`, `RESEND_FROM`.
+The Monday digest (`/api/cron/lead-digest`, 13:00 UTC) emails both
+`OWNER_EMAIL` and `BUYER_EMAIL` as separate To: sends when those vars are set.
 
 Website quote forms already `POST /api/lead` and email `BUYER_EMAIL`.
 
@@ -245,7 +249,7 @@ calls it any more.
 
 | Cron | Schedule | What it does |
 |---|---|---|
-| `/api/cron/lead-digest` | Mon 13:00 UTC | Weekly owner summary: leads by channel, owed month-to-date, open disputes |
+| `/api/cron/lead-digest` | Mon 13:00 UTC | Weekly summary to `OWNER_EMAIL` (`devyn@localseobot.com`) and `BUYER_EMAIL` (`contact@allcleansol.com`): leads by channel, owed month-to-date, open disputes (owner copy) |
 
 The weekly AI call-quality audit was removed along with the voice agent — with
 the buyer answering the calls, there is no transcript of ours to audit.
@@ -259,8 +263,9 @@ node scripts/test-lead-model.mjs
 Covers the billing arithmetic in both pricing modes, month grouping, the
 outcome vocabulary shared between the ledger and the dashboard, dashboard
 token signing, expiry and revocation, GHL call-webhook parsing / billable
-rules, and tracking-number formatting. No live GoHighLevel account is
-required.
+rules, tracking-number formatting, and Monday digest recipient resolution
+(`OWNER_EMAIL` + `BUYER_EMAIL`, de-dupe, `DIGEST_EMAILS` override). No live
+GoHighLevel account is required.
 
 ## Stack
 

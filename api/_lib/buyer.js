@@ -7,7 +7,8 @@
 //
 // Env vars (Vercel → Settings → Environment Variables):
 //   BUYER_NAME              Display name. Confirmed: "All Clean Sol"
-//   BUYER_EMAIL             Lead alerts (forms + calls). Confirmed: contact@allcleansol.com
+//   BUYER_EMAIL             Lead alerts (forms + calls) + Monday digest.
+//                           Confirmed: contact@allcleansol.com
 //   BUYER_PHONE             Alert SMS + GHL forward-to. Confirmed: +17409712907
 //   BUYER_SECRET            Long random string; signs dashboard links.
 //                           Falls back to ONBOARDING_SECRET if unset.
