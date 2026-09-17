@@ -27,7 +27,7 @@ process.env.BUYER_SECRET = "test-secret-not-a-real-one";
 
 const { priceLeads, getPricing } = await import("../api/_lib/buyer.js");
 const { groupByMonth, outcomeLabel, OUTCOME_KEYS } = await import("../api/_lib/lead-ledger.js");
-const { opportunitySearchQuery } = await import("../api/_lib/ghl.js");
+const { opportunitySearchQuery, searchOpportunities } = await import("../api/_lib/ghl.js");
 const { signBuyerToken, verifyBuyerToken } = await import("../api/_lib/buyer-token.js");
 const { parseGhlCallEvent, classifyGhlCall, selectCallerPhone } = await import("../api/_lib/ghl-call.js");
 const { toE164, formatUsDisplay, getTrackingNumber, FALLBACK_TRACKING_E164 } = await import("../api/_lib/phone.js");
@@ -459,6 +459,67 @@ console.log("\nGHL opportunity search query (no live GHL)");
     assert.equal(q.limit, 100);
     assert.equal(opportunitySearchQuery({ limit: 0 }).limit, 20);
   });
+
+  await (async () => {
+    async function atest(name, fn) {
+      try {
+        await fn();
+        passed++;
+        console.log(`  ok   ${name}`);
+      } catch (e) {
+        process.exitCode = 1;
+        console.error(`  FAIL ${name}\n       ${e.message}`);
+      }
+    }
+
+    await atest("searchOpportunities GETs with query params, never a rejected POST body", async () => {
+      process.env.GHL_PIT = "test-token";
+      const calls = [];
+      const original = globalThis.fetch;
+      globalThis.fetch = async (url, init) => {
+        calls.push({ url: String(url), method: init?.method, body: init?.body });
+        return {
+          ok: true,
+          status: 200,
+          statusText: "OK",
+          async text() {
+            return JSON.stringify({
+              opportunities: [
+                { id: "keep", pipelineId: "pipe_1", pipelineStageId: "stage_1", contactId: "c1" },
+                { id: "drop", pipelineId: "other", pipelineStageId: "stage_1", contactId: "c1" },
+              ],
+            });
+          },
+        };
+      };
+      try {
+        const res = await searchOpportunities({
+          pipelineId: "pipe_1",
+          pipelineStageId: "stage_1",
+          contactId: "c1",
+          status: "open",
+          limit: 50,
+        });
+        assert.equal(calls.length, 1);
+        assert.equal(calls[0].method, "GET");
+        assert.equal(calls[0].body, undefined);
+        const u = new URL(calls[0].url);
+        assert.match(u.pathname, /\/opportunities\/search$/);
+        assert.equal(u.searchParams.get("location_id"), "loc_test");
+        assert.equal(u.searchParams.get("pipeline_id"), "pipe_1");
+        assert.equal(u.searchParams.get("pipeline_stage_id"), "stage_1");
+        assert.equal(u.searchParams.get("contact_id"), "c1");
+        assert.equal(u.searchParams.get("status"), "open");
+        assert.equal(u.searchParams.has("pipelineId"), false);
+        assert.equal(u.searchParams.has("getCustomFields"), false);
+        assert.deepEqual(res.opportunities.map((o) => o.id), ["keep"]);
+      } finally {
+        globalThis.fetch = original;
+        delete process.env.GHL_PIT;
+      }
+    });
+  })();
+
   delete process.env.GHL_LOCATION_ID;
 }
 
