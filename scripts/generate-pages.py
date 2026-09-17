@@ -268,7 +268,7 @@ SERVICES = [
         "included": [
             "Every standard-clean item on every visit",
             "The same crew each time, once your schedule is set",
-            "Up to 20% off versus one-time pricing",
+            "Better value than booking one-time visits",
             "Priority scheduling for holidays and last-minute changes",
             "Easy rescheduling by phone or email (24 hours notice)",
             "Satisfaction guarantee on every visit",
@@ -408,22 +408,37 @@ TOPBAR = f"""  <div class="topbar">
   </div>"""
 
 
-HEADER = """  <header class="site-header">
+PHONE_ICON_SVG = """<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true">
+            <path d="M6.6 10.8c1.4 2.8 3.7 5.1 6.5 6.5l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1l-2.4 2.4z"/>
+          </svg>"""
+
+
+# Click-to-call sits in the header on mobile, where most of this traffic
+# lands, so the number is one tap away before the visitor scrolls at all.
+HEADER = f"""  <header class="site-header">
     <div class="container header-inner">
       <a href="/" class="logo-link" aria-label="North Columbus Cleaning Company home">
         <img src="/images/logo-horizontal.svg" alt="North Columbus Cleaning Company" />
       </a>
-      <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-      <nav class="nav" id="nav">
+
+      <div class="header-mobile-actions">
+        <a href="tel:{PHONE_E164}" class="header-call-btn" aria-label="Call {PHONE_DISPLAY}">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+            <path d="M6.6 10.8c1.4 2.8 3.7 5.1 6.5 6.5l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1l-2.4 2.4z"/>
+          </svg>
+        </a>
+        <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+
+      <nav class="nav" id="nav" aria-label="Primary">
         <a href="/services">Services</a>
         <a href="/locations">Areas</a>
-        <a href="/#why">Why us</a>
-        <a href="/#gallery">Our work</a>
+        <a href="/#owner">About</a>
         <a href="/#faq">FAQ</a>
-        <a href="/login">Login</a>
-        <a href="/quote" class="btn btn-primary nav-cta">Get a quote</a>
+        <a href="tel:{PHONE_E164}" class="nav-call">{PHONE_DISPLAY}</a>
+        <a href="#quote" class="btn btn-primary nav-cta">Get a free quote</a>
       </nav>
     </div>
   </header>"""
@@ -504,25 +519,98 @@ def footer():
       </div>
     </div>
   </footer>
-  <script src="/script.js"></script>
+  <script src="/script.js" defer></script>
+  <div class="sticky-cta" id="sticky-cta" aria-label="Quick actions"><a class="sticky-cta-call" href="tel:{PHONE_E164}">&#128222; Call {PHONE_DISPLAY}</a><a class="sticky-cta-quote" href="#quote">Get a free quote</a></div>
 </body>
 </html>
 """
 
 
-CTA_BLOCK = f"""  <section class="section section-cta">
-    <div class="container cta-inline">
-      <div>
-        <span class="eyebrow light">Ready to book</span>
-        <h2>Get your free quote</h2>
-        <p>Tell us about the space. We come back within one business day with a clear, up-front price.</p>
+# The lead form's service list, and which option each service page presets.
+FORM_OPTION_BY_SLUG = {
+    "residential-cleaning": "Residential cleaning",
+    "commercial-cleaning": "Commercial cleaning",
+    "deep-cleaning": "Deep cleaning",
+    "recurring-service": "Recurring service",
+    "move-in-move-out-cleaning": "Move-in / Move-out",
+    "short-term-rental-cleaning": "Short-term rental",
+}
+
+
+def service_options(selected=None):
+    """<option> list for the lead form, pre-picking the page's own service."""
+    opts = [
+        "Residential cleaning",
+        "Commercial cleaning",
+        "Deep cleaning",
+        "Recurring service",
+        "Move-in / Move-out",
+        "Short-term rental",
+        "Not sure yet",
+    ]
+    out = ['            <option value="">Select a service</option>']
+    for o in opts:
+        mark = " selected" if selected and o.lower() == selected.lower() else ""
+        out.append(f"            <option{mark}>{o}</option>")
+    return "\n".join(out)
+
+
+def cta_block(where="", service=None, source="Page"):
+    """The one conversion block every generated page ends on.
+
+    Previously this pointed at the homepage form, which meant a visitor who
+    had read a Dublin deep-clean page had to load another page before they
+    could tell us anything. The form lives here instead, and the phone number
+    sits above it because a call is the fastest lead of all.
+    """
+    place = f" in {where}" if where else ""
+    return f"""  <section id="quote" class="section section-cta">
+    <div class="container quote-inner">
+      <div class="quote-copy">
+        <span class="eyebrow light">Fastest way to get started</span>
+        <h2>Call now or get a free quote</h2>
+        <p class="lead">One short call is all it takes &mdash; tell us about the space{place} and we&rsquo;ll talk through what it needs and when we can be there. Free, and no obligation.</p>
+        <a class="call-cta" href="tel:{PHONE_E164}">
+          {PHONE_ICON_SVG}
+          <span>
+            <span class="call-cta-label">Call now</span>
+            <span class="call-cta-number">{PHONE_DISPLAY}</span>
+          </span>
+        </a>
+        <p class="call-meta">A real local person answers, Mon&ndash;Sat 7am&ndash;7pm.</p>
       </div>
-      <div class="cta-buttons">
-        <a href="/#quote" class="btn btn-secondary">Request a quote</a>
-        <a href="tel:{PHONE_E164}" class="btn btn-outline-light">{PHONE_DISPLAY}</a>
-      </div>
+
+      <form class="quote-form lead-form" data-source="{source}" novalidate>
+        <p class="form-lede">Can&rsquo;t talk right now? Leave your details and we&rsquo;ll call you back.</p>
+        <div class="form-row">
+          <label for="lf-name">Name</label>
+          <input type="text" id="lf-name" name="name" required autocomplete="name" />
+        </div>
+        <div class="form-row">
+          <label for="lf-phone">Phone</label>
+          <input type="tel" id="lf-phone" name="phone" required autocomplete="tel" />
+        </div>
+        <div class="form-row">
+          <label for="lf-service">What do you need cleaned?</label>
+          <select id="lf-service" name="service" required>
+{service_options(service)}
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="lf-email">Email <span class="opt">(optional)</span></label>
+          <input type="email" id="lf-email" name="email" autocomplete="email" />
+        </div>
+        <div class="hp-field" aria-hidden="true">
+          <label for="lf-website">Website</label>
+          <input type="text" id="lf-website" name="website" tabindex="-1" autocomplete="off" />
+        </div>
+        <button type="submit" class="btn btn-secondary btn-block">Request my free quote</button>
+        <p class="form-note" role="status" aria-live="polite"></p>
+        <p class="form-fine">No obligation. We only use your number to talk about your clean.</p>
+      </form>
     </div>
   </section>"""
+
 
 
 TRUST_LIST = """      <ul class="hero-trust">
@@ -540,8 +628,8 @@ def combo_page(s, n):
     brand = " | North Columbus Cleaning"
     title = base + brand if len(base + brand) <= 60 else base
     desc = (
-        f"{s['name']} in {n['name']}, OH by a local, insured, bonded crew. Flat-rate quotes, "
-        f"satisfaction guarantee. Call {PHONE_DISPLAY}."
+        f"{s['name']} in {n['name']}, OH by a local, insured, bonded crew. Free quotes, "
+        f"satisfaction guarantee. Call {PHONE_DISPLAY} or request a call back."
     )
     canonical = f"/services/{s['slug']}/{n['slug']}"
 
@@ -599,6 +687,12 @@ def combo_page(s, n):
   }}
   </script>"""
 
+    cta = cta_block(
+        where=n["name"],
+        service=FORM_OPTION_BY_SLUG.get(s["slug"]),
+        source=f"{s['name']} in {n['name']} page",
+    )
+
     return f"""{head(title, desc, canonical, og_image=s['hero_img'])}
 {jsonld}
 {TOPBAR}
@@ -621,8 +715,8 @@ def combo_page(s, n):
         <p class="lead">{lead}</p>
         <p>{sub}</p>
         <div class="hero-cta">
-          <a href="/#quote" class="btn btn-primary">Get a quote</a>
-          <a href="tel:{PHONE_E164}" class="btn btn-outline">{PHONE_DISPLAY}</a>
+          <a href="tel:{PHONE_E164}" class="btn btn-primary">Call {PHONE_DISPLAY}</a>
+          <a href="#quote" class="btn btn-outline">Get a free quote</a>
         </div>
 {TRUST_LIST}
       </div>
@@ -654,7 +748,7 @@ def combo_page(s, n):
       <div class="grid benefits-grid">
         <div class="benefit"><h4>We clean here weekly</h4><p>Our crews are in {n['name']} regularly &mdash; we know the area, the home styles, and the traffic patterns.</p></div>
         <div class="benefit"><h4>Insured and bonded</h4><p>Every cleaner in your {n['name']} home or business is background-checked, bonded, and fully insured.</p></div>
-        <div class="benefit"><h4>Flat-rate pricing</h4><p>We give {n['name']} customers one clear number up front &mdash; no hourly runs, no surprises at the end.</p></div>
+        <div class="benefit"><h4>Free, no-obligation quotes</h4><p>One short call and {n['name']} customers know exactly what the job involves &mdash; before anything is booked.</p></div>
         <div class="benefit"><h4>Same crew each time</h4><p>Recurring {s['name'].lower()} clients in {n['name']} get the same team every visit.</p></div>
         <div class="benefit"><h4>Flexible scheduling</h4><p>Evenings, weekends, and short-notice availability across {n['name']} and nearby zips ({zips_line}).</p></div>
         <div class="benefit"><h4>Satisfaction guarantee</h4><p>If something in your {n['name']} clean isn't right, we come back and fix it &mdash; at no charge.</p></div>
@@ -662,7 +756,7 @@ def combo_page(s, n):
     </div>
   </section>
 
-{CTA_BLOCK}
+{cta}
 
   <section class="section section-alt">
     <div class="container">
@@ -699,7 +793,7 @@ def location_page(n):
     title = base + brand if len(base + brand) <= 60 else base
     desc = (
         f"Residential and commercial cleaning in {n['name']}, OH by a local, insured, bonded crew. "
-        f"Flat-rate quotes, satisfaction guarantee. Call {PHONE_DISPLAY}."
+        f"Free quotes, satisfaction guarantee. Call {PHONE_DISPLAY} or request a call back."
     )
     zips_line = ", ".join(n['zips'])
 
@@ -717,6 +811,8 @@ def location_page(n):
         for x in other_areas
     )
 
+    cta = cta_block(where=n["name"], source=f"{n['name']} location page")
+
     return f"""{head(title, desc, f"/locations/{n['slug']}")}
 {local_business_jsonld(f"/locations/{n['slug']}", area_served=f"{n['name']}, OH")}
 {TOPBAR}
@@ -729,8 +825,8 @@ def location_page(n):
         <h1>House and office cleaning in {n['name']}, OH</h1>
         <p class="lead">{n['blurb']}</p>
         <div class="hero-cta">
-          <a href="/#quote" class="btn btn-primary">Get a quote</a>
-          <a href="tel:{PHONE_E164}" class="btn btn-outline">{PHONE_DISPLAY}</a>
+          <a href="tel:{PHONE_E164}" class="btn btn-primary">Call {PHONE_DISPLAY}</a>
+          <a href="#quote" class="btn btn-outline">Get a free quote</a>
         </div>
 {TRUST_LIST}
       </div>
@@ -764,13 +860,13 @@ def location_page(n):
         <div class="benefit"><h4>Same crew every time</h4><p>Recurring customers get the same team each visit. They learn your space, your preferences, and your pets.</p></div>
         <div class="benefit"><h4>Fully insured</h4><p>Every cleaner is background-checked, bonded, and insured. Nothing in your {n['name']} home is unprotected.</p></div>
         <div class="benefit"><h4>Flexible scheduling</h4><p>Evenings, weekends, and short-notice openings. We work around your calendar, not ours.</p></div>
-        <div class="benefit"><h4>Transparent pricing</h4><p>One clear, up-front number after a quick call. No surprises, no hourly runs that balloon.</p></div>
+        <div class="benefit"><h4>Free, no-obligation quotes</h4><p>One short call and you know exactly what the job involves. Nothing is booked until you say so.</p></div>
         <div class="benefit"><h4>100% satisfaction</h4><p>If anything in your {n['name']} home isn't right, we come back and fix it &mdash; no charge.</p></div>
       </div>
     </div>
   </section>
 
-{CTA_BLOCK}
+{cta}
 
   <section class="section section-alt">
     <div class="container">
@@ -795,7 +891,7 @@ def service_page(s):
     title = base + brand if len(base + brand) <= 60 else base
     desc = (
         f"{s['name']} services in Columbus, OH by a local, insured, bonded crew. {s['short']} "
-        f"Flat-rate quotes. Call {PHONE_DISPLAY}."
+        f"Free quotes. Call {PHONE_DISPLAY} or request a call back."
     )
 
     included_items = "\n".join(f"        <li>{item}</li>" for item in s['included'])
@@ -812,6 +908,11 @@ def service_page(s):
           </div>
         </a>""" for x in other_services[:3])
 
+    cta = cta_block(
+        service=FORM_OPTION_BY_SLUG.get(s["slug"]),
+        source=f"{s['name']} page",
+    )
+
     return f"""{head(title, desc, f"/services/{s['slug']}", og_image=s['hero_img'])}
 {local_business_jsonld(f"/services/{s['slug']}", service_name=s['name'])}
 {TOPBAR}
@@ -824,8 +925,8 @@ def service_page(s):
         <h1>{s['name']} in Columbus, OH</h1>
         <p class="lead">{s['intro']}</p>
         <div class="hero-cta">
-          <a href="/#quote" class="btn btn-primary">Get a quote</a>
-          <a href="tel:{PHONE_E164}" class="btn btn-outline">{PHONE_DISPLAY}</a>
+          <a href="tel:{PHONE_E164}" class="btn btn-primary">Call {PHONE_DISPLAY}</a>
+          <a href="#quote" class="btn btn-outline">Get a free quote</a>
         </div>
 {TRUST_LIST}
       </div>
@@ -857,7 +958,7 @@ def service_page(s):
     </div>
   </section>
 
-{CTA_BLOCK}
+{cta}
 
   <section class="section section-alt">
     <div class="container">
@@ -902,6 +1003,8 @@ def locations_hub():
           <span class="area-link">See details &rarr;</span>
         </a>""" for n in NEIGHBORHOODS)
 
+    cta = cta_block(source="Locations hub")
+
     return f"""{head(title, desc, "/locations")}
 {local_business_jsonld("/locations")}
 {TOPBAR}
@@ -925,7 +1028,7 @@ def locations_hub():
     </div>
   </section>
 
-{CTA_BLOCK}
+{cta}
 
 {footer()}"""
 
@@ -934,7 +1037,7 @@ def services_hub():
     title = "Cleaning Services in Columbus, OH | North Columbus Cleaning"
     desc = (
         "Residential, commercial, deep, recurring, move-in/out, and Airbnb cleaning "
-        f"services in North Columbus, OH. Flat-rate quotes. Call {PHONE_DISPLAY}."
+        f"services in North Columbus, OH. Free quotes. Call {PHONE_DISPLAY}."
     )
     cards = "\n".join(f"""        <a class="service-card service-card-link" href="/services/{s['slug']}">
           <div class="service-img"><img src="{s['hero_img']}" alt="{s['name']}" loading="lazy" /></div>
@@ -944,6 +1047,8 @@ def services_hub():
             <span class="area-link">See details &rarr;</span>
           </div>
         </a>""" for s in SERVICES)
+
+    cta = cta_block(source="Services hub")
 
     return f"""{head(title, desc, "/services")}
 {local_business_jsonld("/services")}
@@ -968,7 +1073,7 @@ def services_hub():
     </div>
   </section>
 
-{CTA_BLOCK}
+{cta}
 
 {footer()}"""
 
@@ -980,6 +1085,7 @@ def sitemap():
     base = "https://northcolumbuscleaning.com"
     urls = [
         (base + "/", "1.0", "weekly"),
+        (base + "/quote", "0.9", "weekly"),
         (base + "/services", "0.9", "weekly"),
         (base + "/locations", "0.9", "weekly"),
         (base + "/privacy", "0.3", "yearly"),
@@ -1007,6 +1113,11 @@ def sitemap():
 def robots():
     return """User-agent: *
 Allow: /
+
+# The buyer's dashboard and its API are private — the signed link is the
+# credential, and none of it should ever appear in a search result.
+Disallow: /dashboard
+Disallow: /api/buyer/
 
 Sitemap: https://northcolumbuscleaning.com/sitemap.xml
 """
