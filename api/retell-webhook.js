@@ -38,6 +38,8 @@ import { sendEmail } from "./_lib/resend.js";
 import { buildRetellFollowup } from "./_lib/email-templates/retell-followup.js";
 import { calculateQuote } from "./_lib/pricing.js";
 import { buildCallBlocks, sendSlack } from "./_lib/slack.js";
+import { recordLead } from "./_lib/lead-ledger.js";
+import { deliverLead } from "./_lib/lead-delivery.js";
 import {
   OPP_SERVICE_TYPE,
   OPP_FREQUENCY,
@@ -548,6 +550,48 @@ export default async function handler(req, res) {
     }
   }
 
+  // --- 4b. Record the call as a sellable lead, and hand it to the buyer ---
+  // This is the phone half of the product. Only booking/quote calls count:
+  // an FAQ, a complaint or a wrong number is not something anyone would pay
+  // for, and billing for one would cost more trust than it earns.
+  result.lead = { attempted: false };
+  if (contactId && BOOKING_INTENTS.has(intentLower)) {
+    result.lead.attempted = true;
+    const leadPayload = {
+      channel: "phone",
+      contactId,
+      opportunityId: result.ghl.opportunityId || undefined,
+      name: [firstName, lastName].filter(Boolean).join(" ") || phone,
+      phone,
+      email: email || undefined,
+      service: normalizeServiceType(extracted.service_type) || undefined,
+      detail:
+        s(extracted.call_summary) ||
+        s(call?.call_analysis?.call_summary) ||
+        "Inbound call — see the call recording in the CRM.",
+      value: quote?.total || undefined,
+      sourceLabel: "Inbound call",
+    };
+
+    try {
+      const recorded = await recordLead(leadPayload);
+      result.lead.ok = recorded.ok;
+      result.lead.billable = recorded.billable;
+      result.lead.duplicate = recorded.duplicate;
+      if (recorded.error) result.lead.error = recorded.error;
+
+      result.lead.delivery = await deliverLead({
+        ...leadPayload,
+        billable: recorded.billable,
+      });
+    } catch (e) {
+      result.lead.ok = false;
+      result.lead.error = e.message;
+    }
+  } else if (contactId) {
+    result.lead.skipped = `intent "${intentLower || "unknown"}" is not a sellable lead`;
+  }
+
   // --- 5. Auto-text the caller from the customer-facing GHL number ---
   // Sends ONLY if the caller consented during the call. Always uses the
   // A2P-verified customer line so the SMS matches the number on our
@@ -605,7 +649,7 @@ export default async function handler(req, res) {
   // We send to anyone with an email + booking/quote intent regardless of
   // SMS consent (email is opt-in by virtue of them giving it).
   result.customerEmail = { attempted: false };
-  if (BOOKING_INTENTS.has(intent) && email) {
+  if (BOOKING_INTENTS.has(intentLower) && email) {
     result.customerEmail.attempted = true;
     try {
       const { subject, html } = buildRetellFollowup({

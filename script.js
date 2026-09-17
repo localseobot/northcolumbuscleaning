@@ -45,63 +45,66 @@
   });
 })();
 
-// Quote form submission (Formspree, with mailto fallback)
+// Quote form submission — posts to /api/lead, which records the lead and
+// routes it straight to the cleaner who works these. Every submission has to
+// reach the server: a lost form fill is a lost lead.
 (function () {
   var form = document.getElementById('quote-form');
   if (!form) return;
   var note = document.getElementById('form-note');
+  var button = form.querySelector('button[type="submit"]');
 
   form.addEventListener('submit', function (e) {
-    if (form.action.indexOf('YOUR_ID_HERE') !== -1) {
-      e.preventDefault();
-      var name = form.name.value.trim();
-      var email = form.email.value.trim();
-      var phone = form.phone.value.trim();
-      var service = form.service.value;
-      var message = form.message.value.trim();
+    e.preventDefault();
 
-      if (!name || !email || !service) {
-        note.textContent = 'Please fill in your name, email, and service.';
-        note.className = 'form-note error';
-        return;
-      }
+    var name = form.name.value.trim();
+    var email = form.email.value.trim();
+    var phone = form.phone.value.trim();
+    var service = form.service.value;
+    var message = form.message.value.trim();
 
-      var subject = encodeURIComponent('Quote request from ' + name);
-      var body = encodeURIComponent(
-        'Name: ' + name + '\n' +
-        'Email: ' + email + '\n' +
-        'Phone: ' + phone + '\n' +
-        'Service: ' + service + '\n\n' +
-        'Message:\n' + message
-      );
-      window.location.href = 'mailto:admin@northcolumbuscleaning.com?subject=' + subject + '&body=' + body;
-      note.textContent = 'Opening your email client.';
-      note.className = 'form-note success';
+    if (!name || !service || (!email && !phone)) {
+      note.textContent = 'Please give us your name, the service you need, and an email or phone number.';
+      note.className = 'form-note error';
       return;
     }
 
-    e.preventDefault();
-    var data = new FormData(form);
-    note.textContent = 'Sending.';
+    note.textContent = 'Sending\u2026';
     note.className = 'form-note';
+    if (button) button.disabled = true;
 
-    fetch(form.action, {
+    fetch('/api/lead', {
       method: 'POST',
-      body: data,
-      headers: { Accept: 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name,
+        email: email,
+        phone: phone,
+        service: service,
+        message: message,
+        page: window.location.pathname,
+        website: form.website ? form.website.value : ''
+      })
     })
       .then(function (res) {
-        if (res.ok) {
-          note.textContent = 'Thanks. We get back to you within one business day.';
-          note.className = 'form-note success';
-          form.reset();
-        } else {
-          throw new Error('Bad response');
-        }
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          if (!res.ok) throw new Error(data.error || 'Bad response');
+          return data;
+        });
       })
-      .catch(function () {
-        note.textContent = 'Something went wrong. Please call us at (614) 352-2588.';
+      .then(function () {
+        note.textContent = 'Thanks \u2014 we\u2019ll call you back shortly.';
+        note.className = 'form-note success';
+        form.reset();
+      })
+      .catch(function (err) {
+        note.textContent = (err && err.message && err.message !== 'Bad response')
+          ? err.message
+          : 'Something went wrong. Please call us at (614) 352-2588.';
         note.className = 'form-note error';
+      })
+      .then(function () {
+        if (button) button.disabled = false;
       });
   });
 })();

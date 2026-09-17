@@ -417,7 +417,7 @@ HEADER = """  <header class="site-header">
         <a href="/#gallery">Our work</a>
         <a href="/#faq">FAQ</a>
         <a href="/login">Login</a>
-        <a href="/book-now" class="btn btn-primary nav-cta">Book now</a>
+        <a href="/quote" class="btn btn-primary nav-cta">Get a quote</a>
       </nav>
     </div>
   </header>"""
@@ -489,7 +489,6 @@ def footer():
           <li>Mon&ndash;Sat, 7am&ndash;7pm</li>
           <li><a href="/privacy">Privacy policy</a></li>
           <li><a href="/sms-terms">SMS terms</a></li>
-          <li><a href="/apply">Careers &mdash; we're hiring</a></li>
         </ul>
       </div>
     </div>
@@ -975,7 +974,6 @@ def sitemap():
     base = "https://northcolumbuscleaning.com"
     urls = [
         (base + "/", "1.0", "weekly"),
-        (base + "/book-now", "0.9", "weekly"),
         (base + "/services", "0.9", "weekly"),
         (base + "/locations", "0.9", "weekly"),
         (base + "/privacy", "0.3", "yearly"),

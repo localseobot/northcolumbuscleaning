@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Lead Dashboard | North Columbus Cleaning</title>
+<link rel="icon" href="/images/favicon.ico">
+<style>
+  /* Deliberately the same palette as the lead offer page: the buyer should
+     recognise this as the other half of what they were sold. */
+  :root{
+    --forest:#1a4d2e; --deep:#0d3320; --sage:#2d7a4a; --lime:#c9e265;
+    --paper:#faf9f5; --card:#ffffff; --ink:#1c1c1a; --ink-2:#55554e; --ink-3:#83837a;
+    --line:#e4e3dc;
+    --s1:#1baf7a;  /* website leads */
+    --s2:#2a78d6;  /* phone leads  */
+    --ok:#1a7f4f; --warn:#9a6b00; --bad:#b42318;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font:16px/1.6 'Inter','Helvetica Neue',Arial,sans-serif;}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+  h1,h2,h3{line-height:1.2;letter-spacing:-.02em;margin:0}
+  a{color:var(--forest)}
+  .muted{color:var(--ink-2)}
+  .small{font-size:13.5px;line-height:1.5}
+  .xsmall{font-size:12px;color:var(--ink-3)}
+
+  header.top{background:var(--forest);color:#fff;padding:28px 0}
+  header.top .wrap{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;justify-content:space-between}
+  header.top h1{font-size:24px;font-weight:800}
+  header.top .who{font-size:14px;color:rgba(255,255,255,.8)}
+
+  section{padding:30px 0}
+  section+section{border-top:1px solid var(--line)}
+  h2{font-size:20px;font-weight:800;margin-bottom:4px}
+  .sub{font-size:14.5px;color:var(--ink-2);margin:0 0 20px}
+
+  /* ---------- stat tiles ---------- */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:8px}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 15px}
+  .tile .n{font-size:30px;font-weight:800;letter-spacing:-.03em;color:var(--forest);line-height:1.1}
+  .tile .l{font-size:12.5px;color:var(--ink-2);margin-top:5px;line-height:1.35}
+  .tile .sub2{font-size:11.5px;color:var(--ink-3);margin-top:3px}
+
+  /* ---------- chart ---------- */
+  figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 18px 14px}
+  figcaption{font-size:15px;font-weight:700;margin-bottom:2px}
+  .legend{display:flex;gap:18px;margin:10px 0 4px;font-size:13px;color:var(--ink-2)}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:7px;vertical-align:-1px}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  .grid{stroke:var(--line);stroke-width:1}
+  .ax{font-size:12px;fill:var(--ink-3);font-family:inherit}
+  .dl{font-size:11.5px;font-weight:700;fill:var(--ink-2);text-anchor:middle;font-family:inherit}
+  .bar.s1 rect{fill:var(--s1)} .bar.s2 rect{fill:var(--s2)}
+
+  /* ---------- table ---------- */
+  .tablecard{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  table{border-collapse:collapse;width:100%;font-size:14px}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  thead th{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);
+    font-weight:700;background:#fcfcfa;position:sticky;top:0}
+  tbody tr:last-child td{border-bottom:none}
+  td.num{text-align:right;white-space:nowrap}
+  .chan{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    border-radius:999px;padding:3px 9px;color:#fff}
+  .chan.web{background:var(--s1)} .chan.phone{background:var(--s2)}
+  .who{font-weight:700}
+  .contact a{display:block;text-decoration:none;font-size:13.5px}
+  .pill{display:inline-block;font-size:11.5px;border-radius:999px;padding:2px 8px;border:1px solid var(--line);
+    color:var(--ink-2);background:#fbfbf8}
+  .pill.free{color:var(--ok);border-color:#bfe3cf;background:#f1f9f4}
+  .pill.dispute{color:var(--warn);border-color:#ecd9a6;background:#fdf8ec}
+  .pill.credited{color:var(--ok);border-color:#bfe3cf;background:#f1f9f4}
+  select{font:inherit;font-size:13.5px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  .linkbtn{background:none;border:none;padding:0;font:inherit;font-size:12.5px;color:var(--ink-3);
+    text-decoration:underline;cursor:pointer}
+  .linkbtn:hover{color:var(--bad)}
+  .rowmsg{font-size:12.5px;margin-top:6px;min-height:1em}
+  .rowmsg.ok{color:var(--ok)} .rowmsg.err{color:var(--bad)}
+
+  .notes{background:#fbfbf8;font-size:13.5px;white-space:pre-wrap}
+  .notes .n{padding:8px 0;border-bottom:1px solid var(--line)}
+  .notes .n:last-child{border-bottom:none}
+
+  /* ---------- states ---------- */
+  .state{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:34px 26px;text-align:center}
+  .state h2{margin-bottom:8px}
+  .state p{color:var(--ink-2);margin:0 auto;max-width:48ch}
+  .field{margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .field input{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;min-width:280px}
+  .btn{display:inline-block;background:var(--forest);color:var(--lime);font-weight:700;font-size:14.5px;
+    border:none;border-radius:999px;padding:11px 22px;cursor:pointer;text-decoration:none}
+  footer{padding:26px 0 40px;font-size:12px;color:var(--ink-3)}
+
+  @media (max-width:860px){
+    .stats{grid-template-columns:1fr 1fr}
+    thead{display:none}
+    table,tbody,tr,td{display:block;width:100%}
+    tr{border-bottom:1px solid var(--line);padding:6px 0}
+    td{border-bottom:none;padding:5px 14px}
+    td.num{text-align:left}
+    td[data-l]::before{content:attr(data-l);display:block;font-size:11px;text-transform:uppercase;
+      letter-spacing:.06em;color:var(--ink-3);font-weight:700;margin-bottom:2px}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <h1>Lead dashboard</h1>
+    <div class="who" id="whoami"></div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <section id="loading">
+    <div class="state"><h2>Loading your leads…</h2></div>
+  </section>
+</main>
+
+<footer class="wrap">
+  North Columbus Cleaning · Questions about a lead? Call
+  <a href="tel:+16143522588">(614) 352-2588</a> or email
+  <a href="mailto:admin@northcolumbuscleaning.com">admin@northcolumbuscleaning.com</a>.
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---- token handling ------------------------------------------------
+  // The link IS the credential. Stash it and strip it from the address bar
+  // so it doesn't end up in a screenshot, a shared URL or a referer header.
+  var KEY = 'nccBuyerToken';
+  function readToken() {
+    var m = /[?&]t=([^&]+)/.exec(window.location.search);
+    if (m) {
+      var t = decodeURIComponent(m[1]);
+      try { localStorage.setItem(KEY, t); } catch (e) {}
+      history.replaceState(null, '', window.location.pathname);
+      return t;
+    }
+    try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; }
+  }
+  var token = readToken();
+
+  function esc(v) {
+    return String(v === null || v === undefined ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function money(n) {
+    if (n === null || n === undefined) return '—';
+    return '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 });
+  }
+  function pct(n) {
+    return n === null || n === undefined ? '—' : Math.round(n * 100) + '%';
+  }
+  function when(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+
+  var main = document.getElementById('main');
+
+  function showState(title, msg, withField) {
+    main.innerHTML =
+      '<section><div class="state"><h2>' + esc(title) + '</h2><p>' + esc(msg) + '</p>' +
+      (withField
+        ? '<div class="field"><input id="tok" type="text" placeholder="Paste your dashboard link" ' +
+          'aria-label="Dashboard link"><button class="btn" id="go">Open</button></div>'
+        : '') +
+      '</div></section>';
+    if (withField) {
+      document.getElementById('go').addEventListener('click', function () {
+        var v = document.getElementById('tok').value.trim();
+        var m = /[?&]t=([^&]+)/.exec(v);
+        var t = m ? decodeURIComponent(m[1]) : v;
+        if (!t) return;
+        try { localStorage.setItem(KEY, t); } catch (e) {}
+        window.location.reload();
+      });
+    }
+  }
+
+  // ---- chart ----------------------------------------------------------
+  // Grouped bars, web vs phone, one pair per month — the same form and the
+  // same two colours as the volume chart on the offer page, so "what we said
+  // you'd get" and "what you got" can be read side by side.
+  function chart(months) {
+    var data = months.slice(0, 6).reverse();
+    if (!data.length) return '';
+
+    var W = 720, H = 290, top = 30, bottom = 250, left = 52, right = 708;
+    var max = 0;
+    data.forEach(function (m) { max = Math.max(max, m.web, m.phone); });
+    // Round the axis up to something with readable gridlines.
+    var step = max <= 4 ? 1 : max <= 10 ? 2 : max <= 25 ? 5 : 10;
+    var axMax = Math.max(step, Math.ceil(max / step) * step);
+    var y = function (v) { return bottom - (v / axMax) * (bottom - top); };
+
+    var svg = '';
+    for (var g = 0; g <= axMax; g += step) {
+      svg += '<line class="grid" x1="' + left + '" y1="' + y(g).toFixed(1) + '" x2="' + right + '" y2="' + y(g).toFixed(1) + '"/>' +
+             '<text class="ax" x="' + (left - 10) + '" y="' + (y(g) + 4).toFixed(1) + '" text-anchor="end">' + g + '</text>';
+    }
+
+    var slot = (right - left) / data.length;
+    var bw = Math.min(32, slot / 3);
+    var desc = [];
+    data.forEach(function (m, i) {
+      var cx = left + slot * i + slot / 2;
+      var x1 = cx - bw - 2, x2 = cx + 2;
+      [['s1', m.web, x1, 'website'], ['s2', m.phone, x2, 'phone']].forEach(function (b) {
+        var v = b[1], h = bottom - y(v);
+        svg += '<g class="bar ' + b[0] + '"><title>' + esc(m.label) + ' — ' + b[3] + ' leads: ' + v + '</title>';
+        if (v > 0) {
+          svg += '<rect x="' + b[2].toFixed(1) + '" y="' + y(v).toFixed(1) + '" width="' + bw.toFixed(1) +
+                 '" height="' + h.toFixed(1) + '" rx="4"/>' +
+                 '<text class="dl" x="' + (b[2] + bw / 2).toFixed(1) + '" y="' + (y(v) - 7).toFixed(1) + '">' + v + '</text>';
+        } else {
+          svg += '<rect x="' + b[2].toFixed(1) + '" y="' + (bottom - 2) + '" width="' + bw.toFixed(1) +
+                 '" height="2" fill="currentColor" opacity=".18"/>';
+        }
+        svg += '</g>';
+      });
+      svg += '<text class="ax" x="' + cx.toFixed(1) + '" y="' + (bottom + 22) + '" text-anchor="middle">' +
+             esc(m.label.replace(/ \d{4}$/, '').slice(0, 3)) + '</text>';
+      desc.push(m.label + ': ' + m.web + ' website, ' + m.phone + ' phone');
+    });
+
+    return '<figure><figcaption>Leads delivered by month</figcaption>' +
+      '<div class="small muted">Split by where each lead came from</div>' +
+      '<div class="legend"><span><i style="background:var(--s1)"></i>Website</span>' +
+      '<span><i style="background:var(--s2)"></i>Phone</span></div>' +
+      '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Grouped bar chart of leads delivered per month, split by website and phone. ' +
+      esc(desc.join('. ')) + '.">' + svg + '</svg></figure>';
+  }
+
+  // ---- rendering ------------------------------------------------------
+  var OUTCOMES = [
+    ['new', 'New'], ['contacted', 'Contacted'], ['quoted', 'Quoted'],
+    ['booked', 'Booked'], ['won', 'Won'], ['lost', 'Lost'], ['no_answer', 'No answer']
+  ];
+
+  function billingTiles(d) {
+    var m = d.thisMonth;
+    var b = m && m.billing;
+    var tiles = [];
+
+    tiles.push(['n', m ? m.total : 0, 'Leads this month',
+      m ? m.web + ' website · ' + m.phone + ' phone' : '']);
+
+    if (b) {
+      if (b.mode === 'per_lead') {
+        tiles.push(['n', money(b.total), 'Owed this month',
+          b.billable + ' billable × ' + money(b.unitPrice)]);
+      } else {
+        tiles.push(['n', money(b.total), 'Owed this month',
+          b.overage > 0
+            ? money(b.base) + ' + ' + b.overage + ' over the ' + b.included + ' included'
+            : b.billable + ' of ' + b.included + ' included leads used']);
+      }
+      tiles.push(['n', b.costPerLead === null ? '—' : money(b.costPerLead), 'Cost per lead', 'This month']);
+    } else {
+      tiles.push(['n', money(0), 'Owed this month', '']);
+      tiles.push(['n', '—', 'Cost per lead', '']);
+    }
+
+    tiles.push(['n', pct(d.totals.closeRate), 'Close rate',
+      d.totals.worked
+        ? d.totals.won + ' won of ' + d.totals.worked + ' worked'
+        : 'Once you start marking leads']);
+
+    return '<div class="stats">' + tiles.map(function (t) {
+      return '<div class="tile"><div class="n">' + esc(t[1]) + '</div>' +
+        '<div class="l">' + esc(t[2]) + '</div>' +
+        (t[3] ? '<div class="sub2">' + esc(t[3]) + '</div>' : '') + '</div>';
+    }).join('') + '</div>';
+  }
+
+  function leadRow(l) {
+    var flags = '';
+    if (l.duplicate) flags += '<span class="pill free">Repeat — not billed</span> ';
+    if (l.credited) flags += '<span class="pill credited">Credited</span> ';
+    if (l.dispute === 'open') flags += '<span class="pill dispute">Dispute open</span> ';
+    if (l.dispute === 'denied') flags += '<span class="pill">Dispute declined</span> ';
+
+    var opts = OUTCOMES.map(function (o) {
+      return '<option value="' + o[0] + '"' + (l.outcome === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
+    }).join('');
+
+    return '<tr data-id="' + esc(l.id) + '">' +
+      '<td data-l="Received" class="num">' + esc(when(l.receivedAt)) + '</td>' +
+      '<td data-l="Source"><span class="chan ' + (l.channel === 'phone' ? 'phone' : 'web') + '">' +
+        (l.channel === 'phone' ? 'Phone' : 'Web') + '</span></td>' +
+      '<td data-l="Lead"><span class="who">' + esc(l.name) + '</span>' +
+        (l.service ? '<div class="xsmall">' + esc(l.service) + '</div>' : '') +
+        (flags ? '<div style="margin-top:5px">' + flags + '</div>' : '') + '</td>' +
+      '<td data-l="Contact" class="contact">' +
+        (l.phone ? '<a href="tel:' + esc(l.phone) + '">' + esc(l.phone) + '</a>' : '') +
+        (l.email ? '<a href="mailto:' + esc(l.email) + '">' + esc(l.email) + '</a>' : '') +
+        (!l.phone && !l.email ? '<span class="xsmall">—</span>' : '') + '</td>' +
+      '<td data-l="What happened">' +
+        '<select class="outcome" aria-label="Outcome for ' + esc(l.name) + '">' + opts + '</select>' +
+        '<div class="rowmsg" role="status"></div></td>' +
+      '<td data-l="" class="num">' +
+        '<button class="linkbtn detail" type="button">Notes</button><br>' +
+        (l.dispute ? '' : '<button class="linkbtn dispute" type="button">Report bad lead</button>') +
+      '</td></tr>';
+  }
+
+  function render(d) {
+    document.getElementById('whoami').textContent = d.buyer.name || '';
+
+    var priceLine = d.pricing.mode === 'per_lead'
+      ? 'You pay ' + money(d.pricing.perLead) + ' per lead. Repeat callers inside 30 days and any lead we credit are free.'
+      : money(d.pricing.flatMonthly) + ' a month covers ' + d.pricing.includedPerMonth +
+        ' leads; extras are ' + money(d.pricing.perLead) + ' each.';
+
+    var html = '';
+
+    html += '<section><h2>This month</h2><p class="sub">' + esc(priceLine) + '</p>' +
+      billingTiles(d) + '</section>';
+
+    if (d.months.length) {
+      html += '<section>' + chart(d.months) + '</section>';
+    }
+
+    html += '<section><h2>Every lead</h2><p class="sub">Newest first. ' +
+      'Set what happened with each one — it\'s the only way we can tell which leads are worth more.' +
+      (d.totals.openDisputes
+        ? ' You have ' + d.totals.openDisputes + ' open dispute' + (d.totals.openDisputes > 1 ? 's' : '') + ' with us.'
+        : '') +
+      '</p>';
+
+    if (!d.leads.length) {
+      html += '<div class="state"><h2>No leads yet</h2>' +
+        '<p>As soon as someone calls the number or fills in the form, they show up here — ' +
+        'and we text and email you straight away.</p></div>';
+    } else {
+      html += '<div class="tablecard"><table><thead><tr>' +
+        '<th>Received</th><th>Source</th><th>Lead</th><th>Contact</th>' +
+        '<th>What happened</th><th></th></tr></thead><tbody>' +
+        d.leads.map(leadRow).join('') + '</tbody></table></div>';
+    }
+    html += '</section>';
+
+    main.innerHTML = html;
+    wireRows();
+  }
+
+  // ---- row interactions ------------------------------------------------
+  function post(payload) {
+    return fetch('/api/buyer/lead-update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(payload)
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (data) {
+        if (!r.ok) throw new Error(data.error || 'Could not save');
+        return data;
+      });
+    });
+  }
+
+  function say(row, msg, bad) {
+    var el = row.querySelector('.rowmsg');
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'rowmsg ' + (bad ? 'err' : 'ok');
+    if (!bad) setTimeout(function () { el.textContent = ''; el.className = 'rowmsg'; }, 2500);
+  }
+
+  function wireRows() {
+    Array.prototype.forEach.call(main.querySelectorAll('tr[data-id]'), function (row) {
+      var id = row.getAttribute('data-id');
+
+      var sel = row.querySelector('.outcome');
+      if (sel) {
+        sel.addEventListener('change', function () {
+          sel.disabled = true;
+          post({ id: id, outcome: sel.value })
+            .then(function (r) { say(row, 'Saved — ' + r.label); })
+            .catch(function (e) { say(row, e.message, true); })
+            .then(function () { sel.disabled = false; });
+        });
+      }
+
+      var disputeBtn = row.querySelector('.dispute');
+      if (disputeBtn) {
+        disputeBtn.addEventListener('click', function () {
+          var reason = window.prompt(
+            'What was wrong with this lead?\n\n' +
+            'e.g. wrong number, spam, outside your area, or they never asked to be contacted.'
+          );
+          if (reason === null) return;
+          reason = reason.trim();
+          if (!reason) { say(row, 'Tell us what was wrong and we\'ll look into it.', true); return; }
+          disputeBtn.disabled = true;
+          post({ id: id, dispute: true, reason: reason })
+            .then(function () {
+              say(row, 'Thanks — we\'ll review it and get back to you.');
+              disputeBtn.remove();
+            })
+            .catch(function (e) { say(row, e.message, true); disputeBtn.disabled = false; });
+        });
+      }
+
+      var detailBtn = row.querySelector('.detail');
+      if (detailBtn) {
+        detailBtn.addEventListener('click', function () {
+          var existing = row.nextElementSibling;
+          if (existing && existing.classList.contains('noterow')) { existing.remove(); return; }
+
+          var tr = document.createElement('tr');
+          tr.className = 'noterow';
+          var td = document.createElement('td');
+          td.colSpan = 6;
+          td.className = 'notes';
+          td.textContent = 'Loading…';
+          tr.appendChild(td);
+          row.parentNode.insertBefore(tr, row.nextSibling);
+
+          fetch('/api/buyer/leads?id=' + encodeURIComponent(id), {
+            headers: { Authorization: 'Bearer ' + token }
+          })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+              var notes = (data.lead && data.lead.notes) || [];
+              if (!notes.length) { td.textContent = 'No notes on this lead yet.'; return; }
+              td.innerHTML = notes.map(function (n) {
+                return '<div class="n"><div class="xsmall">' + esc(when(n.at)) + '</div>' + esc(n.body) + '</div>';
+              }).join('');
+            })
+            .catch(function () { td.textContent = 'Could not load the notes for this lead.'; });
+        });
+      }
+    });
+  }
+
+  // ---- boot ------------------------------------------------------------
+  if (!token) {
+    showState('You need your dashboard link',
+      'Open the link we emailed you, or paste it below. If you have lost it, ask us for a new one.', true);
+    return;
+  }
+
+  fetch('/api/buyer/leads', { headers: { Authorization: 'Bearer ' + token } })
+    .then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (data) {
+        if (r.status === 401 || r.status === 410) {
+          try { localStorage.removeItem(KEY); } catch (e) {}
+          throw { handled: true, msg: data.error || 'That link is no longer valid.' };
+        }
+        if (!r.ok) throw new Error(data.error || 'Could not load your leads.');
+        return data;
+      });
+    })
+    .then(render)
+    .catch(function (e) {
+      if (e && e.handled) {
+        showState('That link has expired', e.msg + ' Paste a new one below or ask us to send it again.', true);
+      } else {
+        showState('Something went wrong', (e && e.message) || 'Please try again in a moment.', false);
+      }
+    });
+})();
+</script>
+</body>
+</html>

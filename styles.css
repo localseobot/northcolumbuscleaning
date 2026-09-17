@@ -1262,3 +1262,20 @@ a:hover { color: var(--forest); text-decoration: underline; }
   body { padding-bottom: 64px; }
   body.no-sticky-cta-pad { padding-bottom: 0; }
 }
+
+/* The `hidden` attribute must actually hide things. Class rules like
+   `.btn { display: inline-flex }` outrank the browser's own [hidden] rule,
+   which silently left buttons on screen after JS hid them. */
+[hidden] {
+  display: none !important;
+}
+
+/* Honeypot — kept out of the layout and off the tab order, but not
+   display:none, which some bots know to skip. */
+.hp-field {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
