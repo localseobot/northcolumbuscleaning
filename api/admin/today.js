@@ -8,7 +8,7 @@
 //   → returns the structured data (useful for sanity checks or building
 //     a separate UI later)
 
-import { ghl } from "../_lib/ghl.js";
+import { ghl, searchOpportunities } from "../_lib/ghl.js";
 import {
   OPP_APPOINTMENT_DATE,
   OPP_PROVIDER_NAME,
@@ -72,17 +72,11 @@ function todayUtcYmd() {
 
 async function gatherToday() {
   const targetDate = todayUtcYmd();
-  const search = await ghl({
-    method: "POST",
-    path: "/opportunities/search",
-    body: {
-      locationId: process.env.GHL_LOCATION_ID,
-      pipelineId: SALES_PIPELINE_ID,
-      pipelineStageId: STAGE_BOOKED,
-      status: "open",
-      limit: 100,
-      getCustomFields: true,
-    },
+  const search = await searchOpportunities({
+    pipelineId: SALES_PIPELINE_ID,
+    pipelineStageId: STAGE_BOOKED,
+    status: "open",
+    limit: 100,
   }).catch(() => ({ opportunities: [] }));
 
   const dayMs = new Date(targetDate + "T00:00:00Z").getTime();

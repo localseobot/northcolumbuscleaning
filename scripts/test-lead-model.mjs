@@ -27,6 +27,7 @@ process.env.BUYER_SECRET = "test-secret-not-a-real-one";
 
 const { priceLeads, getPricing } = await import("../api/_lib/buyer.js");
 const { groupByMonth, outcomeLabel, OUTCOME_KEYS } = await import("../api/_lib/lead-ledger.js");
+const { opportunitySearchQuery } = await import("../api/_lib/ghl.js");
 const { signBuyerToken, verifyBuyerToken } = await import("../api/_lib/buyer-token.js");
 const { parseGhlCallEvent, classifyGhlCall, selectCallerPhone } = await import("../api/_lib/ghl-call.js");
 const { toE164, formatUsDisplay, getTrackingNumber, FALLBACK_TRACKING_E164 } = await import("../api/_lib/phone.js");
@@ -428,6 +429,37 @@ console.log("\nGHL call webhook handler (no live GHL)");
       delete process.env.GHL_LOCATION_ID;
     });
   })();
+}
+
+console.log("\nGHL opportunity search query (no live GHL)");
+{
+  process.env.GHL_LOCATION_ID = "loc_test";
+  const q = opportunitySearchQuery({
+    pipelineId: "pipe_1",
+    pipelineStageId: "stage_1",
+    contactId: "contact_1",
+    status: "open",
+    limit: 250,
+  });
+  test("uses snake_case GET params GHL search accepts", () => {
+    assert.equal(q.location_id, "loc_test");
+    assert.equal(q.pipeline_id, "pipe_1");
+    assert.equal(q.pipeline_stage_id, "stage_1");
+    assert.equal(q.contact_id, "contact_1");
+    assert.equal(q.status, "open");
+  });
+  test("does not send POST-only props that 422", () => {
+    assert.equal("pipelineId" in q, false);
+    assert.equal("pipelineStageId" in q, false);
+    assert.equal("contactId" in q, false);
+    assert.equal("locationId" in q, false);
+    assert.equal("getCustomFields" in q, false);
+  });
+  test("caps GET limit at GHL's max of 100", () => {
+    assert.equal(q.limit, 100);
+    assert.equal(opportunitySearchQuery({ limit: 0 }).limit, 20);
+  });
+  delete process.env.GHL_LOCATION_ID;
 }
 
 console.log(`\n${passed} passed${process.exitCode ? " — WITH FAILURES" : ""}\n`);

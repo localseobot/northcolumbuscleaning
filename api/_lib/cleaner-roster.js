@@ -9,7 +9,7 @@
 // "Available" = tagged cleaner AND not assigned to any Booked-stage opp
 // on the target date.
 
-import { ghl } from "./ghl.js";
+import { ghl, searchOpportunities } from "./ghl.js";
 import {
   OPP_APPOINTMENT_DATE,
   OPP_PROVIDER_PHONE,
@@ -81,17 +81,11 @@ export async function findAvailableCleaners({ targetDate, excludeIds = [] }) {
   if (allCleaners.length === 0) return [];
 
   // 2. Pull all Booked-stage opps for the target date to know who's busy
-  const oppsSearch = await ghl({
-    method: "POST",
-    path: "/opportunities/search",
-    body: {
-      locationId: process.env.GHL_LOCATION_ID,
-      pipelineId: SALES_PIPELINE_ID,
-      pipelineStageId: STAGE_BOOKED,
-      status: "open",
-      limit: 100,
-      getCustomFields: true,
-    },
+  const oppsSearch = await searchOpportunities({
+    pipelineId: SALES_PIPELINE_ID,
+    pipelineStageId: STAGE_BOOKED,
+    status: "open",
+    limit: 100,
   }).catch(() => ({ opportunities: [] }));
 
   const dayMs = new Date(targetDate + "T00:00:00Z").getTime();

@@ -2,7 +2,7 @@
 // the digest template consumes. Used by both the Monday cron and the
 // manual preview endpoint.
 
-import { ghl } from "./ghl.js";
+import { ghl, searchOpportunities } from "./ghl.js";
 import {
   OPP_QUOTED_PRICE,
   OPP_SERVICE_TYPE,
@@ -35,17 +35,11 @@ function lower(v) {
 }
 
 async function fetchOpps({ stageId, status, limit = 200 }) {
-  const res = await ghl({
-    method: "POST",
-    path: "/opportunities/search",
-    body: {
-      locationId: process.env.GHL_LOCATION_ID,
-      pipelineId: SALES_PIPELINE_ID,
-      pipelineStageId: stageId,
-      status,
-      limit,
-      getCustomFields: true,
-    },
+  const res = await searchOpportunities({
+    pipelineId: SALES_PIPELINE_ID,
+    pipelineStageId: stageId,
+    status,
+    limit,
   }).catch(() => ({ opportunities: [] }));
   return res?.opportunities || [];
 }

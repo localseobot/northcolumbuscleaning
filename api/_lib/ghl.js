@@ -73,3 +73,56 @@ export async function ghl({ method, path, query, body, version }) {
 
   return parsed;
 }
+
+/**
+ * Query params for GET /opportunities/search.
+ *
+ * POST /opportunities/search is a different "advanced search" DTO. It accepts
+ * `locationId` but rejects `pipelineId` / `getCustomFields` with 422
+ * "property should not exist". Pipeline/stage/contact filters belong here as
+ * snake_case query params (same as outreach-review and mcp-ghl).
+ *
+ * GET limit is capped at 100 by GHL.
+ */
+export function opportunitySearchQuery({
+  locationId,
+  pipelineId,
+  pipelineStageId,
+  contactId,
+  status,
+  limit,
+} = {}) {
+  const capped = Math.min(Math.max(Number(limit) || 20, 1), 100);
+  return {
+    location_id: locationId || getDefaultLocationId(),
+    pipeline_id: pipelineId,
+    pipeline_stage_id: pipelineStageId,
+    contact_id: contactId,
+    status,
+    limit: capped,
+  };
+}
+
+/**
+ * Search opportunities. Filters server-side via GET query params, then again
+ * client-side so a silently ignored pipeline/stage/contact filter cannot leak
+ * rows from another pipeline.
+ */
+export async function searchOpportunities(opts = {}) {
+  const res = await ghl({
+    method: "GET",
+    path: "/opportunities/search",
+    query: opportunitySearchQuery(opts),
+  });
+  let opportunities = res?.opportunities || [];
+  if (opts.pipelineId) {
+    opportunities = opportunities.filter((o) => o.pipelineId === opts.pipelineId);
+  }
+  if (opts.pipelineStageId) {
+    opportunities = opportunities.filter((o) => o.pipelineStageId === opts.pipelineStageId);
+  }
+  if (opts.contactId) {
+    opportunities = opportunities.filter((o) => o.contactId === opts.contactId);
+  }
+  return { ...res, opportunities };
+}

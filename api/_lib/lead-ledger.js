@@ -15,7 +15,7 @@
 // Using tags rather than custom fields is deliberate: tags need no provisioning
 // in the GHL UI, so this ships without anyone clicking through settings first.
 
-import { ghl } from "./ghl.js";
+import { ghl, searchOpportunities } from "./ghl.js";
 import { getPricing } from "./buyer.js";
 import { OPP_SERVICE_TYPE, OPP_QUOTED_PRICE, OPP_LEAD_SOURCE } from "./ghl-fields.js";
 
@@ -139,15 +139,10 @@ async function addNote(contactId, body) {
 async function hasRecentLead(contactId, withinDays, excludeOpportunityId) {
   if (!contactId || !withinDays) return false;
   const cutoff = Date.now() - withinDays * 86400000;
-  const res = await ghl({
-    method: "POST",
-    path: "/opportunities/search",
-    body: {
-      locationId: process.env.GHL_LOCATION_ID,
-      pipelineId: SALES_PIPELINE_ID,
-      contactId,
-      limit: 20,
-    },
+  const res = await searchOpportunities({
+    pipelineId: SALES_PIPELINE_ID,
+    contactId,
+    limit: 20,
   }).catch(() => null);
   const opps = res?.opportunities || [];
   return opps.some((o) => {
@@ -354,15 +349,9 @@ function toLead(opp, contact) {
  * @param {number} [o.limit]  Max leads to return. Default 250.
  */
 export async function listLeads({ limit = 250 } = {}) {
-  const res = await ghl({
-    method: "POST",
-    path: "/opportunities/search",
-    body: {
-      locationId: process.env.GHL_LOCATION_ID,
-      pipelineId: SALES_PIPELINE_ID,
-      limit,
-      getCustomFields: true,
-    },
+  const res = await searchOpportunities({
+    pipelineId: SALES_PIPELINE_ID,
+    limit,
   });
   const opps = res?.opportunities || [];
 
