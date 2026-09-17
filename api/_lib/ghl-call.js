@@ -121,6 +121,8 @@ export function parseGhlCallEvent(body) {
     status: "",
     duration: null,
     phone: "",
+    from: "",
+    phoneCandidates: [],
     to: "",
     contactId: "",
     opportunityId: "",
@@ -170,21 +172,19 @@ export function parseGhlCallEvent(body) {
     looked(["callDuration", "CallDuration", "call_duration", "duration", "Duration"]),
   );
 
-  const phone = toE164(
-    looked([
-      "from",
-      "From",
-      "caller",
-      "callerId",
-      "caller_id",
-      "phone",
-      "phoneNumber",
-      "phone_number",
-      "contact.phone",
-    ]),
-  );
+  // Prefer the GHL contact's phone (the homeowner) over `from`/`to`, which
+  // on a forwarded call can be our tracking line or the buyer's number.
+  const phoneCandidates = [
+    looked(["contact.phone"]),
+    looked(["phone", "phoneNumber", "phone_number"]),
+    looked(["from", "From", "caller", "callerId", "caller_id"]),
+  ]
+    .map(toE164)
+    .filter(Boolean);
 
+  const phone = phoneCandidates[0] || "";
   const to = toE164(looked(["to", "To", "called", "calledNumber", "trackingNumber", "tracking_number"]));
+  const from = toE164(looked(["from", "From", "caller", "callerId", "caller_id"]));
 
   const first = s(looked(["firstName", "first_name", "contact.firstName"]));
   const last = s(looked(["lastName", "last_name", "contact.lastName"]));
@@ -213,6 +213,8 @@ export function parseGhlCallEvent(body) {
     status,
     duration,
     phone,
+    from,
+    phoneCandidates,
     to,
     contactId: s(looked(["contactId", "contact_id", "contact.id"])),
     opportunityId: s(looked(["opportunityId", "opportunity_id", "opportunity.id"])),
@@ -297,6 +299,21 @@ export function classifyGhlCall(event, opts = {}) {
   }
 
   return { skip: false, reason: "inbound call with no status (treated as connected)", connected: false };
+}
+
+/**
+ * Homeowner caller ID for the dashboard. Drops our tracking line, the
+ * buyer's forward-to, and other GHL numbers so a forwarded call never
+ * shows up as "from ourselves".
+ */
+export function selectCallerPhone(candidates, exclude = []) {
+  const skip = new Set((exclude || []).map(toE164).filter(Boolean));
+  const list = [];
+  for (const raw of candidates || []) {
+    const n = toE164(raw);
+    if (n && !list.includes(n)) list.push(n);
+  }
+  return list.find((n) => !skip.has(n)) || "";
 }
 
 export const GHL_CALL_STATUS = { CONNECTED, MISSED, EARLY };

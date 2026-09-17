@@ -174,6 +174,29 @@ the buyer's phone. Forward-to is All Clean Sol.
 | Buyer SMS | `+17409712907` |
 | Production webhook | `POST https://www.northcolumbuscleaning.com/api/ghl-call-webhook` |
 
+### Exact GHL attach (copy this)
+
+This is what puts the call on `/dashboard` the same way a website form does
+(`recordLead` → `deliverLead` → SMS to `+17409712907`, email to
+`contact@allcleansol.com`). GHL call logs alone are not enough.
+
+| | |
+|---|---|
+| URL | `https://www.northcolumbuscleaning.com/api/ghl-call-webhook` |
+| Method | `POST` |
+| Header (optional) | `X-Webhook-Secret: <GHL_CALL_WEBHOOK_SECRET>` |
+| **Best event (billable = answered)** | Settings → Integrations → Webhooks → **Inbound Message**, `messageType=CALL`, `callStatus=completed` / `answered` |
+| **Workflow event (minimum to see rows)** | Automations → **After-Hours Call Routing** → action **Webhook**, trigger already **Incoming Call**. Add it next to Connect Call. |
+| Body | Default contact payload is enough (`contact.id`, `contact.phone`, `first_name`). Caller ID is taken from `contact.phone`, never from our tracking line or the buyer's number. |
+
+Billable rule used by the dashboard (same function as the webhook):
+
+- **Bill:** `answered` / `completed` / `connected` / `in-progress`, or duration > 0
+- **Do not bill:** `missed` / `no-answer` / `voicemail` / `busy` / `failed` / `canceled`, ringing-only, duration 0
+- Incoming Call with **no** status still records a row so tracking is live; set `GHL_CALL_REQUIRE_ANSWERED=1` once the Inbound Message (CALL) webhook is attached if you want unanswered rings dropped.
+
+Form leads already POST `/api/lead` and email `BUYER_EMAIL` (set to `contact@allcleansol.com`).
+
 Copy `.env.example` into Vercel. Destinations are comments/defaults;
 `BUYER_SECRET` / `GHL_PIT` stay secrets.
 

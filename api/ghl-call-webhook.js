@@ -24,9 +24,10 @@
 import { ghl } from "./_lib/ghl.js";
 import { recordLead } from "./_lib/lead-ledger.js";
 import { deliverLead } from "./_lib/lead-delivery.js";
-import { parseGhlCallEvent, classifyGhlCall } from "./_lib/ghl-call.js";
+import { parseGhlCallEvent, classifyGhlCall, selectCallerPhone } from "./_lib/ghl-call.js";
 import { LEAD_SOURCE_OPTIONS } from "./_lib/ghl-fields.js";
 import { sendSlack } from "./_lib/slack.js";
+import { CUSTOMER_LINE, INTERNAL_LINE } from "./_lib/ghl-sms.js";
 
 export const config = { runtime: "nodejs" };
 
@@ -59,7 +60,6 @@ function parseBody(req) {
 
 async function hydrateFromContact(event) {
   if (!event.contactId || !process.env.GHL_PIT) return event;
-  if (event.phone && event.name) return event;
   const r = await ghl({ method: "GET", path: `/contacts/${event.contactId}` }).catch(() => null);
   const c = r?.contact || r;
   if (!c) return event;
@@ -69,7 +69,8 @@ async function hydrateFromContact(event) {
     [s(c.firstName), s(c.lastName)].filter(Boolean).join(" ");
   return {
     ...event,
-    phone: event.phone || s(c.phone),
+    // Contact record is the homeowner. Webhook `from` may be our tracking line.
+    phone: s(c.phone) || event.phone,
     email: event.email || s(c.email).toLowerCase(),
     name,
   };
@@ -140,6 +141,18 @@ export default async function handler(req, res) {
   }
 
   const event = await hydrateFromContact(parsed);
+  const caller = selectCallerPhone(
+    [event.phone, ...(parsed.phoneCandidates || []), parsed.from],
+    [
+      process.env.TRACKING_NUMBER,
+      process.env.GHL_FROM_NUMBER,
+      process.env.BUYER_PHONE,
+      CUSTOMER_LINE,
+      INTERNAL_LINE,
+      "+16147629409",
+    ],
+  );
+  if (caller) event.phone = caller;
   result.phone = event.phone || result.phone;
   result.contactId = event.contactId || result.contactId;
 

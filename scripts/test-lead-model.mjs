@@ -28,7 +28,7 @@ process.env.BUYER_SECRET = "test-secret-not-a-real-one";
 const { priceLeads, getPricing } = await import("../api/_lib/buyer.js");
 const { groupByMonth, outcomeLabel, OUTCOME_KEYS } = await import("../api/_lib/lead-ledger.js");
 const { signBuyerToken, verifyBuyerToken } = await import("../api/_lib/buyer-token.js");
-const { parseGhlCallEvent, classifyGhlCall } = await import("../api/_lib/ghl-call.js");
+const { parseGhlCallEvent, classifyGhlCall, selectCallerPhone } = await import("../api/_lib/ghl-call.js");
 const { toE164, formatUsDisplay, getTrackingNumber, FALLBACK_TRACKING_E164 } = await import("../api/_lib/phone.js");
 const ghlCallWebhook = (await import("../api/ghl-call-webhook.js")).default;
 
@@ -291,6 +291,29 @@ console.log("\nGHL call webhook parsing");
     assert.equal(e.contactId, "contact-1");
     assert.equal(e.name, "Lukas");
     assert.equal(classifyGhlCall(e).skip, false);
+  });
+
+  test("contact.phone wins over From when From is our tracking line", () => {
+    const e = parseGhlCallEvent({
+      direction: "inbound",
+      messageType: "CALL",
+      callStatus: "completed",
+      callDuration: 30,
+      From: "+16143522588",
+      To: "+17409712907",
+      contact: { phone: "(614) 555-1212" },
+    });
+    assert.equal(e.phone, "+16145551212");
+  });
+
+  test("selectCallerPhone drops tracking and buyer numbers", () => {
+    assert.equal(
+      selectCallerPhone(
+        ["+16143522588", "+17409712907", "6145551212"],
+        ["+16143522588", "+17409712907"],
+      ),
+      "+16145551212",
+    );
   });
 }
 
