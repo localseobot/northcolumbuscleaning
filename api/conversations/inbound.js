@@ -23,7 +23,7 @@
 //
 // Always returns 200 OK so GHL doesn't retry on transient failures.
 
-import { ghl } from "../_lib/ghl.js";
+import { ghl, searchOpportunities } from "../_lib/ghl.js";
 import { sendGhlSms, INTERNAL_LINE, CUSTOMER_LINE } from "../_lib/ghl-sms.js";
 import { sendOpsAlert } from "../_lib/alerts.js";
 import { classifyCleanerMessage } from "../_lib/classify-cleaner-message.js";
@@ -124,17 +124,11 @@ async function findCleanerContact({ contactId, phone }) {
 
 async function findCleanerJobs({ cleanerPhone, dateYmd }) {
   if (!cleanerPhone || !dateYmd) return [];
-  const search = await ghl({
-    method: "POST",
-    path: "/opportunities/search",
-    body: {
-      locationId: process.env.GHL_LOCATION_ID,
-      pipelineId: SALES_PIPELINE_ID,
-      pipelineStageId: STAGE_BOOKED,
-      status: "open",
-      limit: 100,
-      getCustomFields: true,
-    },
+  const search = await searchOpportunities({
+    pipelineId: SALES_PIPELINE_ID,
+    pipelineStageId: STAGE_BOOKED,
+    status: "open",
+    limit: 100,
   }).catch(() => ({ opportunities: [] }));
 
   const dayMs = new Date(dateYmd + "T00:00:00Z").getTime();
