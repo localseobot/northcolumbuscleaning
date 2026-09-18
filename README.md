@@ -9,6 +9,28 @@ company, because that is what makes a homeowner call or fill in the form.
 Everything behind it exists to capture that enquiry, hand it to the buyer
 within seconds, and prove what was delivered.
 
+## The public site quotes no prices
+
+Because we do not do the work, we cannot promise what it costs. No page,
+form, popup, or meta description may show a dollar figure, a discount
+percentage, or an "instant price" to a homeowner. The site's only job is to
+produce **a phone call or a short form fill**; the buyer quotes the job on
+the call back.
+
+That rule shapes the front end:
+
+- Every page ends in `#quote` — a tap-to-call block plus a three-field form
+  (name, phone, service). No page sends a visitor elsewhere to convert.
+- Every form carries `class="lead-form"`, so `script.js` wires them all the
+  same way and posts to `/api/lead`. Name plus a phone number (or email) is
+  all that is required; a longer form is a lost lead.
+- Tap-to-call appears in the header on mobile, in the hero, in the `#quote`
+  block, and in the sticky bottom bar.
+- The pricing engine (`api/_lib/pricing.js`) is still there for the buyer's
+  own use behind the token-gated `/api/admin/quote`. It is no longer exposed
+  to the public — the old `/api/public-quote` endpoint and the `/quote`
+  price calculator that used it have been removed.
+
 ## How a lead flows
 
 ```
@@ -19,8 +41,8 @@ Phone call ───┘        (GHL)            └─→ Row on the buyer's das
 
 | Source | Entry point | Recorded by |
 |---|---|---|
-| Quote form on any page | `POST /api/lead` | `api/lead.js` |
-| Price calculator on `/quote` | `POST /api/lead` | `api/lead.js` |
+| Short lead form on any page | `POST /api/lead` | `api/lead.js` |
+| Call-back popup (exit intent / 25s) | `POST /api/lead` | `api/lead.js` |
 | Inbound call (GHL → buyer phone) | GHL inbound-call / call-status webhook | `api/ghl-call-webhook.js` |
 
 Both paths converge on `recordLead()` in `api/_lib/lead-ledger.js` and then

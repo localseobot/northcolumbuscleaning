@@ -145,6 +145,10 @@ a:hover { color: var(--forest); text-decoration: underline; }
 }
 .btn-outline:hover { background: var(--forest); color: var(--lime); }
 .btn-block { width: 100%; }
+/* A full-width button has room to wrap, and must: the CTA labels on the lead
+   forms are longer than a narrow phone can fit on one line, and .btn's
+   nowrap was pushing the whole page sideways. */
+.btn-block { white-space: normal; }
 
 /* ============ TOP BAR ============ */
 .topbar {
@@ -910,6 +914,9 @@ a:hover { color: var(--forest); text-decoration: underline; }
   h1 { font-size: 34px; }
   h2 { font-size: 28px; }
   .container { padding: 0 14px; }
+  /* Two columns of area links no longer fit — they were spilling a couple of
+     pixels past the viewport on the narrowest phones. */
+  .areas-list { grid-template-columns: 1fr; }
   .header-mobile-actions { gap: 4px; }
   .header-call-btn { width: 40px; height: 40px; }
   .nav-toggle { width: 40px; height: 40px; }
@@ -1278,4 +1285,209 @@ a:hover { color: var(--forest); text-decoration: underline; }
   width: 1px;
   height: 1px;
   overflow: hidden;
+}
+
+/* ============ LEAD CAPTURE (call-first) ============
+   The site's only job is to produce a phone call or a short form fill, so
+   the call button and the form get the loudest treatment on every page. */
+
+/* Big tap-to-call block used in hero sidebars and the dark CTA section. */
+.call-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--lime);
+  color: var(--forest);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  text-decoration: none;
+  font-weight: 900;
+  line-height: 1.15;
+  transition: background 0.15s ease;
+}
+.call-cta:hover,
+.call-cta:active { background: #b4ce51; color: var(--forest); text-decoration: none; }
+.call-cta svg { flex-shrink: 0; }
+.call-cta .call-cta-label {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0.75;
+  margin-bottom: 2px;
+}
+.call-cta .call-cta-number {
+  display: block;
+  font-size: 26px;
+  letter-spacing: -0.5px;
+}
+@media (max-width: 380px) {
+  .call-cta .call-cta-number { font-size: 22px; }
+}
+
+/* Answer-time reassurance under the call button. */
+.call-meta {
+  margin: var(--space-2) 0 0;
+  font-size: 15px;
+  opacity: 0.85;
+}
+
+/* Hero-side form card (homepage + generated pages). */
+.hero-lead { padding: var(--space-6) 0 var(--space-8); }
+.hero-lead .hero-inner { align-items: center; }
+.hero-form {
+  background: #fff;
+  border: 1px solid var(--light-gray);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: 0 18px 50px rgba(13, 51, 32, 0.12);
+}
+.hero-form .lead-form { padding: 0; border: 0; background: transparent; }
+.leadbox-head { margin-bottom: var(--space-2); }
+.leadbox-head h2 {
+  font-size: 26px;
+  margin-bottom: 6px;
+  color: var(--forest);
+}
+.leadbox-head p {
+  font-size: 15px;
+  margin: 0;
+  opacity: 0.8;
+}
+.leadbox-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 900;
+  color: var(--charcoal);
+  opacity: 0.55;
+}
+.leadbox-divider::before,
+.leadbox-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--light-gray);
+}
+
+/* Short lede + fine print inside a form card. */
+.form-lede {
+  margin: 0 0 var(--space-2);
+  font-size: 15px;
+  color: var(--charcoal);
+  opacity: 0.85;
+}
+.form-fine {
+  margin: var(--space-1) 0 0;
+  font-size: 13px;
+  text-align: center;
+  color: var(--charcoal);
+  opacity: 0.65;
+}
+.form-row label .opt {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.6;
+}
+
+/* Post-submit panel that replaces the form. Keeps the phone number in
+   front of someone who has just told us they want to be contacted. */
+.lead-success {
+  text-align: center;
+  padding: var(--space-2) 0;
+}
+.lead-success h3 {
+  color: var(--forest);
+  margin-bottom: var(--space-1);
+}
+.lead-success p {
+  font-size: 16px;
+  margin-bottom: var(--space-2);
+}
+.lead-success .call-cta { width: 100%; justify-content: center; }
+
+/* Dark CTA section: the call block sits above the contact list. */
+.section-cta .call-cta { margin-top: var(--space-2); }
+.section-cta .quote-copy .call-meta { color: var(--off-white); }
+
+/* Callback modal (replaces the old discount popup). */
+.callback-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 51, 32, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+  z-index: 9500;
+}
+.callback-backdrop.open { display: flex; }
+.callback-modal {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  max-width: 420px;
+  width: 100%;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(13, 51, 32, 0.28);
+}
+.callback-modal h2 {
+  font-size: 26px;
+  color: var(--forest);
+  margin-bottom: var(--space-1);
+}
+.callback-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: transparent;
+  border: 0;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--charcoal);
+  opacity: 0.5;
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+}
+.callback-close:hover { opacity: 1; }
+
+@media (max-width: 420px) {
+  .hero-form { padding: var(--space-3); }
+}
+
+/* The form card stays light even inside the dark CTA band, so its text must
+   not inherit `.section-cta p`'s off-white. This also un-hides the status
+   line, which was off-white-on-off-white and therefore invisible while a
+   submission was in flight. */
+.section-cta .quote-form p { color: var(--charcoal); opacity: 1; }
+.section-cta .quote-form .form-lede,
+.section-cta .quote-form .form-fine { opacity: 0.8; }
+.section-cta .quote-form .form-note.success { color: var(--sage); }
+.section-cta .quote-form .form-note.error { color: #b91c1c; }
+
+/* The confirmation replaces the form, so it carries the card itself —
+   otherwise it would land straight on the dark green band. Nested inside a
+   card that is already white, it drops back to plain text. */
+.lead-success {
+  background: #fff;
+  color: var(--charcoal);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+.section-cta .lead-success p,
+.section-cta .lead-success h3 { color: var(--charcoal); opacity: 1; }
+.section-cta .lead-success h3 { color: var(--forest); }
+.hero-form .lead-success,
+.quote-card .lead-success,
+.callback-modal .lead-success {
+  background: transparent;
+  padding: var(--space-2) 0;
 }

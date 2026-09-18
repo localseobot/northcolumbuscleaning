@@ -100,28 +100,27 @@
 
       <nav class="nav" id="nav" aria-label="Primary">
         <a href="/services">Services</a>
-        <a href="/quote">Pricing</a>
         <a href="/locations">Areas</a>
         <a href="/#owner">About</a>
         <a href="/#faq">FAQ</a>
         <a href="tel:+16143522588" class="nav-call">(614) 352-2588</a>
-        <a href="/quote" class="btn btn-primary nav-cta">Get a quote</a>
+        <a href="#quote" class="btn btn-primary nav-cta">Get a free quote</a>
       </nav>
     </div>
   </header>
 
   <!-- ============ HERO ============ -->
-  <section id="home" class="hero">
+  <section id="home" class="hero hero-lead">
     <div class="container hero-inner">
       <div class="hero-text">
         <span class="eyebrow">House &amp; office cleaning in North Columbus, OH</span>
         <h1>Clean homes. Clean offices. Done right.</h1>
         <p class="lead">
-          Residential and commercial cleaning services across North Columbus, Ohio. Insured, bonded, background-checked crews &mdash; clear pricing and work that holds up.
+          Residential and commercial cleaning services across North Columbus, Ohio. Insured, bonded, background-checked crews &mdash; and a free quote in one short phone call.
         </p>
         <div class="hero-cta">
-          <a href="/quote" class="btn btn-primary">See your price</a>
-          <a href="tel:+16143522588" class="btn btn-outline">(614) 352-2588</a>
+          <a href="tel:+16143522588" class="btn btn-primary">Call (614) 352-2588</a>
+          <a href="#quote" class="btn btn-outline">Get a free quote</a>
         </div>
         <ul class="hero-trust">
           <li>
@@ -138,8 +137,55 @@
           </li>
         </ul>
       </div>
-      <div class="hero-visual">
-        <img src="/images/hero.jpg" fetchpriority="high" width="1200" height="1600" alt="A spotless kitchen cleaned by North Columbus Cleaning Company" />
+      <!-- The fastest path to a lead is a phone call, so the call button is
+           first and the form underneath is deliberately short: three fields,
+           no pricing, no scheduling step to abandon. -->
+      <div class="hero-form">
+        <div class="leadbox-head">
+          <h2>Talk to us in 30 seconds</h2>
+          <p>Tap to call now &mdash; a real local person picks up, Mon&ndash;Sat 7am&ndash;7pm.</p>
+        </div>
+        <a class="call-cta" href="tel:+16143522588" style="width:100%;justify-content:center;">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true">
+            <path d="M6.6 10.8c1.4 2.8 3.7 5.1 6.5 6.5l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1l-2.4 2.4z"/>
+          </svg>
+          <span>
+            <span class="call-cta-label">Call now</span>
+            <span class="call-cta-number">(614) 352-2588</span>
+          </span>
+        </a>
+        <div class="leadbox-divider">or</div>
+        <form class="lead-form" data-source="Homepage hero" novalidate>
+          <p class="form-lede">Leave your number and we&rsquo;ll call you right back.</p>
+          <div class="form-row">
+            <label for="hero-name">Name</label>
+            <input type="text" id="hero-name" name="name" required autocomplete="name" />
+          </div>
+          <div class="form-row">
+            <label for="hero-phone">Phone</label>
+            <input type="tel" id="hero-phone" name="phone" required autocomplete="tel" />
+          </div>
+          <div class="form-row">
+            <label for="hero-service">What do you need cleaned?</label>
+            <select id="hero-service" name="service" required>
+              <option value="">Select a service</option>
+              <option>Residential cleaning</option>
+              <option>Commercial cleaning</option>
+              <option>Deep cleaning</option>
+              <option>Recurring service</option>
+              <option>Move-in / Move-out</option>
+              <option>Short-term rental</option>
+              <option>Not sure yet</option>
+            </select>
+          </div>
+          <div class="hp-field" aria-hidden="true">
+            <label for="hero-website">Website</label>
+            <input type="text" id="hero-website" name="website" tabindex="-1" autocomplete="off" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Request my free quote</button>
+          <p class="form-note" role="status" aria-live="polite"></p>
+          <p class="form-fine">No obligation. We only use your number to talk about your clean.</p>
+        </form>
       </div>
     </div>
   </section>
@@ -161,7 +207,7 @@
         <ul>
           <li>$1M general-liability insured</li>
           <li>Bonded crews, background-checked</li>
-          <li>Flat-rate pricing &mdash; no surprises</li>
+          <li>Free quotes &mdash; no obligation</li>
         </ul>
       </div>
     </div>
@@ -246,8 +292,8 @@
           Every crew member is hand-picked, background-checked, and trained on our room-by-room checklist before they ever step into a customer's home. We treat your space like our own.
         </p>
         <div class="owner-cta">
-          <a href="/quote" class="btn btn-primary">See your price</a>
-          <a href="tel:+16143522588" class="btn btn-outline">Talk to us &mdash; (614) 352-2588</a>
+          <a href="tel:+16143522588" class="btn btn-primary">Call (614) 352-2588</a>
+          <a href="#quote" class="btn btn-outline">Get a free quote</a>
         </div>
       </div>
     </div>
@@ -324,13 +370,13 @@
       <div class="grid process-grid">
         <div class="step">
           <div class="step-num">1</div>
-          <h3>Request a quote</h3>
-          <p>Tell us about the space. We send a clear, up-front price within hours.</p>
+          <h3>Call or send the form</h3>
+          <p>Takes under a minute. Tell us the space and the best number to reach you.</p>
         </div>
         <div class="step">
           <div class="step-num">2</div>
-          <h3>Pick a time</h3>
-          <p>Choose a window that works. Evenings and weekends included.</p>
+          <h3>We call you back</h3>
+          <p>Usually within minutes during business hours. We talk through the job and pick a time &mdash; evenings and weekends included.</p>
         </div>
         <div class="step">
           <div class="step-num">3</div>
@@ -450,35 +496,39 @@
   <section id="quote" class="section section-cta">
     <div class="container quote-inner">
       <div class="quote-copy">
-        <span class="eyebrow light">Ready to book</span>
-        <h2>Get your free quote</h2>
+        <span class="eyebrow light">Fastest way to get started</span>
+        <h2>Call now or get a free quote</h2>
         <p class="lead">
-          Fill out the form and we get back to you within one business day with a clear, up-front price. Or pick up the phone.
+          The quickest answer is always a phone call &mdash; one minute on the phone and you&rsquo;ll know exactly what your clean involves and when we can be there.
         </p>
+        <a class="call-cta" href="tel:+16143522588">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true">
+            <path d="M6.6 10.8c1.4 2.8 3.7 5.1 6.5 6.5l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1l-2.4 2.4z"/>
+          </svg>
+          <span>
+            <span class="call-cta-label">Call now</span>
+            <span class="call-cta-number">(614) 352-2588</span>
+          </span>
+        </a>
+        <p class="call-meta">A real local person answers, Mon&ndash;Sat 7am&ndash;7pm.</p>
         <ul class="quote-contact">
-          <li><strong>Phone</strong> <a href="tel:+16143522588">(614) 352-2588</a></li>
           <li><strong>Email</strong> <a href="mailto:admin@northcolumbuscleaning.com">admin@northcolumbuscleaning.com</a></li>
           <li><strong>Hours</strong> Mon&ndash;Sat, 7am&ndash;7pm</li>
         </ul>
       </div>
 
-      <form class="quote-form" id="quote-form" action="/api/lead" method="POST" novalidate>
+      <form class="quote-form lead-form" id="quote-form" data-source="Homepage quote section" novalidate>
+        <p class="form-lede">Can&rsquo;t talk right now? Leave your details and we&rsquo;ll call you back.</p>
         <div class="form-row">
           <label for="name">Name</label>
           <input type="text" id="name" name="name" required autocomplete="name" />
         </div>
-        <div class="form-row form-row-2">
-          <div>
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" required autocomplete="email" />
-          </div>
-          <div>
-            <label for="phone">Phone</label>
-            <input type="tel" id="phone" name="phone" autocomplete="tel" />
-          </div>
+        <div class="form-row">
+          <label for="phone">Phone</label>
+          <input type="tel" id="phone" name="phone" required autocomplete="tel" />
         </div>
         <div class="form-row">
-          <label for="service">Service</label>
+          <label for="service">What do you need cleaned?</label>
           <select id="service" name="service" required>
             <option value="">Select a service</option>
             <option>Residential cleaning</option>
@@ -491,15 +541,20 @@
           </select>
         </div>
         <div class="form-row">
-          <label for="message">Tell us about the space</label>
-          <textarea id="message" name="message" rows="4" placeholder="e.g. 3 bed / 2 bath in Clintonville, bi-weekly"></textarea>
+          <label for="email">Email <span class="opt">(optional)</span></label>
+          <input type="email" id="email" name="email" autocomplete="email" />
+        </div>
+        <div class="form-row">
+          <label for="message">Anything we should know? <span class="opt">(optional)</span></label>
+          <textarea id="message" name="message" rows="3" placeholder="e.g. 3 bed / 2 bath in Clintonville, bi-weekly"></textarea>
         </div>
         <div class="hp-field" aria-hidden="true">
           <label for="website">Website</label>
           <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
         </div>
-        <button type="submit" class="btn btn-secondary btn-block">Request quote</button>
+        <button type="submit" class="btn btn-secondary btn-block">Request my free quote</button>
         <p class="form-note" id="form-note" role="status" aria-live="polite"></p>
+        <p class="form-fine">No obligation. We only use your number to talk about your clean.</p>
       </form>
     </div>
   </section>
@@ -515,7 +570,7 @@
       <div class="faq">
         <details>
           <summary>How much does a cleaning cost?</summary>
-          <p>Flat-rate, based on the size of your home and the type of clean. <a href="/quote">See your exact price in 30 seconds</a> &mdash; no email or phone number required to look. Standard 3-bed / 2-bath homes start around $110 per visit, with up to 20% off for recurring service.</p>
+          <p>It depends on the size of the space, the type of clean, and how often you want us. Rather than guess, we quote it properly: <a href="tel:+16143522588">call (614) 352-2588</a> or <a href="#quote">send the short form</a> and you&rsquo;ll get a straight answer for your home, free and with no obligation.</p>
         </details>
         <details>
           <summary>Are you insured and bonded?</summary>
@@ -635,6 +690,6 @@
   </footer>
 
   <script src="/script.js" defer></script>
-  <div class="sticky-cta" id="sticky-cta" aria-label="Quick actions"><a class="sticky-cta-call" href="tel:+16143522588">📞 Call (614) 352-2588</a><a class="sticky-cta-quote" href="/quote">Get instant price</a></div>
+  <div class="sticky-cta" id="sticky-cta" aria-label="Quick actions"><a class="sticky-cta-call" href="tel:+16143522588">📞 Call (614) 352-2588</a><a class="sticky-cta-quote" href="#quote">Get a free quote</a></div>
   </body>
 </html>

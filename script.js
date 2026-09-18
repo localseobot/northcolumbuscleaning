@@ -2,10 +2,12 @@
 // has TRACKING_NUMBER (or GHL_FROM_NUMBER) set, rewrite every tel: link so
 // a number change does not require regenerating pages.
 window.__NCC_TRACKING_DISPLAY = '(614) 352-2588';
+window.__NCC_TRACKING_HREF = 'tel:+16143522588';
 (function () {
   function applyTracking(href, display) {
     if (!href || !display) return;
     window.__NCC_TRACKING_DISPLAY = display;
+    window.__NCC_TRACKING_HREF = href;
     var phoneLike = /\+?1?[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/;
     document.querySelectorAll('a[href^="tel:"]').forEach(function (a) {
       a.setAttribute('href', href);
@@ -75,69 +77,115 @@ window.__NCC_TRACKING_DISPLAY = '(614) 352-2588';
   });
 })();
 
-// Quote form submission — posts to /api/lead, which records the lead and
-// routes it straight to the cleaner who works these. Every submission has to
-// reach the server: a lost form fill is a lost lead.
-(function () {
-  var form = document.getElementById('quote-form');
-  if (!form) return;
-  var note = document.getElementById('form-note');
-  var button = form.querySelector('button[type="submit"]');
+// ---------------------------------------------------------------------------
+// Lead forms
+// ---------------------------------------------------------------------------
+// Posts to /api/lead, which records the lead and routes it straight to the
+// cleaner who works these. Every submission has to reach the server: a lost
+// form fill is a lost lead.
+//
+// Every short form on the site carries class="lead-form", so a page can have
+// as many as it needs (hero card, bottom CTA, callback modal) and they all
+// behave identically. Name plus a way to reach them is all we insist on —
+// everything else is detail the buyer collects on the call back.
+window.__nccWireLeadForm = (function () {
+  function val(form, field) {
+    var el = form.elements[field];
+    return el && typeof el.value === 'string' ? el.value.trim() : '';
+  }
 
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
+  // Replace the form with a confirmation that still puts the phone number in
+  // front of someone who has just told us they want to be contacted.
+  function successPanel(form, phone) {
+    var display = window.__NCC_TRACKING_DISPLAY || '(614) 352-2588';
+    var href = window.__NCC_TRACKING_HREF || 'tel:+16143522588';
+    var wrap = document.createElement('div');
+    wrap.className = 'lead-success';
+    wrap.setAttribute('role', 'status');
+    wrap.innerHTML =
+      '<h3>Got it — talk soon.</h3>' +
+      '<p>We&rsquo;ll call you' + (phone ? ' on ' + phone : '') +
+      ' shortly to go over your clean. Need it sorted right now?</p>' +
+      '<a class="call-cta" href="' + href + '">' +
+        '<span><span class="call-cta-label">Call now</span>' +
+        '<span class="call-cta-number">' + display + '</span></span>' +
+      '</a>';
+    form.parentNode.replaceChild(wrap, form);
+  }
 
-    var name = form.name.value.trim();
-    var email = form.email.value.trim();
-    var phone = form.phone.value.trim();
-    var service = form.service.value;
-    var message = form.message.value.trim();
+  return function wire(form) {
+    if (!form || form.__nccWired) return;
+    form.__nccWired = true;
 
-    if (!name || !service || (!email && !phone)) {
-      note.textContent = 'Please give us your name, the service you need, and an email or phone number.';
-      note.className = 'form-note error';
-      return;
+    var button = form.querySelector('button[type="submit"]');
+    var note = form.querySelector('.form-note');
+    if (!note) {
+      note = document.createElement('p');
+      note.className = 'form-note';
+      note.setAttribute('role', 'status');
+      note.setAttribute('aria-live', 'polite');
+      form.appendChild(note);
     }
 
-    note.textContent = 'Sending\u2026';
-    note.className = 'form-note';
-    if (button) button.disabled = true;
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
 
-    fetch('/api/lead', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: name,
-        email: email,
-        phone: phone,
-        service: service,
-        message: message,
-        page: window.location.pathname,
-        website: form.website ? form.website.value : ''
-      })
-    })
-      .then(function (res) {
-        return res.json().catch(function () { return {}; }).then(function (data) {
-          if (!res.ok) throw new Error(data.error || 'Bad response');
-          return data;
-        });
-      })
-      .then(function () {
-        note.textContent = 'Thanks \u2014 we\u2019ll call you back shortly.';
-        note.className = 'form-note success';
-        form.reset();
-      })
-      .catch(function (err) {
-        note.textContent = (err && err.message && err.message !== 'Bad response')
-          ? err.message
-          : 'Something went wrong. Please call us at ' + (window.__NCC_TRACKING_DISPLAY || '(614) 352-2588') + '.';
+      var name = val(form, 'name');
+      var phone = val(form, 'phone');
+      var email = val(form, 'email');
+
+      if (!name || (!phone && !email)) {
+        note.textContent = 'Please give us your name and a phone number so we can call you back.';
         note.className = 'form-note error';
+        return;
+      }
+
+      note.textContent = 'Sending…';
+      note.className = 'form-note';
+      if (button) button.disabled = true;
+
+      var message = val(form, 'message');
+      var source = form.getAttribute('data-source');
+      if (source) message = message ? message + '\n(' + source + ')' : source;
+
+      fetch('/api/lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name,
+          email: email,
+          phone: phone,
+          service: val(form, 'service'),
+          message: message,
+          bedrooms: val(form, 'bedrooms'),
+          bathrooms: val(form, 'bathrooms'),
+          page: window.location.pathname,
+          website: val(form, 'website')
+        })
       })
-      .then(function () {
-        if (button) button.disabled = false;
-      });
-  });
+        .then(function (res) {
+          return res.json().catch(function () { return {}; }).then(function (data) {
+            if (!res.ok) throw new Error(data.error || 'Bad response');
+            return data;
+          });
+        })
+        .then(function () {
+          successPanel(form, phone);
+        })
+        .catch(function (err) {
+          note.textContent = (err && err.message && err.message !== 'Bad response')
+            ? err.message
+            : 'Something went wrong. Please call us at ' + (window.__NCC_TRACKING_DISPLAY || '(614) 352-2588') + '.';
+          note.className = 'form-note error';
+          if (button) button.disabled = false;
+        });
+    });
+  };
 })();
+
+document.querySelectorAll('form.lead-form').forEach(function (f) {
+  window.__nccWireLeadForm(f);
+});
 
 // Footer year
 (function () {
@@ -145,162 +193,117 @@ window.__NCC_TRACKING_DISPLAY = '(614) 352-2588';
   if (y) y.textContent = new Date().getFullYear();
 })();
 
-// Summer Shine email-capture popup
+// ---------------------------------------------------------------------------
+// Call-back modal
+// ---------------------------------------------------------------------------
+// Catches visitors who are about to leave without calling or filling anything
+// in. It asks for a name and a number only — the shortest ask on the site —
+// and posts to the same /api/lead endpoint as every other form.
 (function () {
-  // Skip on pages where it would interfere with conversion / be redundant
-  var path = window.location.pathname.replace(/\/$/, '');
-  var SKIP = ['/book-now', '/login', '/privacy', '/sms-terms', '/data-deletion'];
+  // Skip where it would interfere with conversion or be redundant
+  var path = window.location.pathname.replace(/\/$/, '').replace(/\.html$/, '');
+  var SKIP = ['/quote', '/login', '/privacy', '/sms-terms', '/data-deletion', '/lead-offer'];
   if (SKIP.indexOf(path) !== -1) return;
 
-  // Skip if already dismissed or signed up
-  var STATE_KEY = 'ncc_summer_shine_state';
+  // Skip if the visitor already converted or already said no
+  var STATE_KEY = 'ncc_callback_state';
   var state = null;
   try { state = localStorage.getItem(STATE_KEY); } catch (_) {}
-  if (state === 'signed_up' || state === 'dismissed') return;
+  if (state === 'submitted') return;
 
-  // Respect dismissal cooldown — wait at least 3 days before re-prompting a dismisser
-  var DISMISS_KEY = 'ncc_summer_shine_dismiss_at';
+  // Respect dismissal — wait 3 days before asking a dismisser again
+  var DISMISS_KEY = 'ncc_callback_dismissed_at';
   try {
     var lastDismiss = parseInt(localStorage.getItem(DISMISS_KEY) || '0', 10);
     if (lastDismiss && Date.now() - lastDismiss < 3 * 24 * 60 * 60 * 1000) return;
   } catch (_) {}
 
-  var POPUP_HTML =
-    '<div class="promo-backdrop" id="promo-backdrop" role="dialog" aria-modal="true" aria-labelledby="promo-title" hidden>' +
-      '<div class="promo-modal" id="promo-modal">' +
-        '<button class="promo-close" type="button" aria-label="Close" id="promo-close">&times;</button>' +
-        '<span class="promo-tag">☀️ Summer Shine</span>' +
-        '<h2 id="promo-title">30% off your first clean</h2>' +
-        '<p>Get your home Summer-ready. Pop in your email and we&rsquo;ll send you the code.</p>' +
-        '<form id="promo-form" novalidate>' +
-          '<input type="text" name="firstName" id="promo-name" placeholder="First name" required autocomplete="given-name" />' +
-          '<input type="email" name="email" id="promo-email" placeholder="you@example.com" required autocomplete="email" />' +
-          '<button type="submit" id="promo-submit">Get my 30% off</button>' +
-          '<div class="promo-error" id="promo-error" hidden></div>' +
-          '<div class="promo-note">We only use your info to send the code and follow up if you have questions. No spam.</div>' +
+  var MODAL_HTML =
+    '<div class="callback-backdrop" id="callback-backdrop" role="dialog" aria-modal="true" aria-labelledby="callback-title">' +
+      '<div class="callback-modal">' +
+        '<button class="callback-close" type="button" aria-label="Close" id="callback-close">&times;</button>' +
+        '<h2 id="callback-title">Want us to call you?</h2>' +
+        '<p class="form-lede">Leave your name and number and a local team member calls you straight back with a free quote. No obligation.</p>' +
+        '<a class="call-cta" href="tel:+16143522588" style="width:100%;justify-content:center;">' +
+          '<span><span class="call-cta-label">Or call now</span>' +
+          '<span class="call-cta-number">(614) 352-2588</span></span>' +
+        '</a>' +
+        '<div class="leadbox-divider">or</div>' +
+        '<form class="lead-form" id="callback-form" data-source="Call-back popup" novalidate>' +
+          '<div class="form-row">' +
+            '<label for="cb-name">Name</label>' +
+            '<input type="text" id="cb-name" name="name" required autocomplete="name" />' +
+          '</div>' +
+          '<div class="form-row">' +
+            '<label for="cb-phone">Phone</label>' +
+            '<input type="tel" id="cb-phone" name="phone" required autocomplete="tel" />' +
+          '</div>' +
+          '<div class="hp-field" aria-hidden="true">' +
+            '<label for="cb-website">Website</label>' +
+            '<input type="text" id="cb-website" name="website" tabindex="-1" autocomplete="off" />' +
+          '</div>' +
+          '<button type="submit" class="btn btn-primary btn-block">Call me back</button>' +
+          '<p class="form-note" role="status" aria-live="polite"></p>' +
         '</form>' +
-        '<div class="promo-success">' +
-          '<p id="promo-thanks" style="margin-bottom:6px;font-size:17px;">Use this code at checkout:</p>' +
-          '<div class="promo-code" id="promo-code">SUMMER30</div>' +
-          '<p style="margin-bottom:16px;font-size:14px;">Valid on your first cleaning. One per household.</p>' +
-          '<a href="/book-now" class="promo-cta">Book now</a>' +
-        '</div>' +
       '</div>' +
     '</div>';
 
-  function inject() {
-    if (document.getElementById('promo-backdrop')) return;
-    var wrap = document.createElement('div');
-    wrap.innerHTML = POPUP_HTML;
-    document.body.appendChild(wrap.firstChild);
-    wireUp();
-  }
-
-  function open() {
-    var bd = document.getElementById('promo-backdrop');
-    if (!bd) return;
-    bd.classList.add('open');
-    bd.hidden = false;
-    var name = document.getElementById('promo-name');
-    if (name) setTimeout(function () { name.focus(); }, 180);
-  }
+  var backdrop = null;
 
   function close(reason) {
-    var bd = document.getElementById('promo-backdrop');
-    if (!bd) return;
-    bd.classList.remove('open');
-    bd.hidden = true;
+    if (!backdrop) return;
+    backdrop.classList.remove('open');
+    document.body.style.overflow = '';
     if (reason === 'dismissed') {
       try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch (_) {}
     }
   }
 
-  function showSuccess(code, firstName) {
-    var modal = document.getElementById('promo-modal');
-    var codeEl = document.getElementById('promo-code');
-    var thanks = document.getElementById('promo-thanks');
-    if (codeEl && code) codeEl.textContent = code;
-    if (thanks && firstName) {
-      thanks.textContent = 'Thanks, ' + firstName + '! Use this code at checkout:';
-    }
-    if (modal) modal.classList.add('is-success');
-    try { localStorage.setItem(STATE_KEY, 'signed_up'); } catch (_) {}
-  }
+  function inject() {
+    var wrap = document.createElement('div');
+    wrap.innerHTML = MODAL_HTML;
+    backdrop = wrap.firstChild;
+    document.body.appendChild(backdrop);
 
-  function wireUp() {
-    var bd = document.getElementById('promo-backdrop');
-    var closeBtn = document.getElementById('promo-close');
-    var form = document.getElementById('promo-form');
-    var submit = document.getElementById('promo-submit');
-    var error = document.getElementById('promo-error');
-
-    closeBtn.addEventListener('click', function () { close('dismissed'); });
-    bd.addEventListener('click', function (e) { if (e.target === bd) close('dismissed'); });
+    document.getElementById('callback-close')
+      .addEventListener('click', function () { close('dismissed'); });
+    backdrop.addEventListener('click', function (e) {
+      if (e.target === backdrop) close('dismissed');
+    });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && bd.classList.contains('open')) close('dismissed');
+      if (e.key === 'Escape' && backdrop.classList.contains('open')) close('dismissed');
     });
 
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      error.hidden = true;
-      var firstName = (form.firstName.value || '').trim();
-      var email = (form.email.value || '').trim();
-      if (!firstName) {
-        error.textContent = 'Please enter your first name.';
-        error.hidden = false;
-        return;
-      }
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-        error.textContent = 'Please enter a valid email address.';
-        error.hidden = false;
-        return;
-      }
-      submit.disabled = true;
-      submit.textContent = 'Sending…';
-      fetch('/api/promo-signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, firstName: firstName })
-      })
-        .then(function (r) { return r.json().catch(function () { return {}; }); })
-        .then(function (data) {
-          submit.disabled = false;
-          submit.textContent = 'Get my 30% off';
-          if (data && data.code) {
-            showSuccess(data.code, firstName);
-          } else if (data && data.error) {
-            error.textContent = data.error;
-            error.hidden = false;
-          } else {
-            // Network or partial failure — still grant the code so visitor isn't stuck
-            showSuccess('SUMMER30', firstName);
-          }
-        })
-        .catch(function () {
-          submit.disabled = false;
-          submit.textContent = 'Get my 30% off';
-          // Network failure: still reveal the code, log captured email locally
-          showSuccess('SUMMER30', firstName);
-        });
+    var form = document.getElementById('callback-form');
+    window.__nccWireLeadForm(form);
+    // Remember a conversion so we never interrupt this visitor again.
+    form.addEventListener('submit', function () {
+      try { localStorage.setItem(STATE_KEY, 'submitted'); } catch (_) {}
     });
   }
 
-  // Triggers: first scroll past 30% of viewport OR 12s on page, whichever first.
-  // Also exit intent on desktop (mouse leaves top of viewport).
+  function open() {
+    if (!backdrop) inject();
+    backdrop.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    var first = backdrop.querySelector('input');
+    if (first) setTimeout(function () { first.focus(); }, 180);
+  }
+
+  // Triggers: 25 seconds on page, or exit intent on desktop. Deliberately
+  // later than the old popup — someone reading the page is already engaged,
+  // and the sticky call bar is there the whole time anyway.
   var triggered = false;
   function trigger() {
     if (triggered) return;
+    // Don't interrupt someone already typing into a form on the page.
+    var active = document.activeElement;
+    if (active && active.closest && active.closest('form.lead-form')) return;
     triggered = true;
-    inject();
-    // Give the inject a tick to land in DOM
-    requestAnimationFrame(open);
+    open();
   }
 
-  setTimeout(trigger, 12000);
-
-  window.addEventListener('scroll', function () {
-    if (window.scrollY > window.innerHeight * 0.3) trigger();
-  }, { passive: true });
+  setTimeout(trigger, 25000);
 
   document.addEventListener('mouseout', function (e) {
     if (!e.relatedTarget && e.clientY <= 0) trigger();
