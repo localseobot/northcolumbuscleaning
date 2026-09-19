@@ -38,10 +38,6 @@
       box-shadow: 0 12px 32px rgba(13, 51, 32, 0.08);
       text-align: center;
     }
-    .review-logo {
-      height: 44px;
-      margin-bottom: var(--space-4);
-    }
     .review-card h1 {
       font-size: clamp(28px, 4vw, 38px);
       margin-bottom: var(--space-2);
@@ -51,7 +47,7 @@
       font-size: 18px;
       color: var(--charcoal);
       opacity: 0.85;
-      margin-bottom: var(--space-5);
+      margin-bottom: var(--space-4);
     }
     .smileys {
       display: grid;
@@ -180,19 +176,69 @@
     }
     .form-error.is-visible { display: block; }
 
+    .review-hubs {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px 14px;
+      margin-top: var(--space-3);
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .review-hubs a { color: var(--sage); }
+    .review-hubs a:hover { color: var(--forest); }
+    .review-success-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: var(--space-2);
+      margin-top: var(--space-3);
+    }
     @media (max-width: 520px) {
-      .review-card { padding: var(--space-5) var(--space-3); border-radius: 18px; }
+      .review-card { padding: var(--space-4) var(--space-3); border-radius: 18px; }
       .smiley-emoji { font-size: 64px; }
       .smileys { gap: var(--space-2); }
+      .review-hero { padding: var(--space-4) var(--space-2) var(--space-8); }
     }
   </style>
 </head>
-<body>
+<body class="no-sticky-cta-pad">
   <div class="review-shell">
+    <div class="topbar">
+      <div class="container topbar-inner">
+        <span class="topbar-item">Serving Columbus, OH and surrounding neighborhoods</span>
+        <span class="topbar-item"><a href="tel:+16143522588">(614) 352-2588</a></span>
+      </div>
+    </div>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="/" class="logo-link" aria-label="North Columbus Cleaning Company home">
+          <img src="/images/logo-horizontal.svg" alt="North Columbus Cleaning Company" />
+        </a>
+        <div class="header-mobile-actions">
+          <a href="tel:+16143522588" class="header-call-btn" aria-label="Call (614) 352-2588">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+              <path d="M6.6 10.8c1.4 2.8 3.7 5.1 6.5 6.5l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1l-2.4 2.4z"/>
+            </svg>
+          </a>
+          <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+        <nav class="nav" id="nav" aria-label="Primary">
+          <a href="/services">Services</a>
+          <a href="/locations">Areas</a>
+          <a href="/quote">Contact</a>
+          <a href="/#owner">About</a>
+          <a href="/#faq">FAQ</a>
+          <a href="tel:+16143522588" class="nav-call">(614) 352-2588</a>
+          <a href="/quote" class="btn btn-primary nav-cta">Get a free quote</a>
+        </nav>
+      </div>
+    </header>
+
     <div class="review-hero">
       <div class="review-card">
-        <img src="/images/logo-horizontal.svg" alt="North Columbus Cleaning" class="review-logo" />
-
         <div id="step-choose">
           <h1 id="greeting">How was your cleaning?</h1>
           <p class="lead">Your feedback helps us get better every visit.</p>
@@ -234,14 +280,25 @@
           <div class="check">✓</div>
           <h1>Thank you</h1>
           <p class="lead">We received your feedback. The owner will personally reach out within one business day to make it right.</p>
+          <div class="review-success-links">
+            <a href="tel:+16143522588" class="btn btn-primary">Call (614) 352-2588</a>
+            <a href="/quote" class="btn btn-outline">Get a free quote</a>
+          </div>
         </div>
 
         <p class="review-foot">
           North Columbus Cleaning · <a href="tel:+16143522588">(614) 352-2588</a> · <a href="mailto:admin@northcolumbuscleaning.com">admin@northcolumbuscleaning.com</a>
         </p>
+        <nav class="review-hubs" aria-label="Site">
+          <a href="/">Home</a>
+          <a href="/services">Services</a>
+          <a href="/locations">Areas</a>
+          <a href="/quote">Get a free quote</a>
+        </nav>
       </div>
     </div>
   </div>
+  <script src="/script.js" defer></script>
 
   <script>
     (function () {

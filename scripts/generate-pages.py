@@ -435,6 +435,7 @@ HEADER = f"""  <header class="site-header">
       <nav class="nav" id="nav" aria-label="Primary">
         <a href="/services">Services</a>
         <a href="/locations">Areas</a>
+        <a href="/quote">Contact</a>
         <a href="/#owner">About</a>
         <a href="/#faq">FAQ</a>
         <a href="tel:{PHONE_E164}" class="nav-call">{PHONE_DISPLAY}</a>
@@ -444,16 +445,36 @@ HEADER = f"""  <header class="site-header">
   </header>"""
 
 
+def breadcrumb(crumbs):
+    """crumbs: list of (href|None, label). Last item is the current page."""
+    parts = []
+    for i, (href, label) in enumerate(crumbs):
+        sep = " <span class=\"bc-sep\" aria-hidden=\"true\">&rsaquo;</span> " if i < len(crumbs) - 1 else ""
+        if href:
+            parts.append(f'<a href="{href}">{label}</a>{sep}')
+        else:
+            parts.append(f'<span aria-current="page">{label}</span>')
+    return f"""  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <div class="container">
+      {"".join(parts)}
+    </div>
+  </nav>"""
+
+
+def related_link_list(links):
+    """Compact internal-link chips. links: list of (href, label)."""
+    items = "\n".join(f'        <a href="{href}">{label}</a>' for href, label in links)
+    return f'      <div class="related-links">\n{items}\n      </div>'
+
+
 def footer():
     service_links = "\n".join(
         f'          <li><a href="/services/{s["slug"]}">{s["name"]}</a></li>'
         for s in SERVICES
     )
-    area_links_top = NEIGHBORHOODS[:6]
-    area_links_rest = NEIGHBORHOODS[6:]
     area_list = "\n".join(
         f'          <li><a href="/locations/{n["slug"]}">{n["name"]}</a></li>'
-        for n in area_links_top
+        for n in NEIGHBORHOODS
     )
     return f"""  <footer class="site-footer">
     <section class="footer-location">
@@ -486,7 +507,7 @@ def footer():
     </section>
     <div class="container footer-inner">
       <div class="footer-col">
-        <img src="/images/logo-horizontal.svg" alt="North Columbus Cleaning Company" />
+        <a href="/"><img src="/images/logo-horizontal.svg" alt="North Columbus Cleaning Company" /></a>
         <p class="footer-tag">Residential and commercial cleaning serving North Columbus, Ohio.</p>
       </div>
       <div class="footer-col">
@@ -495,7 +516,7 @@ def footer():
 {service_links}
         </ul>
       </div>
-      <div class="footer-col">
+      <div class="footer-col footer-areas">
         <h5>Areas we serve</h5>
         <ul>
 {area_list}
@@ -505,9 +526,12 @@ def footer():
       <div class="footer-col">
         <h5>Contact &amp; legal</h5>
         <ul>
+          <li><a href="/quote">Get a free quote</a></li>
           <li><a href="tel:{PHONE_E164}">{PHONE_DISPLAY}</a></li>
           <li><a href="mailto:admin@northcolumbuscleaning.com">admin@northcolumbuscleaning.com</a></li>
           <li>Mon&ndash;Sat, 7am&ndash;7pm</li>
+          <li><a href="/">Home</a></li>
+          <li><a href="/#faq">FAQ</a></li>
           <li><a href="/privacy">Privacy policy</a></li>
           <li><a href="/sms-terms">SMS terms</a></li>
         </ul>
@@ -640,15 +664,12 @@ def combo_page(s, n):
 
     included_items = "\n".join(f"        <li>{item}</li>" for item in s['included'])
 
-    # Other services offered in this SAME location (links to other combos)
+    # Other services offered in this SAME location (compact chips — image
+    # cards after the CTA made combo pages feel like a second homepage)
     others_here = [x for x in SERVICES if x['slug'] != s['slug']]
-    others_here_cards = "\n".join(f"""        <a class="service-card service-card-link" href="/services/{x['slug']}/{n['slug']}">
-          <div class="service-img"><img src="{x['hero_img']}" alt="{x['name']} in {n['name']}" loading="lazy" /></div>
-          <div class="service-body">
-            <h3>{x['name']} in {n['name']}</h3>
-            <p>{x['short']}</p>
-          </div>
-        </a>""" for x in others_here)
+    others_here_links = related_link_list(
+        [(f"/services/{x['slug']}/{n['slug']}", f"{x['name']} in {n['name']}") for x in others_here]
+    )
 
     # Same service in OTHER locations (sibling combos)
     others_elsewhere = [x for x in NEIGHBORHOODS if x['slug'] != n['slug']]
@@ -698,14 +719,12 @@ def combo_page(s, n):
 {TOPBAR}
 {HEADER}
 
-  <nav class="breadcrumb" aria-label="Breadcrumb">
-    <div class="container">
-      <a href="/">Home</a> &rsaquo;
-      <a href="/services">Services</a> &rsaquo;
-      <a href="/services/{s['slug']}">{s['name']}</a> &rsaquo;
-      <span>{n['name']}</span>
-    </div>
-  </nav>
+{breadcrumb([
+    ("/", "Home"),
+    ("/services", "Services"),
+    (f"/services/{s['slug']}", s["name"]),
+    (None, n["name"]),
+])}
 
   <section class="hero hero-compact">
     <div class="container hero-inner">
@@ -714,6 +733,7 @@ def combo_page(s, n):
         <h1>{s['name']} in {n['name']}, OH</h1>
         <p class="lead">{lead}</p>
         <p>{sub}</p>
+        <p class="hero-local-link">Part of our <a href="/locations/{n['slug']}">house cleaning in {n['name']}</a> coverage. See the full <a href="/services/{s['slug']}">{s['name'].lower()} service</a> or <a href="/quote">request a quote</a>.</p>
         <div class="hero-cta">
           <a href="tel:{PHONE_E164}" class="btn btn-primary">Call {PHONE_DISPLAY}</a>
           <a href="#quote" class="btn btn-outline">Get a free quote</a>
@@ -758,15 +778,14 @@ def combo_page(s, n):
 
 {cta}
 
-  <section class="section section-alt">
+  <section class="section section-alt section-tight">
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">Other services in {n['name']}</span>
         <h2>Other cleaning services in {n['name']}, OH</h2>
+        <p class="section-sub">Same local crew. <a href="/locations/{n['slug']}">See every service we offer in {n['name']}</a>.</p>
       </div>
-      <div class="grid services-grid">
-{others_here_cards}
-      </div>
+{others_here_links}
     </div>
   </section>
 
@@ -802,6 +821,7 @@ def location_page(n):
           <div class="service-body">
             <h3>{s['name']} in {n['name']}</h3>
             <p>{s['short']}</p>
+            <span class="area-link">See details &rarr;</span>
           </div>
         </a>""" for s in SERVICES)
 
@@ -818,12 +838,19 @@ def location_page(n):
 {TOPBAR}
 {HEADER}
 
+{breadcrumb([
+    ("/", "Home"),
+    ("/locations", "Areas"),
+    (None, n["name"]),
+])}
+
   <section class="hero hero-compact">
     <div class="container hero-inner">
       <div class="hero-text">
         <span class="eyebrow">{n['county']} &middot; {zips_line}</span>
         <h1>House and office cleaning in {n['name']}, OH</h1>
         <p class="lead">{n['blurb']}</p>
+        <p class="hero-local-link">Popular here: <a href="/services/residential-cleaning/{n['slug']}">residential cleaning in {n['name']}</a>, <a href="/services/deep-cleaning/{n['slug']}">deep cleaning</a>, and <a href="/services/recurring-service/{n['slug']}">recurring service</a>. Or see <a href="/services">all cleaning services</a>.</p>
         <div class="hero-cta">
           <a href="tel:{PHONE_E164}" class="btn btn-primary">Call {PHONE_DISPLAY}</a>
           <a href="#quote" class="btn btn-outline">Get a free quote</a>
@@ -841,11 +868,12 @@ def location_page(n):
       <div class="section-head">
         <span class="eyebrow">What we clean in {n['name']}</span>
         <h2>Cleaning services in {n['name']}, OH</h2>
-        <p class="section-sub">Every service below is available to homes and businesses in {n['name']} and the surrounding area.</p>
+        <p class="section-sub">Every service below is available to homes and businesses in {n['name']} and the surrounding area. Want the same service in another town? Start from our <a href="/services">services</a> pages.</p>
       </div>
       <div class="grid services-grid">
 {service_cards}
       </div>
+      <p class="section-more"><a href="/quote">Get a free {n['name']} quote &rarr;</a></p>
     </div>
   </section>
 
@@ -905,8 +933,9 @@ def service_page(s):
           <div class="service-body">
             <h3>{x['name']}</h3>
             <p>{x['short']}</p>
+            <span class="area-link">See details &rarr;</span>
           </div>
-        </a>""" for x in other_services[:3])
+        </a>""" for x in other_services)
 
     cta = cta_block(
         service=FORM_OPTION_BY_SLUG.get(s["slug"]),
@@ -918,12 +947,19 @@ def service_page(s):
 {TOPBAR}
 {HEADER}
 
+{breadcrumb([
+    ("/", "Home"),
+    ("/services", "Services"),
+    (None, s["name"]),
+])}
+
   <section class="hero hero-compact">
     <div class="container hero-inner">
       <div class="hero-text">
         <span class="eyebrow">Our services</span>
         <h1>{s['name']} in Columbus, OH</h1>
         <p class="lead">{s['intro']}</p>
+        <p class="hero-local-link">Available across North Columbus &mdash; pick a neighborhood below, or <a href="/locations">browse all service areas</a>. Ready to talk? <a href="/quote">Get a free quote</a>.</p>
         <div class="hero-cta">
           <a href="tel:{PHONE_E164}" class="btn btn-primary">Call {PHONE_DISPLAY}</a>
           <a href="#quote" class="btn btn-outline">Get a free quote</a>
@@ -945,15 +981,9 @@ def service_page(s):
       <ul class="included-list">
 {included_items}
       </ul>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container">
-      <div class="section-head">
-        <span class="eyebrow">Who it&rsquo;s for</span>
-        <h2>Who {s['name'].lower()} is right for</h2>
-        <p class="section-sub">{s['good_fit']}</p>
+      <div class="fit-panel">
+        <h3>Who {s['name'].lower()} is right for</h3>
+        <p>{s['good_fit']}</p>
       </div>
     </div>
   </section>
@@ -965,7 +995,7 @@ def service_page(s):
       <div class="section-head">
         <span class="eyebrow">Service area</span>
         <h2>{s['name']} service areas in North Columbus</h2>
-        <p class="section-sub">All across Franklin and Delaware counties and the surrounding neighborhoods.</p>
+        <p class="section-sub">All across Franklin and Delaware counties. Each link is {s['name'].lower()} in that neighborhood. For a full local overview, start from our <a href="/locations">service areas</a>.</p>
       </div>
       <ul class="areas-list">
 {area_links}
@@ -978,8 +1008,9 @@ def service_page(s):
       <div class="section-head">
         <span class="eyebrow">Other services</span>
         <h2>Other cleaning services we offer</h2>
+        <p class="section-sub">Same insured crew, same satisfaction guarantee. <a href="/services">See every service</a>.</p>
       </div>
-      <div class="grid services-grid services-grid-3">
+      <div class="grid services-grid">
 {other_service_cards}
       </div>
     </div>
@@ -1003,6 +1034,10 @@ def locations_hub():
           <span class="area-link">See details &rarr;</span>
         </a>""" for n in NEIGHBORHOODS)
 
+    service_links = related_link_list(
+        [(f"/services/{s['slug']}", s["name"]) for s in SERVICES]
+    )
+
     cta = cta_block(source="Locations hub")
 
     return f"""{head(title, desc, "/locations")}
@@ -1010,12 +1045,17 @@ def locations_hub():
 {TOPBAR}
 {HEADER}
 
-  <section class="section hero-compact section-head-hero">
+{breadcrumb([
+    ("/", "Home"),
+    (None, "Service areas"),
+])}
+
+  <section class="hub-hero">
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">Where we work</span>
         <h1>Cleaning service areas in North Columbus, OH</h1>
-        <p class="section-sub">Twelve neighborhoods across Franklin and Delaware counties. Don&rsquo;t see yours? Give us a call &mdash; we&rsquo;re expanding every month.</p>
+        <p class="section-sub">Twelve neighborhoods across Franklin and Delaware counties. Don&rsquo;t see yours? <a href="tel:{PHONE_E164}">Give us a call</a> or <a href="/quote">request a quote</a> &mdash; we&rsquo;re expanding every month.</p>
       </div>
     </div>
   </section>
@@ -1025,6 +1065,17 @@ def locations_hub():
       <div class="grid areas-grid">
 {cards}
       </div>
+    </div>
+  </section>
+
+  <section class="section section-tight">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">What we clean</span>
+        <h2>Cleaning services across every neighborhood</h2>
+        <p class="section-sub">The same crew covers all twelve areas. Pick a service, then a town.</p>
+      </div>
+{service_links}
     </div>
   </section>
 
@@ -1048,6 +1099,10 @@ def services_hub():
           </div>
         </a>""" for s in SERVICES)
 
+    area_links = related_link_list(
+        [(f"/locations/{n['slug']}", n["name"]) for n in NEIGHBORHOODS]
+    )
+
     cta = cta_block(source="Services hub")
 
     return f"""{head(title, desc, "/services")}
@@ -1055,12 +1110,17 @@ def services_hub():
 {TOPBAR}
 {HEADER}
 
-  <section class="section hero-compact section-head-hero">
+{breadcrumb([
+    ("/", "Home"),
+    (None, "Services"),
+])}
+
+  <section class="hub-hero">
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">Our services</span>
         <h1>Cleaning services in Columbus, OH</h1>
-        <p class="section-sub">Pick the one that fits. Every service is delivered by the same insured, background-checked crew and backed by a satisfaction guarantee.</p>
+        <p class="section-sub">Pick the one that fits. Every service is delivered by the same insured, background-checked crew and backed by a satisfaction guarantee. <a href="/quote">Get a free quote</a> or <a href="/locations">see where we work</a>.</p>
       </div>
     </div>
   </section>
@@ -1070,6 +1130,17 @@ def services_hub():
       <div class="grid services-grid">
 {cards}
       </div>
+    </div>
+  </section>
+
+  <section class="section section-tight">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Where we work</span>
+        <h2>Available in every North Columbus neighborhood</h2>
+        <p class="section-sub">Each town page lists the same six services, tailored to that area.</p>
+      </div>
+{area_links}
     </div>
   </section>
 
