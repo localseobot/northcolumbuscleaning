@@ -163,6 +163,7 @@ SERVICES = [
         "slug": "residential-cleaning",
         "name": "Residential cleaning",
         "kw": "house cleaning",
+        "coverage_label": "house cleaning",
         "short": "Standard house cleans for occupied homes.",
         "hero_img": "/images/residential.jpg",
         "intro": (
@@ -193,6 +194,7 @@ SERVICES = [
         "slug": "commercial-cleaning",
         "name": "Commercial cleaning",
         "kw": "commercial cleaning",
+        "coverage_label": "commercial cleaning",
         "short": "Offices, salons, retail, and medical.",
         "hero_img": "/images/commercial.jpg",
         "intro": (
@@ -222,6 +224,7 @@ SERVICES = [
         "slug": "deep-cleaning",
         "name": "Deep cleaning",
         "kw": "deep cleaning",
+        "coverage_label": "deep cleaning",
         "short": "Top-to-bottom detail cleans.",
         "hero_img": "/images/deep-cleaning.jpg",
         "intro": (
@@ -253,6 +256,7 @@ SERVICES = [
         "slug": "recurring-service",
         "name": "Recurring service",
         "kw": "recurring cleaning service",
+        "coverage_label": "recurring cleaning",
         "short": "Weekly, bi-weekly, or monthly plans.",
         "hero_img": "/images/recurring.jpg",
         "intro": (
@@ -282,6 +286,7 @@ SERVICES = [
         "slug": "move-in-move-out-cleaning",
         "name": "Move-in and move-out cleaning",
         "kw": "move-out cleaning",
+        "coverage_label": "move-in and move-out cleaning",
         "short": "Empty-property deep cleans.",
         "hero_img": "/images/move-out.jpg",
         "intro": (
@@ -312,6 +317,7 @@ SERVICES = [
         "slug": "short-term-rental-cleaning",
         "name": "Short-term rental cleaning",
         "kw": "Airbnb cleaning",
+        "coverage_label": "short-term rental cleaning",
         "short": "Airbnb and VRBO turnovers.",
         "hero_img": "/images/short-term.jpg",
         "intro": (
@@ -397,7 +403,7 @@ def head(title, description, canonical_path, og_image="/images/hero.jpg"):
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
-<body>"""
+<body class="site-public">"""
 
 
 TOPBAR = f"""  <div class="topbar">
@@ -733,7 +739,7 @@ def combo_page(s, n):
         <h1>{s['name']} in {n['name']}, OH</h1>
         <p class="lead">{lead}</p>
         <p>{sub}</p>
-        <p class="hero-local-link">Part of our <a href="/locations/{n['slug']}">house cleaning in {n['name']}</a> coverage. See the full <a href="/services/{s['slug']}">{s['name'].lower()} service</a> or <a href="/quote">request a quote</a>.</p>
+        <p class="hero-local-link">Part of our <a href="/locations/{n['slug']}">{s['coverage_label']} in {n['name']}</a> coverage. See the full <a href="/services/{s['slug']}">{s['coverage_label']}</a> service or <a href="/quote">request a quote</a>.</p>
         <div class="hero-cta">
           <a href="tel:{PHONE_E164}" class="btn btn-primary">Call {PHONE_DISPLAY}</a>
           <a href="#quote" class="btn btn-outline">Get a free quote</a>
