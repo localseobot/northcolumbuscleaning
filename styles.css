@@ -196,10 +196,12 @@ a:hover { color: var(--forest); text-decoration: underline; }
   align-items: center;
   gap: var(--space-3);
 }
+/* Marketing-only: extra Contact link needs a tighter desktop nav.
+   Do not apply on login/manage/onboard/apply — they still share this file. */
 @media (max-width: 1120px) and (min-width: 901px) {
-  .nav { gap: 14px; }
-  .nav a { font-size: 13px; letter-spacing: 0.6px; }
-  .nav .nav-cta { padding: 8px 14px; letter-spacing: 1px; }
+  .site-public .nav { gap: 14px; }
+  .site-public .nav a { font-size: 13px; letter-spacing: 0.6px; }
+  .site-public .nav .nav-cta { padding: 8px 14px; letter-spacing: 1px; }
 }
 .nav a {
   color: var(--forest);
@@ -664,9 +666,12 @@ a:hover { color: var(--forest); text-decoration: underline; }
 }
 .footer-inner {
   display: grid;
-  grid-template-columns: 1.3fr 1fr 1.1fr 1fr;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
   gap: var(--space-6);
   padding-bottom: var(--space-6);
+}
+.site-public .footer-inner {
+  grid-template-columns: 1.3fr 1fr 1.1fr 1fr;
 }
 .footer-areas ul {
   columns: 2;
@@ -995,10 +1000,12 @@ a:hover { color: var(--forest); text-decoration: underline; }
 
 @media (max-width: 720px) {
   body { font-size: 16px; }
-  h1 { font-size: 36px; letter-spacing: -0.5px; }
-  h2 { font-size: 28px; }
+  h1 { font-size: 40px; letter-spacing: -1px; }
+  h2 { font-size: 32px; }
   h3 { font-size: 22px; }
-  .section-head { margin-bottom: var(--space-6); }
+  .site-public h1 { font-size: 36px; letter-spacing: -0.5px; }
+  .site-public h2 { font-size: 28px; }
+  .site-public .section-head { margin-bottom: var(--space-6); }
   .hub-hero { padding: var(--space-6) 0 var(--space-3); }
   .hero-compact { padding: var(--space-6) 0; }
   .hero-compact h1 { font-size: 32px; }
