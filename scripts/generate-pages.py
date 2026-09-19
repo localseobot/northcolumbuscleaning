@@ -507,7 +507,7 @@ def footer():
     </section>
     <div class="container footer-inner">
       <div class="footer-col">
-        <img src="/images/logo-horizontal.svg" alt="North Columbus Cleaning Company" />
+        <a href="/"><img src="/images/logo-horizontal.svg" alt="North Columbus Cleaning Company" /></a>
         <p class="footer-tag">Residential and commercial cleaning serving North Columbus, Ohio.</p>
       </div>
       <div class="footer-col">

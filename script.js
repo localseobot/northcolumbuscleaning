@@ -202,7 +202,7 @@ document.querySelectorAll('form.lead-form').forEach(function (f) {
 (function () {
   // Skip where it would interfere with conversion or be redundant
   var path = window.location.pathname.replace(/\/$/, '').replace(/\.html$/, '');
-  var SKIP = ['/quote', '/login', '/privacy', '/sms-terms', '/data-deletion', '/lead-offer'];
+  var SKIP = ['/quote', '/login', '/privacy', '/sms-terms', '/data-deletion', '/lead-offer', '/review'];
   if (SKIP.indexOf(path) !== -1) return;
 
   // Skip if the visitor already converted or already said no
