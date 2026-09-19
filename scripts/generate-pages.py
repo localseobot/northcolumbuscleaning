@@ -739,7 +739,7 @@ def combo_page(s, n):
         <h1>{s['name']} in {n['name']}, OH</h1>
         <p class="lead">{lead}</p>
         <p>{sub}</p>
-        <p class="hero-local-link">Part of our <a href="/locations/{n['slug']}">{s['coverage_label']} in {n['name']}</a> coverage. See the full <a href="/services/{s['slug']}">{s['name'].lower()} service</a> or <a href="/quote">request a quote</a>.</p>
+        <p class="hero-local-link">Part of our <a href="/locations/{n['slug']}">{s['coverage_label']} in {n['name']}</a> coverage. See the full <a href="/services/{s['slug']}">{s['coverage_label']}</a> service or <a href="/quote">request a quote</a>.</p>
         <div class="hero-cta">
           <a href="tel:{PHONE_E164}" class="btn btn-primary">Call {PHONE_DISPLAY}</a>
           <a href="#quote" class="btn btn-outline">Get a free quote</a>
