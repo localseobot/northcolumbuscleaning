@@ -109,12 +109,30 @@ the GHL UI, so nothing has to be clicked through settings before this works.
 and a month-by-month split of website vs phone volume. They can set an outcome
 on each lead and report a bad one.
 
-Access is a signed link, not a password: `/dashboard?t=<token>`. Holding the
-link is the credential, the same model as a private calendar feed. It is
-unforgeable (HMAC-SHA256, `BUYER_SECRET`) and revocable (change
-`BUYER_ACCESS_NONCE` and every link ever issued dies).
+### Signing in
 
-Mint one:
+There is no password. Open `/dashboard`, enter your email, and
+`POST /api/buyer/login` emails you a sign-in link. Opening the link signs that
+browser in for 30 days; after that the page asks for your email again. "Sign
+out" in the header forgets the link on that device.
+
+Only these addresses get a link (anything else gets the same "if that address
+is on the account" reply and no email): `BUYER_EMAIL`, `OWNER_EMAIL`, and any
+address in `DASHBOARD_EMAILS` (comma-separated). That list is the whole access
+policy for the dashboard.
+
+Under the hood the link is the credential: `/dashboard?t=<token>`, the same
+model as a private calendar feed. It is unforgeable (HMAC-SHA256,
+`BUYER_SECRET`, falling back to `ONBOARDING_SECRET`) and revocable (change
+`BUYER_ACCESS_NONCE` and every link ever issued, emailed or minted, dies). It
+is a link rather than a six-digit code because a code needs somewhere to count
+wrong guesses, and this app has no database.
+
+The dashboard says "please sign in again" for any link it cannot verify:
+expired, revoked, or one the browser saved under an older secret. Enter your
+email and a fresh one arrives.
+
+The admin can still mint a standing one-year link by hand:
 
 ```sh
 curl "https://www.northcolumbuscleaning.com/api/admin/buyer-link?token=$ADMIN_TOKEN"
@@ -161,6 +179,7 @@ Set in Vercel → Settings → Environment Variables.
 | `BUYER_PHONE` | Lead alert texts + GHL call forward-to. Confirmed: `+17409712907` |
 | `BUYER_SECRET` | Signs dashboard links. Falls back to `ONBOARDING_SECRET` |
 | `BUYER_ACCESS_NONCE` | Change to revoke every issued dashboard link |
+| `DASHBOARD_EMAILS` | Optional. Extra comma-separated addresses that may sign in to `/dashboard`. `BUYER_EMAIL` and `OWNER_EMAIL` always can. |
 | `LEAD_PRICING_MODE` | `per_lead` (default) or `flat` |
 | `LEAD_PRICE` | Per-lead price in dollars (default 35) |
 | `LEAD_FLAT_MONTHLY` | Flat monthly price (default 200) |

@@ -97,3 +97,29 @@ export function priceLeads(leads, pricing = getPricing()) {
     costPerLead: billable ? pricing.perLead : null,
   };
 }
+
+// ---- dashboard sign-in ------------------------------------------------------
+//
+// Who may sign in to /dashboard by email: the buyer, the owner, and any address
+// in DASHBOARD_EMAILS (comma-separated). The link we email is the same signed
+// credential the admin can mint by hand, so this list IS the access policy for
+// the dashboard. Keep it short.
+
+export function dashboardLoginEmails(source = process.env) {
+  const raw = [
+    source.BUYER_EMAIL,
+    source.OWNER_EMAIL,
+    ...String(source.DASHBOARD_EMAILS || "").split(/[,;]+/),
+  ];
+  const seen = new Set();
+  for (const v of raw) {
+    const e = String(v || "").trim().toLowerCase();
+    if (e.includes("@")) seen.add(e);
+  }
+  return [...seen];
+}
+
+export function canSignInToDashboard(email, source = process.env) {
+  const e = String(email || "").trim().toLowerCase();
+  return e.length > 0 && dashboardLoginEmails(source).includes(e);
+}
