@@ -188,7 +188,7 @@ Set in Vercel → Settings → Environment Variables.
 | `LEAD_FLAT_MONTHLY` | Flat monthly price (default 200) |
 | `LEAD_MONTHLY_INCLUDED` | Leads included in the flat rate (default 10) |
 | `LEAD_DEDUPE_DAYS` | Repeat-contact grace window (default 30) |
-| `OWNER_EMAIL` | Weekly lead digest owner copy. Set to `devyn@localseobot.com` |
+| `OWNER_EMAIL` | Gets a copy of every website form lead, plus the owner copy of the weekly digest. Set to `devyn@localseobot.com` |
 | `DIGEST_EMAILS` | Optional comma-separated override of digest recipients. `OWNER_EMAIL` + `BUYER_EMAIL` work without this. |
 | `ADMIN_TOKEN` | Gates every `/api/admin/*` endpoint |
 | `GHL_PIT`, `GHL_LOCATION_ID` | GoHighLevel API. Sub-account id is `XIA5AmegWaylDoPVe3r8`. |

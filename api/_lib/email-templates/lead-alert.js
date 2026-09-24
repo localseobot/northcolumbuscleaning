@@ -32,6 +32,7 @@ function row(label, value) {
  * @param {string} [o.service]
  * @param {string} [o.detail]      Their own words, or the call summary
  * @param {string} [o.dashboardUrl]
+ * @param {string} [o.copyNote]    Set on the owner's copy; shown above the lead
  * @param {boolean} [o.billable]
  */
 export function buildLeadAlert(o) {
@@ -46,6 +47,11 @@ export function buildLeadAlert(o) {
     : "";
 
   const body = `
+    ${
+      o.copyNote
+        ? `<p style="margin:0 0 18px;padding:10px 12px;background:#f1f5f9;border-radius:8px;font-size:13px;color:${BRAND.textMuted};">${esc(o.copyNote)}</p>`
+        : ""
+    }
     <p style="margin:0 0 6px;font-size:17px;font-weight:700;">${esc(o.name || "New lead")}</p>
     <p style="margin:0 0 22px;color:${BRAND.textMuted};font-size:14px;">Came in via ${esc(via)} · ${esc(
       new Date().toLocaleString("en-US", { timeZone: "America/New_York", dateStyle: "medium", timeStyle: "short" }),
