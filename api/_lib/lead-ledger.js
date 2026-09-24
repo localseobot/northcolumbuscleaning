@@ -41,22 +41,37 @@ export const TAG = {
   disputeOpen: "dispute:open",
   disputeApproved: "dispute:approved",
   disputeDenied: "dispute:denied",
+  // What kind of job the buyer says this is. A household or a business is
+  // one or the other, so this is a fact about the contact, like billing.
+  residential: "lead:type:residential",
+  commercial: "lead:type:commercial",
 };
 
 const CHANNEL_TAG = { web: TAG.web, phone: TAG.phone };
 
-// Outcomes the buyer can set, mapped onto GHL's native opportunity state.
-// "abandoned" is GHL's own status for a lead that went nowhere without being
-// actively lost — exactly what "never picked up" means.
+// The markings the buyer can pick, kept short on purpose: what kind of job it
+// is while they work it, then how it ended. Each maps onto GHL's native
+// opportunity state so GHL's own pipeline reporting stays honest.
+//
+//   Residential / Commercial  open, "Contacted" stage, plus a contact tag for
+//                             the kind of job (GHL has no native field for it)
+//   Closed                    won
+//   Lost                      lost
+//   Spam                      abandoned: GHL's status for a lead that was never
+//                             a real prospect, so it can't drag the close rate
+//
+// Marking a lead Spam does not credit it. Credits only come from a dispute we
+// review (fileDispute / resolveDispute).
 const OUTCOMES = {
   new: { status: "open", stage: STAGES.new, label: "New" },
-  contacted: { status: "open", stage: STAGES.contacted, label: "Contacted" },
-  quoted: { status: "open", stage: STAGES.quoted, label: "Quoted" },
-  booked: { status: "open", stage: STAGES.booked, label: "Booked" },
-  won: { status: "won", stage: STAGES.won, label: "Won" },
+  residential: { status: "open", stage: STAGES.contacted, label: "Residential", kindTag: TAG.residential },
+  commercial: { status: "open", stage: STAGES.contacted, label: "Commercial", kindTag: TAG.commercial },
+  closed: { status: "won", stage: STAGES.won, label: "Closed" },
   lost: { status: "lost", stage: STAGES.lost, label: "Lost" },
-  no_answer: { status: "abandoned", stage: STAGES.new, label: "No answer" },
+  spam: { status: "abandoned", stage: STAGES.lost, label: "Spam" },
 };
+
+const KIND_TAGS = [TAG.residential, TAG.commercial];
 
 export const OUTCOME_KEYS = Object.keys(OUTCOMES);
 
@@ -75,17 +90,21 @@ function getCf(cfs, id) {
   return f.fieldValueString || f.fieldValueNumber || f.fieldValue || null;
 }
 
-// Reverse the outcome map: given an opportunity's status + stage, say what the
-// buyer last marked it. Status wins — a won/lost opp is unambiguous — and the
-// stage only disambiguates the several "open" states.
-function readOutcome(opp) {
+// Reverse the outcome map: given an opportunity's status + stage and the
+// contact's tags, say what the buyer last marked it. Status wins — a closed,
+// lost or spam lead is unambiguous. An open lead only counts as Residential or
+// Commercial once it has left the New stage, so a repeat caller's fresh
+// enquiry still shows as New even though the person already carries a tag.
+// Leads marked under the old, longer list (Contacted / Quoted / Booked) read
+// as New until the buyer picks one of the current choices.
+export function readOutcome(opp, tags = []) {
   const status = s(opp?.status).toLowerCase();
-  if (status === "won") return "won";
+  if (status === "won") return "closed";
   if (status === "lost") return "lost";
-  if (status === "abandoned") return "no_answer";
-  const stage = s(opp?.pipelineStageId);
-  for (const key of ["booked", "quoted", "contacted"]) {
-    if (stage === OUTCOMES[key].stage) return key;
+  if (status === "abandoned") return "spam";
+  if (s(opp?.pipelineStageId) === STAGES.contacted) {
+    if (tags.includes(TAG.residential)) return "residential";
+    if (tags.includes(TAG.commercial)) return "commercial";
   }
   return "new";
 }
@@ -318,7 +337,7 @@ function toLead(opp, contact) {
         ? "phone"
         : "web";
 
-  const outcome = readOutcome(opp);
+  const outcome = readOutcome(opp, tags);
 
   return {
     id: opp.id,
@@ -409,6 +428,17 @@ export async function setOutcome(leadId, outcome) {
   const target = OUTCOMES[outcome];
   if (!target) throw new Error(`unknown outcome: ${outcome}`);
 
+  const opp = await ghl({ method: "GET", path: `/opportunities/${leadId}` }).catch(() => null);
+  const contactId = (opp?.opportunity || opp)?.contactId;
+
+  // Tag first, move second. If the move then fails, a lead still in New keeps
+  // reading as New, because a kind tag only counts once the stage has moved.
+  if (target.kindTag) {
+    if (!contactId) throw new Error("lead not found");
+    await addTags(contactId, [target.kindTag]);
+    await removeTags(contactId, KIND_TAGS.filter((t) => t !== target.kindTag));
+  }
+
   await ghl({
     method: "PUT",
     path: `/opportunities/${leadId}`,
@@ -419,8 +449,6 @@ export async function setOutcome(leadId, outcome) {
     },
   });
 
-  const opp = await ghl({ method: "GET", path: `/opportunities/${leadId}` }).catch(() => null);
-  const contactId = (opp?.opportunity || opp)?.contactId;
   await addNote(contactId, `Buyer marked this lead: ${target.label}`);
 
   return { ok: true, outcome, label: target.label };

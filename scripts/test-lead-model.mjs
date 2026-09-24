@@ -120,7 +120,7 @@ console.log("\noutcomes");
   });
   test("the dashboard's outcome list matches the ledger's", () => {
     // Kept in step by hand — this test is the thing that catches the drift.
-    const inDashboard = ["new", "contacted", "quoted", "booked", "won", "lost", "no_answer"];
+    const inDashboard = ["new", "residential", "commercial", "closed", "lost", "spam"];
     assert.deepEqual([...OUTCOME_KEYS].sort(), [...inDashboard].sort());
   });
 }
@@ -593,6 +593,85 @@ console.log("\nGHL opportunity search query (no live GHL)");
   })();
 
   delete process.env.GHL_LOCATION_ID;
+}
+
+console.log("\nowner copy of website leads (no live email)");
+{
+  const { deliverLead, ownerCopyEmail } = await import("../api/_lib/lead-delivery.js");
+  const saved = {};
+  const KEYS = ["RESEND_API_KEY", "RESEND_FROM", "OWNER_EMAIL", "BUYER_EMAIL", "BUYER_PHONE", "BUYER_NAME"];
+  for (const k of KEYS) saved[k] = process.env[k];
+  const original = globalThis.fetch;
+  const sent = [];
+  globalThis.fetch = async (url, init = {}) => {
+    sent.push(JSON.parse(init.body));
+    return new Response(JSON.stringify({ id: "email_1" }), { status: 200, headers: { "content-type": "application/json" } });
+  };
+  const setEnv = (o) => {
+    for (const k of KEYS) delete process.env[k];
+    Object.assign(process.env, { RESEND_API_KEY: "re_test", RESEND_FROM: "NCC <hello@example.com>" }, o);
+  };
+  const webLead = { channel: "web", name: "Jane Homeowner", phone: "+16145550101", service: "Deep clean", billable: true };
+
+  await (async () => {
+    async function atest(name, fn) {
+      try {
+        sent.length = 0;
+        await fn();
+        passed++;
+        console.log(`  ok   ${name}`);
+      } catch (e) {
+        process.exitCode = 1;
+        console.error(`  FAIL ${name}\n       ${e.message}`);
+      }
+    }
+
+    await atest("a website lead goes to the buyer and a marked copy to the owner", async () => {
+      setEnv({ OWNER_EMAIL: "owner@example.com", BUYER_EMAIL: "buyer@example.com", BUYER_NAME: "All Clean Sol" });
+      const out = await deliverLead(webLead);
+      assert.deepEqual(sent.map((m) => m.to[0]).sort(), ["buyer@example.com", "owner@example.com"]);
+      const copy = sent.find((m) => m.to[0] === "owner@example.com");
+      const toBuyer = sent.find((m) => m.to[0] === "buyer@example.com");
+      assert.equal(copy.subject, `Copy: ${toBuyer.subject}`);
+      assert.match(copy.html, /Your copy\. This lead was also sent to All Clean Sol\./);
+      assert.doesNotMatch(toBuyer.html, /Your copy/);
+      assert.equal(out.ownerCopy.id, "email_1");
+    });
+
+    await atest("phone leads are not copied", async () => {
+      setEnv({ OWNER_EMAIL: "owner@example.com", BUYER_EMAIL: "buyer@example.com" });
+      await deliverLead({ ...webLead, channel: "phone" });
+      assert.deepEqual(sent.map((m) => m.to[0]), ["buyer@example.com"]);
+    });
+
+    await atest("no duplicate when the owner is also the buyer", async () => {
+      setEnv({ OWNER_EMAIL: "Same@Example.com", BUYER_EMAIL: "same@example.com" });
+      await deliverLead(webLead);
+      assert.deepEqual(sent.map((m) => m.to[0]), ["same@example.com"]);
+    });
+
+    await atest("the owner still gets a copy before any buyer is set up", async () => {
+      setEnv({ OWNER_EMAIL: "owner@example.com" });
+      const out = await deliverLead(webLead);
+      assert.deepEqual(sent.map((m) => m.to[0]), ["owner@example.com"]);
+      assert.match(sent[0].html, /No buyer is set up yet/);
+      assert.equal(out.email.skipped, true);
+    });
+
+    await atest("no copy when OWNER_EMAIL is unset", async () => {
+      setEnv({ BUYER_EMAIL: "buyer@example.com" });
+      const out = await deliverLead(webLead);
+      assert.deepEqual(sent.map((m) => m.to[0]), ["buyer@example.com"]);
+      assert.equal(out.ownerCopy.skipped, true);
+      assert.equal(ownerCopyEmail({}), null);
+    });
+  })();
+
+  globalThis.fetch = original;
+  for (const k of KEYS) {
+    if (saved[k] === undefined) delete process.env[k];
+    else process.env[k] = saved[k];
+  }
 }
 
 console.log(`\n${passed} passed${process.exitCode ? " — WITH FAILURES" : ""}\n`);

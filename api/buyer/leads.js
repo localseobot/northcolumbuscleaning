@@ -67,13 +67,15 @@ export default async function handler(req, res) {
     total: rows.length,
     web: rows.filter((l) => l.channel === "web").length,
     phone: rows.filter((l) => l.channel === "phone").length,
-    won: rows.filter((l) => l.outcome === "won").length,
+    won: rows.filter((l) => l.outcome === "closed").length,
     billing: priceLeads(rows, pricing),
   }));
 
   const thisMonth = months[0] || null;
-  const worked = leads.filter((l) => l.outcome !== "new").length;
-  const won = leads.filter((l) => l.outcome === "won").length;
+  // Spam was never a real prospect, so it neither counts as worked nor
+  // drags the close rate down.
+  const worked = leads.filter((l) => l.outcome !== "new" && l.outcome !== "spam").length;
+  const won = leads.filter((l) => l.outcome === "closed").length;
 
   return res.status(200).json({
     ok: true,

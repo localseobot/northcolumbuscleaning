@@ -51,7 +51,7 @@ function statsTable({ week, prevWeek, monthBilling }) {
         monthBilling.mode === "per_lead"
           ? `${monthBilling.billable} × ${money(monthBilling.unitPrice)}`
           : `${monthBilling.billable} of ${monthBilling.included} included`) : ""}
-      ${statRow("Won by the buyer", String(week.filter((l) => l.outcome === "won").length), "From this week's leads")}
+      ${statRow("Closed by the buyer", String(week.filter((l) => l.outcome === "closed").length), "From this week's leads")}
     </table>`;
 }
 
