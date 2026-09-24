@@ -91,6 +91,11 @@
   .state p{color:var(--ink-2);margin:0 auto;max-width:48ch}
   .field{margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
   .field input{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;min-width:280px}
+  .field[hidden]{display:none}
+  #signin-msg{margin:12px auto 0;min-height:1.4em}
+  .msg-ok{color:var(--ok)} .msg-err{color:var(--bad)}
+  header.top .who a{color:rgba(255,255,255,.85);margin-left:14px;font-size:13px}
+  header.top .who a[hidden]{display:none}
   .btn{display:inline-block;background:var(--forest);color:var(--lime);font-weight:700;font-size:14.5px;
     border:none;border-radius:999px;padding:11px 22px;cursor:pointer;text-decoration:none}
   footer{padding:26px 0 40px;font-size:12px;color:var(--ink-3)}
@@ -112,7 +117,7 @@
 <header class="top">
   <div class="wrap">
     <h1>Lead dashboard</h1>
-    <div class="who" id="whoami"></div>
+    <div class="who"><span id="whoami"></span><a href="#" id="signout" hidden>Sign out</a></div>
   </div>
 </header>
 
@@ -169,24 +174,85 @@
 
   var main = document.getElementById('main');
 
-  function showState(title, msg, withField) {
+  function showState(title, msg) {
+    main.innerHTML =
+      '<section><div class="state"><h2>' + esc(title) + '</h2><p>' + esc(msg) + '</p></div></section>';
+  }
+
+  // The sign-in box. Email in, link out — see /api/buyer/login. Nobody has to
+  // keep hold of a link any more: the address on file is the way back in.
+  // "Paste a link" stays for anyone holding the standing link the admin mints.
+  function signInBox(title, msg) {
     main.innerHTML =
       '<section><div class="state"><h2>' + esc(title) + '</h2><p>' + esc(msg) + '</p>' +
-      (withField
-        ? '<div class="field"><input id="tok" type="text" placeholder="Paste your dashboard link" ' +
-          'aria-label="Dashboard link"><button class="btn" id="go">Open</button></div>'
-        : '') +
+      '<form class="field" id="signin" novalidate>' +
+        '<input id="email" type="email" autocomplete="email" inputmode="email" ' +
+          'placeholder="you@example.com" aria-label="Email address" required>' +
+        '<button class="btn" id="send" type="submit">Email me a sign-in link</button>' +
+      '</form>' +
+      '<p class="small muted" id="signin-msg" role="status" aria-live="polite"></p>' +
+      '<p class="xsmall" style="margin-top:18px">' +
+        '<button class="linkbtn" id="paste-toggle" type="button">Already have a dashboard link? Paste it instead</button>' +
+      '</p>' +
+      '<div class="field" id="paste" hidden>' +
+        '<input id="tok" type="text" placeholder="Paste your dashboard link" aria-label="Dashboard link">' +
+        '<button class="btn" id="go" type="button">Open</button>' +
+      '</div>' +
       '</div></section>';
-    if (withField) {
-      document.getElementById('go').addEventListener('click', function () {
-        var v = document.getElementById('tok').value.trim();
-        var m = /[?&]t=([^&]+)/.exec(v);
-        var t = m ? decodeURIComponent(m[1]) : v;
-        if (!t) return;
-        try { localStorage.setItem(KEY, t); } catch (e) {}
-        window.location.reload();
-      });
-    }
+
+    var form = document.getElementById('signin');
+    var email = document.getElementById('email');
+    var send = document.getElementById('send');
+    var out = document.getElementById('signin-msg');
+    email.focus();
+
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var v = email.value.trim();
+      if (!v || v.indexOf('@') < 1) {
+        out.textContent = 'Enter the email address we have on file for you.';
+        out.className = 'small msg-err';
+        return;
+      }
+      send.disabled = true;
+      out.textContent = 'Sending…';
+      out.className = 'small muted';
+      fetch('/api/buyer/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: v })
+      })
+        .then(function (r) {
+          return r.json().catch(function () { return {}; }).then(function (data) {
+            if (!r.ok) throw new Error(data.error || 'Could not send the email.');
+            return data;
+          });
+        })
+        .then(function (data) {
+          out.textContent = data.message || 'Check your inbox for the sign-in link.';
+          out.className = 'small msg-ok';
+          send.textContent = 'Send it again';
+        })
+        .catch(function (e) {
+          out.textContent = (e && e.message) || 'Something went wrong. Please try again.';
+          out.className = 'small msg-err';
+        })
+        .then(function () { send.disabled = false; });
+    });
+
+    document.getElementById('paste-toggle').addEventListener('click', function () {
+      var box = document.getElementById('paste');
+      box.hidden = !box.hidden;
+      if (!box.hidden) document.getElementById('tok').focus();
+    });
+    document.getElementById('go').addEventListener('click', function () {
+      var v = document.getElementById('tok').value.trim();
+      var m = /[?&]t=([^&]+)/.exec(v);
+      var t = m ? decodeURIComponent(m[1]) : v;
+      if (!t) return;
+      try { localStorage.setItem(KEY, t); } catch (e) {}
+      window.location.reload();
+    });
   }
 
   // ---- chart ----------------------------------------------------------
@@ -446,9 +512,16 @@
   }
 
   // ---- boot ------------------------------------------------------------
+  var signout = document.getElementById('signout');
+  signout.addEventListener('click', function (ev) {
+    ev.preventDefault();
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    window.location.reload();
+  });
+
   if (!token) {
-    showState('You need your dashboard link',
-      'Open the link we emailed you, or paste it below. If you have lost it, ask us for a new one.', true);
+    signInBox('Sign in to your lead dashboard',
+      'Enter the email address we have on file and we\'ll send you a link that signs you in on this device.');
     return;
   }
 
@@ -463,12 +536,12 @@
         return data;
       });
     })
-    .then(render)
+    .then(function (d) { render(d); signout.hidden = false; })
     .catch(function (e) {
       if (e && e.handled) {
-        showState('That link has expired', e.msg + ' Paste a new one below or ask us to send it again.', true);
+        signInBox('Please sign in again', e.msg + ' Enter your email below and we\'ll send you a fresh link.');
       } else {
-        showState('Something went wrong', (e && e.message) || 'Please try again in a moment.', false);
+        showState('Something went wrong', (e && e.message) || 'Please try again in a moment.');
       }
     });
 })();
