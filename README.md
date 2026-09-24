@@ -86,8 +86,10 @@ stored at the grain it belongs to:
 
 - **A lead** is an opportunity in the Sales Pipeline. One call or one form
   submission = one opportunity = one row on the dashboard.
-- **The outcome** (won / lost / no answer / …) is the opportunity's native
-  status and stage, so GHL's own reporting stays correct.
+- **The outcome** the buyer picks is the opportunity's native status and
+  stage, so GHL's own reporting stays correct. There are six choices: New,
+  Residential, Commercial, Closed (won), Lost, and Spam (abandoned). Spam is
+  only a label; a credit still needs a dispute.
 - **Billing state** (repeat caller? credited?) lives in contact tags, because
   "have we already charged for this person" is a fact about a person, not
   about one enquiry.
@@ -102,6 +104,7 @@ the GHL UI, so nothing has to be clicked through settings before this works.
 | `lead:duplicate` | Repeat contact inside the dedupe window — delivered, not billed |
 | `lead:credited` | We approved a dispute; not billed |
 | `dispute:open` / `:approved` / `:denied` | Dispute state |
+| `lead:type:residential` / `lead:type:commercial` | The kind of job the buyer marked. Kept when the lead is later Closed or Lost. |
 
 ## The buyer dashboard
 

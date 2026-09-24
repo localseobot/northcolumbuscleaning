@@ -310,9 +310,10 @@
   }
 
   // ---- rendering ------------------------------------------------------
+  // Keep in step with OUTCOMES in api/_lib/lead-ledger.js.
   var OUTCOMES = [
-    ['new', 'New'], ['contacted', 'Contacted'], ['quoted', 'Quoted'],
-    ['booked', 'Booked'], ['won', 'Won'], ['lost', 'Lost'], ['no_answer', 'No answer']
+    ['new', 'New'], ['residential', 'Residential'], ['commercial', 'Commercial'],
+    ['closed', 'Closed'], ['lost', 'Lost'], ['spam', 'Spam']
   ];
 
   function billingTiles(d) {
@@ -341,7 +342,7 @@
 
     tiles.push(['n', pct(d.totals.closeRate), 'Close rate',
       d.totals.worked
-        ? d.totals.won + ' won of ' + d.totals.worked + ' worked'
+        ? d.totals.won + ' closed of ' + d.totals.worked + ' marked'
         : 'Once you start marking leads']);
 
     return '<div class="stats">' + tiles.map(function (t) {
@@ -436,12 +437,12 @@
     });
   }
 
-  function say(row, msg, bad) {
+  function say(row, msg, bad, holdMs) {
     var el = row.querySelector('.rowmsg');
     if (!el) return;
     el.textContent = msg;
     el.className = 'rowmsg ' + (bad ? 'err' : 'ok');
-    if (!bad) setTimeout(function () { el.textContent = ''; el.className = 'rowmsg'; }, 2500);
+    if (!bad) setTimeout(function () { el.textContent = ''; el.className = 'rowmsg'; }, holdMs || 2500);
   }
 
   function wireRows() {
@@ -453,7 +454,15 @@
         sel.addEventListener('change', function () {
           sel.disabled = true;
           post({ id: id, outcome: sel.value })
-            .then(function (r) { say(row, 'Saved — ' + r.label); })
+            .then(function (r) {
+              // Spam is only a label. A credit still goes through "Report bad
+              // lead", so point there while that button is on the row.
+              if (sel.value === 'spam' && row.querySelector('.dispute')) {
+                say(row, 'Saved — Spam. Tap "Report bad lead" if you want it credited.', false, 8000);
+              } else {
+                say(row, 'Saved — ' + r.label);
+              }
+            })
             .catch(function (e) { say(row, e.message, true); })
             .then(function () { sel.disabled = false; });
         });

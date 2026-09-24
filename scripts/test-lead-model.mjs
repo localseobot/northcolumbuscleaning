@@ -120,7 +120,7 @@ console.log("\noutcomes");
   });
   test("the dashboard's outcome list matches the ledger's", () => {
     // Kept in step by hand — this test is the thing that catches the drift.
-    const inDashboard = ["new", "contacted", "quoted", "booked", "won", "lost", "no_answer"];
+    const inDashboard = ["new", "residential", "commercial", "closed", "lost", "spam"];
     assert.deepEqual([...OUTCOME_KEYS].sort(), [...inDashboard].sort());
   });
 }
