@@ -156,6 +156,174 @@ NEIGHBORHOODS = [
             "Bradley high schools."
         ),
     },
+    {
+        "slug": "grove-city",
+        "name": "Grove City",
+        "county": "Franklin County",
+        "zips": ["43123"],
+        "blurb": (
+            "Grove City sits southwest of downtown Columbus, a short hop down I-71 to a "
+            "walkable Town Center and the old Beulah Park grounds, now a neighborhood of "
+            "new homes beside a large central park. We clean across Beulah Park, the "
+            "Broadway corridor, and established streets off Stringtown and Hoover roads."
+        ),
+    },
+    {
+        "slug": "groveport",
+        "name": "Groveport",
+        "county": "Franklin County",
+        "zips": ["43125"],
+        "blurb": (
+            "Groveport is a canal-era town about 11 miles southeast of downtown, with a "
+            "compact Main Street, Blacklick Creek, and neighborhoods that spread toward "
+            "Hamilton Road and the Groveport Recreation Center. Homes here run from older "
+            "village houses to newer builds, and we clean both."
+        ),
+    },
+    {
+        "slug": "obetz",
+        "name": "Obetz",
+        "county": "Franklin County",
+        "zips": ["43207"],
+        "blurb": (
+            "Obetz is a south-side village inside the I-270 loop, about seven miles from "
+            "downtown along Alum Creek Drive. Fortress Obetz and Memorial Park sit beside "
+            "a mix of ranch houses, newer streets, and small businesses in the 43207 zip. "
+            "We cover the village and the blocks just around it."
+        ),
+    },
+    {
+        "slug": "canal-winchester",
+        "name": "Canal Winchester",
+        "county": "Franklin County",
+        "zips": ["43110"],
+        "blurb": (
+            "Canal Winchester is about 16 miles southeast of downtown, where a historic "
+            "canal-town center meets newer subdivisions and retail along Gender Road. The "
+            "city reaches into Fairfield County in the 43110 zip — brick storefronts "
+            "downtown, and larger family homes toward US-33."
+        ),
+    },
+    {
+        "slug": "lockbourne",
+        "name": "Lockbourne",
+        "county": "Franklin County",
+        "zips": ["43137"],
+        "blurb": (
+            "Lockbourne is a small village about 13 miles south of downtown, just past "
+            "Rickenbacker, with residential streets off Lockbourne Road and the old canal "
+            "corridor. The 43137 zip is quiet and spread out. We still make the drive for "
+            "homes and the small businesses that need a regular crew."
+        ),
+    },
+    {
+        "slug": "commercial-point",
+        "name": "Commercial Point",
+        "county": "Pickaway County",
+        "zips": ["43116"],
+        "blurb": (
+            "Commercial Point is a growing Pickaway County village about 18 miles south of "
+            "Columbus along US-23. The old Main Street core is surrounded by newer "
+            "subdivisions as the town fills in between the Scioto River and the Teays "
+            "Valley schools. Most visits here are family homes in the 43116 zip."
+        ),
+    },
+    {
+        "slug": "ashville",
+        "name": "Ashville",
+        "county": "Pickaway County",
+        "zips": ["43103"],
+        "blurb": (
+            "Ashville sits on US-23 in Pickaway County, roughly 20 miles south of downtown "
+            "Columbus, with a historic railroad depot and a walkable downtown. Teays Valley "
+            "schools draw families into the 43103 zip, where we clean older village houses "
+            "and the newer homes going up on the edges of town."
+        ),
+    },
+    {
+        "slug": "lithopolis",
+        "name": "Lithopolis",
+        "county": "Fairfield County",
+        "zips": ["43136"],
+        "blurb": (
+            "Lithopolis is a small Fairfield County village about 17 miles southeast of "
+            "Columbus, just south of Canal Winchester. The landmark is the Wagnalls "
+            "Memorial — library and theater on East Columbus Street — with brick homes and "
+            "newer streets filling the 43136 zip around it."
+        ),
+    },
+    {
+        "slug": "urbancrest",
+        "name": "Urbancrest",
+        "county": "Franklin County",
+        "zips": ["43123"],
+        "blurb": (
+            "Urbancrest is a small Franklin County village tucked against Grove City, about "
+            "nine miles southwest of downtown and sharing the 43123 zip. Residential "
+            "streets sit just off Central Avenue, in the South-Western schools area, close "
+            "enough to I-71 that a recurring visit fits a Grove City loop."
+        ),
+    },
+    {
+        "slug": "harrisburg",
+        "name": "Harrisburg",
+        "county": "Franklin County",
+        "zips": ["43126"],
+        "blurb": (
+            "Harrisburg, Ohio — the village on Harrisburg Pike, not the city in "
+            "Pennsylvania — sits about 15 miles southwest of downtown, where Franklin "
+            "County meets Pickaway. The 43126 zip is a compact Main Street core with rural "
+            "edges, a short hop from Grove City and the Big Darby corridor."
+        ),
+    },
+    {
+        "slug": "german-village",
+        "name": "German Village",
+        "county": "Franklin County",
+        "zips": ["43206", "43215"],
+        "blurb": (
+            "German Village is the brick-street neighborhood immediately south of downtown "
+            "Columbus. Schiller Park, Third Street, and the Book Loft sit among "
+            "19th-century cottages with plaster walls, original woodwork, and tight "
+            "staircases that need a careful clean."
+        ),
+    },
+    {
+        "slug": "brewery-district",
+        "name": "Brewery District",
+        "county": "Franklin County",
+        "zips": ["43215", "43206"],
+        "blurb": (
+            "The Brewery District runs along South Front Street, just south of downtown and "
+            "west of German Village. Converted brewery lofts and brick warehouses mix with "
+            "newer condos, a few blocks from Scioto Audubon Metro Park and the Whittier "
+            "Peninsula."
+        ),
+    },
+    {
+        "slug": "merion-village",
+        "name": "Merion Village",
+        "county": "Franklin County",
+        "zips": ["43206", "43207"],
+        "blurb": (
+            "Merion Village sits just south of German Village, roughly between Thurman "
+            "Avenue and the railroad. Parsons Avenue is the commercial edge. The housing "
+            "is cottages, foursquares, and renovated rentals — older Columbus houses our "
+            "crews already know how to clean."
+        ),
+    },
+    {
+        "slug": "schumacher-place",
+        "name": "Schumacher Place",
+        "county": "Franklin County",
+        "zips": ["43206"],
+        "blurb": (
+            "Schumacher Place is the smaller historic pocket east of German Village and "
+            "west of Parsons Avenue. Whittier, Jaeger, and Reinhard streets hold brick "
+            "cottages and renovated doubles about a mile south of downtown, between German "
+            "Village and Merion Village."
+        ),
+    },
 ]
 
 SERVICES = [
@@ -348,8 +516,26 @@ SERVICES = [
 
 # ============ SHARED HTML PIECES ============
 
+def count_phrase(n):
+    """Spelled-out area counts used in hub copy. Falls back to digits."""
+    words = {
+        12: "Twelve",
+        22: "Twenty-two",
+        26: "Twenty-six",
+    }
+    return words.get(n, str(n))
+
+
+def area_names_sentence():
+    """Oxford-comma-free list matching the original footer: a, b & c."""
+    names = [n["name"] for n in NEIGHBORHOODS]
+    if len(names) == 1:
+        return names[0]
+    return ", ".join(names[:-1]) + " &amp; " + names[-1]
+
+
 def local_business_jsonld(canonical_path, area_served=None, service_name=None):
-    """LocalBusiness schema. area_served: None (all 12), a city name str, or list."""
+    """LocalBusiness schema. area_served: None (every location), a city name str, or list."""
     canonical = f"https://northcolumbuscleaning.com{canonical_path}"
     if area_served is None:
         area_served_json = "[" + ",".join(
@@ -496,7 +682,7 @@ def footer():
           </address>
           <p><strong>Phone</strong> <a href="tel:{PHONE_E164}" itemprop="telephone">{PHONE_DISPLAY}</a></p>
           <p><strong>Web</strong> <a href="https://www.northcolumbuscleaning.com/" itemprop="url">northcolumbuscleaning.com</a></p>
-          <p class="footer-location-description" itemprop="description">Residential and commercial cleaning services in Worthington, Clintonville, Westerville, Dublin, Powell, Upper Arlington, New Albany, Gahanna, Polaris, Lewis Center, Delaware &amp; Hilliard, OH.</p>
+          <p class="footer-location-description" itemprop="description">Residential and commercial cleaning services in {area_names_sentence()}, OH.</p>
           <meta itemprop="foundingDate" content="2026-04-23" />
           <meta itemprop="priceRange" content="$$" />
         </div>
@@ -514,7 +700,7 @@ def footer():
     <div class="container footer-inner">
       <div class="footer-col">
         <a href="/"><img src="/images/logo-horizontal.svg" alt="North Columbus Cleaning Company" /></a>
-        <p class="footer-tag">Residential and commercial cleaning serving North Columbus, Ohio.</p>
+        <p class="footer-tag">Residential and commercial cleaning serving Columbus, Ohio and nearby communities.</p>
       </div>
       <div class="footer-col">
         <h5>Services</h5>
@@ -965,7 +1151,7 @@ def service_page(s):
         <span class="eyebrow">Our services</span>
         <h1>{s['name']} in Columbus, OH</h1>
         <p class="lead">{s['intro']}</p>
-        <p class="hero-local-link">Available across North Columbus &mdash; pick a neighborhood below, or <a href="/locations">browse all service areas</a>. Ready to talk? <a href="/quote">Get a free quote</a>.</p>
+        <p class="hero-local-link">Available across the Columbus area &mdash; pick a neighborhood below, or <a href="/locations">browse all service areas</a>. Ready to talk? <a href="/quote">Get a free quote</a>.</p>
         <div class="hero-cta">
           <a href="tel:{PHONE_E164}" class="btn btn-primary">Call {PHONE_DISPLAY}</a>
           <a href="#quote" class="btn btn-outline">Get a free quote</a>
@@ -1000,8 +1186,8 @@ def service_page(s):
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">Service area</span>
-        <h2>{s['name']} service areas in North Columbus</h2>
-        <p class="section-sub">All across Franklin and Delaware counties. Each link is {s['name'].lower()} in that neighborhood. For a full local overview, start from our <a href="/locations">service areas</a>.</p>
+        <h2>{s['name']} service areas around Columbus</h2>
+        <p class="section-sub">Across Franklin, Delaware, Fairfield, and Pickaway counties. Each link is {s['name'].lower()} in that neighborhood. For a full local overview, start from our <a href="/locations">service areas</a>.</p>
       </div>
       <ul class="areas-list">
 {area_links}
@@ -1028,10 +1214,12 @@ def service_page(s):
 # ============ HUB PAGES ============
 
 def locations_hub():
-    title = "Cleaning Service Areas in North Columbus, OH"
+    n_count = len(NEIGHBORHOODS)
+    title = "Cleaning Service Areas Around Columbus, OH"
     desc = (
-        "Cleaning services across 12 North Columbus, OH neighborhoods &mdash; Worthington, "
-        f"Dublin, Westerville, New Albany, Powell, and more. Call {PHONE_DISPLAY}."
+        f"Cleaning services across {n_count} Columbus, OH neighborhoods and suburbs "
+        f"&mdash; Worthington, Dublin, Grove City, Canal Winchester, and more. "
+        f"Call {PHONE_DISPLAY}."
     )
     cards = "\n".join(f"""        <a class="area-card" href="/locations/{n['slug']}">
           <h3>{n['name']}</h3>
@@ -1060,8 +1248,8 @@ def locations_hub():
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">Where we work</span>
-        <h1>Cleaning service areas in North Columbus, OH</h1>
-        <p class="section-sub">Twelve neighborhoods across Franklin and Delaware counties. Don&rsquo;t see yours? <a href="tel:{PHONE_E164}">Give us a call</a> or <a href="/quote">request a quote</a> &mdash; we&rsquo;re expanding every month.</p>
+        <h1>Cleaning service areas around Columbus, OH</h1>
+        <p class="section-sub">{count_phrase(n_count)} neighborhoods and suburbs across Franklin, Delaware, Fairfield, and Pickaway counties. Don&rsquo;t see yours? <a href="tel:{PHONE_E164}">Give us a call</a> or <a href="/quote">request a quote</a> &mdash; we&rsquo;re expanding every month.</p>
       </div>
     </div>
   </section>
@@ -1079,7 +1267,7 @@ def locations_hub():
       <div class="section-head">
         <span class="eyebrow">What we clean</span>
         <h2>Cleaning services across every neighborhood</h2>
-        <p class="section-sub">The same crew covers all twelve areas. Pick a service, then a town.</p>
+        <p class="section-sub">The same crew covers all {n_count} areas. Pick a service, then a town.</p>
       </div>
 {service_links}
     </div>
@@ -1143,7 +1331,7 @@ def services_hub():
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">Where we work</span>
-        <h2>Available in every North Columbus neighborhood</h2>
+        <h2>Available in every neighborhood and suburb we serve</h2>
         <p class="section-sub">Each town page lists the same six services, tailored to that area.</p>
       </div>
 {area_links}
