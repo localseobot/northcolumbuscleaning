@@ -624,14 +624,12 @@ EASTON_OFFICE = {
     "city": "Columbus",
     "region": "OH",
     "zip": "43219",
-    # TODO: Easton office phone. Until the office has its own number this is the
-    # main/tracking number, so script.js's tracking overlay rewrites it like any
-    # other page. Once it has one, replace this with the office's own number
-    # ("e164", "display", "schema") and set "attr" to " data-location-phone",
-    # as GROVE_CITY_OFFICE does; the page then marks <body> for script.js.
-    "phone": {**MAIN_PHONE, "schema": PHONE_SCHEMA},
-    "phone_todo": "TODO: Easton office phone goes here. Set it in EASTON_OFFICE in "
-                  "scripts/generate-pages.py and regenerate; until then this is the main/tracking number.",
+    "phone": {
+        "e164": "+13802273766",
+        "display": "(380) 227-3766",
+        "schema": "+1-380-227-3766",
+        "attr": " data-location-phone",
+    },
     "open_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
     "opens": "07:00",
     "closes": "19:00",
