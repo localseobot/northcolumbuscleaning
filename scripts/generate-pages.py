@@ -3,8 +3,10 @@
 
 Run from the project root: python3 scripts/generate-pages.py
 """
+import json
 import os
 from pathlib import Path
+from urllib.parse import quote_plus
 
 ROOT = Path(__file__).parent.parent
 
@@ -13,6 +15,10 @@ ROOT = Path(__file__).parent.parent
 PHONE_E164 = "+16143522588"
 PHONE_DISPLAY = "(614) 352-2588"
 PHONE_SCHEMA = "+1-614-352-2588"
+
+# Shared header, footer, and CTA pieces take one of these. "attr" marks links
+# that script.js must not rewrite to the tracking number.
+MAIN_PHONE = {"e164": PHONE_E164, "display": PHONE_DISPLAY, "attr": ""}
 
 # ============ DATA ============
 NEIGHBORHOODS = [
@@ -514,6 +520,74 @@ SERVICES = [
     },
 ]
 
+# ============ GROVE CITY OFFICE ============
+# The Grove City office has its own Google Business Profile, and /grove-city is
+# that profile's website. Google checks the profile's name, address, phone, and
+# hours against this page, so they live here and nowhere else. Its own number
+# is used only on /grove-city; every other page keeps MAIN_PHONE.
+#
+# /locations/grove-city is the service-area page for the town and stays as it
+# is; /grove-city is the office. The two link to each other.
+GROVE_CITY_OFFICE = {
+    "path": "/grove-city",
+    "area_slug": "grove-city",
+    "name": "North Columbus Cleaning - Grove City",
+    "street": "3989 Broadway",
+    "suite": "",  # e.g. "Suite 101" once assigned; fills in the page and schema
+    "city": "Grove City",
+    "region": "OH",
+    "zip": "43123",
+    "phone": {
+        "e164": "+13802336057",
+        "display": "(380) 233-6057",
+        "schema": "+1-380-233-6057",
+        "attr": " data-location-phone",
+    },
+    "open_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    "opens": "07:00",
+    "closes": "19:00",
+    "hours_rows": [
+        ("Monday &ndash; Saturday", "7am &ndash; 7pm"),
+        ("Sunday", "Closed"),
+    ],
+    # Google Maps embed. Swap in the profile's own "Embed a map" URL once it is
+    # verified; until then the map searches the street address.
+    "map_embed": None,
+    # (name, /locations slug or None, zip or None, line of local copy)
+    "nearby": [
+        ("Grove City", "grove-city", "43123",
+         "Town Center along Broadway, Beulah Park, and the streets off Stringtown and Hoover roads."),
+        ("Urbancrest", "urbancrest", "43123",
+         "The village right next door, off Central Avenue in the same zip."),
+        ("Galloway", None, "43119",
+         "Galloway and Prairie Township, a short drive northwest of Grove City."),
+        ("Orient", None, "43146",
+         "The small village south of Grove City, just over the Pickaway County line."),
+        ("Commercial Point", "commercial-point", "43116",
+         "The growing Pickaway County village south of Grove City, old Main Street and new subdivisions."),
+        ("Harrisburg", "harrisburg", "43126",
+         "The village on Harrisburg Pike, southwest where Franklin County meets Pickaway."),
+        ("Obetz", "obetz", "43207",
+         "The south-side village along Alum Creek Drive, inside the I-270 loop."),
+        ("Lockbourne", "lockbourne", "43137",
+         "The small village just past Rickenbacker, south of the city."),
+        ("Groveport", "groveport", "43125",
+         "The canal-era town southeast of downtown, with its compact Main Street."),
+        ("South and west Columbus", None, None,
+         "Neighborhoods on the city&rsquo;s south and west sides, a short drive up I-71 or around I-270."),
+    ],
+}
+
+
+def office_address_line(o):
+    """Street line with the suite, once there is one."""
+    return f"{o['street']}, {o['suite']}" if o["suite"] else o["street"]
+
+
+def office_full_address(o):
+    return f"{office_address_line(o)}, {o['city']}, {o['region']} {o['zip']}"
+
+
 # ============ SHARED HTML PIECES ============
 
 def count_phrase(n):
@@ -555,7 +629,7 @@ def local_business_jsonld(canonical_path, area_served=None, service_name=None):
   </script>"""
 
 
-def head(title, description, canonical_path, og_image="/images/hero.jpg"):
+def head(title, description, canonical_path, og_image="/images/hero.jpg", body_attrs=""):
     canonical = f"https://northcolumbuscleaning.com{canonical_path}"
     og_img_full = f"https://northcolumbuscleaning.com{og_image}"
     return f"""<!DOCTYPE html>
@@ -589,13 +663,14 @@ def head(title, description, canonical_path, og_image="/images/hero.jpg"):
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
-<body class="site-public">"""
+<body class="site-public"{body_attrs}>"""
 
 
-TOPBAR = f"""  <div class="topbar">
+def topbar(phone=MAIN_PHONE):
+    return f"""  <div class="topbar">
     <div class="container topbar-inner">
       <span class="topbar-item">Serving Columbus, OH and surrounding neighborhoods</span>
-      <span class="topbar-item"><a href="tel:{PHONE_E164}">{PHONE_DISPLAY}</a></span>
+      <span class="topbar-item"><a href="tel:{phone['e164']}"{phone['attr']}>{phone['display']}</a></span>
     </div>
   </div>"""
 
@@ -607,14 +682,15 @@ PHONE_ICON_SVG = """<svg viewBox="0 0 24 24" width="26" height="26" fill="curren
 
 # Click-to-call sits in the header on mobile, where most of this traffic
 # lands, so the number is one tap away before the visitor scrolls at all.
-HEADER = f"""  <header class="site-header">
+def header(phone=MAIN_PHONE):
+    return f"""  <header class="site-header">
     <div class="container header-inner">
       <a href="/" class="logo-link" aria-label="North Columbus Cleaning Company home">
         <img src="/images/logo-horizontal.svg" alt="North Columbus Cleaning Company" />
       </a>
 
       <div class="header-mobile-actions">
-        <a href="tel:{PHONE_E164}" class="header-call-btn" aria-label="Call {PHONE_DISPLAY}">
+        <a href="tel:{phone['e164']}" class="header-call-btn" aria-label="Call {phone['display']}"{phone['attr']}>
           <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
             <path d="M6.6 10.8c1.4 2.8 3.7 5.1 6.5 6.5l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1l-2.4 2.4z"/>
           </svg>
@@ -630,7 +706,7 @@ HEADER = f"""  <header class="site-header">
         <a href="/quote">Contact</a>
         <a href="/#owner">About</a>
         <a href="/#faq">FAQ</a>
-        <a href="tel:{PHONE_E164}" class="nav-call">{PHONE_DISPLAY}</a>
+        <a href="tel:{phone['e164']}" class="nav-call"{phone['attr']}>{phone['display']}</a>
         <a href="#quote" class="btn btn-primary nav-cta">Get a free quote</a>
       </nav>
     </div>
@@ -659,7 +735,7 @@ def related_link_list(links):
     return f'      <div class="related-links">\n{items}\n      </div>'
 
 
-def footer():
+def footer(sticky_phone=MAIN_PHONE):
     service_links = "\n".join(
         f'          <li><a href="/services/{s["slug"]}">{s["name"]}</a></li>'
         for s in SERVICES
@@ -736,7 +812,7 @@ def footer():
     </div>
   </footer>
   <script src="/script.js" defer></script>
-  <div class="sticky-cta" id="sticky-cta" aria-label="Quick actions"><a class="sticky-cta-call" href="tel:{PHONE_E164}">&#128222; Call {PHONE_DISPLAY}</a><a class="sticky-cta-quote" href="#quote">Get a free quote</a></div>
+  <div class="sticky-cta" id="sticky-cta" aria-label="Quick actions"><a class="sticky-cta-call" href="tel:{sticky_phone['e164']}"{sticky_phone['attr']}>&#128222; Call {sticky_phone['display']}</a><a class="sticky-cta-quote" href="#quote">Get a free quote</a></div>
 </body>
 </html>
 """
@@ -771,7 +847,7 @@ def service_options(selected=None):
     return "\n".join(out)
 
 
-def cta_block(where="", service=None, source="Page"):
+def cta_block(where="", service=None, source="Page", phone=MAIN_PHONE):
     """The one conversion block every generated page ends on.
 
     Previously this pointed at the homepage form, which meant a visitor who
@@ -786,11 +862,11 @@ def cta_block(where="", service=None, source="Page"):
         <span class="eyebrow light">Fastest way to get started</span>
         <h2>Call now or get a free quote</h2>
         <p class="lead">One short call is all it takes &mdash; tell us about the space{place} and we&rsquo;ll talk through what it needs and when we can be there. Free, and no obligation.</p>
-        <a class="call-cta" href="tel:{PHONE_E164}">
+        <a class="call-cta" href="tel:{phone['e164']}"{phone['attr']}>
           {PHONE_ICON_SVG}
           <span>
             <span class="call-cta-label">Call now</span>
-            <span class="call-cta-number">{PHONE_DISPLAY}</span>
+            <span class="call-cta-number">{phone['display']}</span>
           </span>
         </a>
         <p class="call-meta">A real local person answers, Mon&ndash;Sat 7am&ndash;7pm.</p>
@@ -908,8 +984,8 @@ def combo_page(s, n):
 
     return f"""{head(title, desc, canonical, og_image=s['hero_img'])}
 {jsonld}
-{TOPBAR}
-{HEADER}
+{topbar()}
+{header()}
 
 {breadcrumb([
     ("/", "Home"),
@@ -1025,10 +1101,19 @@ def location_page(n):
 
     cta = cta_block(where=n["name"], source=f"{n['name']} location page")
 
+    office_panel = ""
+    o = GROVE_CITY_OFFICE
+    if n["slug"] == o["area_slug"]:
+        office_panel = f"""
+      <div class="fit-panel">
+        <h3>Our Grove City office</h3>
+        <p>{o['name']} is at {office_full_address(o)}. <a href="{o['path']}">See the office&rsquo;s hours, map, and contact details</a>.</p>
+      </div>"""
+
     return f"""{head(title, desc, f"/locations/{n['slug']}")}
 {local_business_jsonld(f"/locations/{n['slug']}", area_served=f"{n['name']}, OH")}
-{TOPBAR}
-{HEADER}
+{topbar()}
+{header()}
 
 {breadcrumb([
     ("/", "Home"),
@@ -1065,7 +1150,7 @@ def location_page(n):
       <div class="grid services-grid">
 {service_cards}
       </div>
-      <p class="section-more"><a href="/quote">Get a free {n['name']} quote &rarr;</a></p>
+      <p class="section-more"><a href="/quote">Get a free {n['name']} quote &rarr;</a></p>{office_panel}
     </div>
   </section>
 
@@ -1136,8 +1221,8 @@ def service_page(s):
 
     return f"""{head(title, desc, f"/services/{s['slug']}", og_image=s['hero_img'])}
 {local_business_jsonld(f"/services/{s['slug']}", service_name=s['name'])}
-{TOPBAR}
-{HEADER}
+{topbar()}
+{header()}
 
 {breadcrumb([
     ("/", "Home"),
@@ -1211,6 +1296,263 @@ def service_page(s):
 {footer()}"""
 
 
+# ============ GROVE CITY OFFICE PAGE ============
+
+def office_jsonld(o):
+    """HouseholdCleaningService for the office itself: its own NAP and hours,
+    and a branchOf pointer back to the main business."""
+    url = f"https://northcolumbuscleaning.com{o['path']}"
+    area_served = []
+    for name, _slug, _zip, _line in o["nearby"]:
+        if name == "South and west Columbus":
+            area_served.append({"@type": "City", "name": "Columbus, OH"})
+        elif name == "Galloway":
+            area_served.append({"@type": "Place", "name": "Galloway, OH"})
+        else:
+            area_served.append({"@type": "City", "name": f"{name}, OH"})
+    data = {
+        "@context": "https://schema.org",
+        "@type": "HouseholdCleaningService",
+        "@id": f"{url}#business",
+        "name": o["name"],
+        "image": "https://northcolumbuscleaning.com/images/logo.svg",
+        "url": url,
+        "telephone": o["phone"]["schema"],
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": office_address_line(o),
+            "addressLocality": o["city"],
+            "addressRegion": o["region"],
+            "postalCode": o["zip"],
+            "addressCountry": "US",
+        },
+        "hasMap": office_directions_url(o),
+        "openingHoursSpecification": [{
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": o["open_days"],
+            "opens": o["opens"],
+            "closes": o["closes"],
+        }],
+        "areaServed": area_served,
+        "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "Cleaning services",
+            "itemListElement": [
+                {"@type": "Offer", "itemOffered": {"@type": "Service", "name": s["name"]}}
+                for s in SERVICES
+            ],
+        },
+        "branchOf": {
+            "@type": "HouseholdCleaningService",
+            "name": "North Columbus Cleaning Company",
+            "url": "https://northcolumbuscleaning.com/",
+        },
+    }
+    body = json.dumps(data, indent=2, ensure_ascii=False).replace("\n", "\n  ")
+    return f"""  <script type="application/ld+json">
+  {body}
+  </script>"""
+
+
+def office_directions_url(o):
+    return "https://www.google.com/maps/search/?api=1&query=" + quote_plus(office_full_address(o))
+
+
+def office_map_embed(o):
+    return o["map_embed"] or (
+        "https://www.google.com/maps?q=" + quote_plus(office_full_address(o)) + "&output=embed"
+    )
+
+
+def grove_city_office_page():
+    o = GROVE_CITY_OFFICE
+    p = o["phone"]
+    area = next(n for n in NEIGHBORHOODS if n["slug"] == o["area_slug"])
+    title = f"{o['name']}, OH"
+    desc = (
+        f"House and office cleaning from our Grove City office at {office_full_address(o)}. "
+        f"Mon-Sat 7am-7pm. Call {p['display']} or request a free quote."
+    )
+
+    hours_rows = "\n".join(
+        f"              <tr><th scope=\"row\">{day}</th><td>{time}</td></tr>"
+        for day, time in o["hours_rows"]
+    )
+
+    service_cards = "\n".join(f"""        <a class="service-card service-card-link" href="/services/{s['slug']}/{area['slug']}">
+          <div class="service-img"><img src="{s['hero_img']}" alt="{s['name']} in Grove City" loading="lazy" /></div>
+          <div class="service-body">
+            <h3>{s['name']}</h3>
+            <p>{s['short']}</p>
+            <span class="area-link">See details &rarr;</span>
+          </div>
+        </a>""" for s in SERVICES)
+
+    area_cards = []
+    for name, slug, zip_code, line in o["nearby"]:
+        meta = f'\n          <p class="area-meta">{zip_code}</p>' if zip_code else ""
+        if slug:
+            area_cards.append(f"""        <a class="area-card" href="/locations/{slug}">
+          <h3>{name}</h3>{meta}
+          <p>{line}</p>
+          <span class="area-link">See {name} &rarr;</span>
+        </a>""")
+        else:
+            area_cards.append(f"""        <div class="area-card">
+          <h3>{name}</h3>{meta}
+          <p>{line}</p>
+        </div>""")
+    area_cards = "\n".join(area_cards)
+    nearby_names = [name for name, _s, _z, _l in o["nearby"] if name != "South and west Columbus"]
+    nearby_sentence = ", ".join(nearby_names) + ", and the south and west sides of Columbus"
+
+    cta = cta_block(where="Grove City", source=f"{o['name']} page", phone=p)
+    body_attrs = f' data-location-phone="tel:{p["e164"]}" data-location-phone-display="{p["display"]}"'
+
+    return f"""{head(title, desc, o['path'], body_attrs=body_attrs)}
+{office_jsonld(o)}
+{topbar(p)}
+{header(p)}
+
+{breadcrumb([
+    ("/", "Home"),
+    ("/locations", "Areas"),
+    (f"/locations/{area['slug']}", "Grove City"),
+    (None, "Grove City office"),
+])}
+
+  <section class="hero hero-compact">
+    <div class="container hero-inner">
+      <div class="hero-text">
+        <span class="eyebrow">Grove City office &middot; {area['county']} &middot; {o['zip']}</span>
+        <h1>{o['name']}</h1>
+        <p class="lead">Residential and commercial cleaning from our office on Broadway in Grove City, near the Town Center. Homes and businesses on the south and west side of Columbus can reach a local office directly at {p['display']}.</p>
+        <p>The Grove City office covers the city and the towns around it &mdash; Urbancrest next door, Galloway to the northwest, and the villages south toward Pickaway County. Same six services, same free quotes, and a number that rings here.</p>
+        <p class="hero-local-link">Looking for the town itself? See our <a href="/locations/{area['slug']}">Grove City service area</a> page, or <a href="/services">all cleaning services</a>.</p>
+        <div class="hero-cta">
+          <a href="tel:{p['e164']}" class="btn btn-primary"{p['attr']}>Call {p['display']}</a>
+          <a href="#quote" class="btn btn-outline">Get a free quote</a>
+        </div>
+{TRUST_LIST}
+      </div>
+      <div class="hero-visual">
+        <img src="/images/hero.jpg" alt="A spotless kitchen cleaned by {o['name']}" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="office">
+    <div class="container office-inner">
+      <div class="office-nap">
+        <span class="eyebrow">Office details</span>
+        <h2>{o['name']}</h2>
+        <address>
+          {office_address_line(o)}<br />
+          {o['city']}, {o['region']} {o['zip']}
+        </address>
+        <p class="office-phone"><strong>Phone</strong> <a href="tel:{p['e164']}"{p['attr']}>{p['display']}</a></p>
+        <table class="office-hours">
+          <caption>Office hours</caption>
+          <tbody>
+{hours_rows}
+          </tbody>
+        </table>
+        <div class="office-actions">
+          <a href="tel:{p['e164']}" class="btn btn-primary"{p['attr']}>Call the Grove City office</a>
+          <a href="{office_directions_url(o)}" class="btn btn-outline" target="_blank" rel="noopener">Get directions</a>
+        </div>
+      </div>
+      <div class="office-map">
+        <iframe
+          src="{office_map_embed(o)}"
+          title="{o['name']} on Google Maps"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen
+        ></iframe>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">What we clean</span>
+        <h2>Cleaning services from our Grove City office</h2>
+        <p class="section-sub">Every service is available to homes and businesses in Grove City and the nearby towns below. Each card opens that service in Grove City.</p>
+      </div>
+      <div class="grid services-grid">
+{service_cards}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Areas served</span>
+        <h2>Towns and neighborhoods near the Grove City office</h2>
+        <p class="section-sub">From Broadway it&rsquo;s a short drive to {nearby_sentence}. Somewhere else? See <a href="/locations">every area we serve</a>.</p>
+      </div>
+      <div class="grid areas-grid">
+{area_cards}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Why call Grove City</span>
+        <h2>A local office for the south and west side</h2>
+      </div>
+      <div class="grid benefits-grid">
+        <div class="benefit"><h4>Right on Broadway</h4><p>The office sits on Broadway near Grove City&rsquo;s Town Center, a few minutes from I-71 and I-270.</p></div>
+        <div class="benefit"><h4>A number that rings here</h4><p>{p['display']} reaches the Grove City office, Monday through Saturday, 7am to 7pm.</p></div>
+        <div class="benefit"><h4>All six services</h4><p>House cleaning, commercial, deep, recurring, move-in/move-out, and short-term rental cleaning.</p></div>
+        <div class="benefit"><h4>Free, no-obligation quotes</h4><p>One short call and you know what the job involves. Nothing is booked until you say so.</p></div>
+        <div class="benefit"><h4>Same crew every time</h4><p>Recurring customers get the same team each visit, so they learn your space and your preferences.</p></div>
+        <div class="benefit"><h4>Flexible scheduling</h4><p>Evenings, weekends, and short-notice openings across Grove City and the towns around it.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Questions</span>
+        <h2>Grove City office questions</h2>
+      </div>
+      <div class="faq">
+        <details>
+          <summary>Where is the Grove City office?</summary>
+          <p>{office_full_address(o)}, on Broadway near the Town Center. <a href="{office_directions_url(o)}" target="_blank" rel="noopener">Get directions on Google Maps</a>.</p>
+        </details>
+        <details>
+          <summary>What are the office hours?</summary>
+          <p>Monday through Saturday, 7am to 7pm. The office is closed on Sunday.</p>
+        </details>
+        <details>
+          <summary>Which areas does the Grove City office serve?</summary>
+          <p>{nearby_sentence}.</p>
+        </details>
+        <details>
+          <summary>How do I get a quote?</summary>
+          <p><a href="tel:{p['e164']}"{p['attr']}>Call {p['display']}</a> or <a href="#quote">send the short form</a>. We talk through the space and what it needs, then quote it properly for your home or business &mdash; free, and with no obligation.</p>
+        </details>
+        <details>
+          <summary>Is this the same company as North Columbus Cleaning?</summary>
+          <p>Yes. {o['name']} is the Grove City office of North Columbus Cleaning, with the same services. For other towns, see <a href="/locations">all service areas</a>.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+{cta}
+
+{footer(sticky_phone=p)}"""
+
+
 # ============ HUB PAGES ============
 
 def locations_hub():
@@ -1236,8 +1578,8 @@ def locations_hub():
 
     return f"""{head(title, desc, "/locations")}
 {local_business_jsonld("/locations")}
-{TOPBAR}
-{HEADER}
+{topbar()}
+{header()}
 
 {breadcrumb([
     ("/", "Home"),
@@ -1301,8 +1643,8 @@ def services_hub():
 
     return f"""{head(title, desc, "/services")}
 {local_business_jsonld("/services")}
-{TOPBAR}
-{HEADER}
+{topbar()}
+{header()}
 
 {breadcrumb([
     ("/", "Home"),
@@ -1353,6 +1695,7 @@ def sitemap():
         (base + "/quote", "0.9", "weekly"),
         (base + "/services", "0.9", "weekly"),
         (base + "/locations", "0.9", "weekly"),
+        (base + GROVE_CITY_OFFICE["path"], "0.9", "monthly"),
         (base + "/privacy", "0.3", "yearly"),
         (base + "/sms-terms", "0.3", "yearly"),
     ]
@@ -1407,6 +1750,9 @@ def main():
     for s in SERVICES:
         write(f"services/{s['slug']}.html", service_page(s))
     write("services/index.html", services_hub())
+
+    # Grove City office (its own Google Business Profile)
+    write(GROVE_CITY_OFFICE["path"].lstrip("/") + ".html", grove_city_office_page())
 
     # Combo pages (service × location)
     combo_count = 0
