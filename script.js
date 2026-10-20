@@ -3,13 +3,30 @@
 // a number change does not require regenerating pages.
 window.__NCC_TRACKING_DISPLAY = '(614) 352-2588';
 window.__NCC_TRACKING_HREF = 'tel:+16143522588';
+
+// A branch office page (e.g. /grove-city) is the website for its own Google
+// Business Profile and has to show that office's number. <body> carries it,
+// and the office's tel: links are marked data-location-phone so the tracking
+// overlay below leaves them alone.
+window.__NCC_LOCATION_PHONE = (function () {
+  var b = document.body;
+  var href = b && b.getAttribute('data-location-phone');
+  var display = b && b.getAttribute('data-location-phone-display');
+  if (!href || !display) return null;
+  window.__NCC_TRACKING_HREF = href;
+  window.__NCC_TRACKING_DISPLAY = display;
+  return { href: href, display: display };
+})();
+
 (function () {
   function applyTracking(href, display) {
     if (!href || !display) return;
-    window.__NCC_TRACKING_DISPLAY = display;
-    window.__NCC_TRACKING_HREF = href;
+    if (!window.__NCC_LOCATION_PHONE) {
+      window.__NCC_TRACKING_DISPLAY = display;
+      window.__NCC_TRACKING_HREF = href;
+    }
     var phoneLike = /\+?1?[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/;
-    document.querySelectorAll('a[href^="tel:"]').forEach(function (a) {
+    document.querySelectorAll('a[href^="tel:"]:not([data-location-phone])').forEach(function (a) {
       a.setAttribute('href', href);
       if (phoneLike.test(a.textContent)) {
         a.textContent = a.textContent.replace(phoneLike, display);
@@ -218,15 +235,16 @@ document.querySelectorAll('form.lead-form').forEach(function (f) {
     if (lastDismiss && Date.now() - lastDismiss < 3 * 24 * 60 * 60 * 1000) return;
   } catch (_) {}
 
+  var cbPhone = window.__NCC_LOCATION_PHONE || { href: 'tel:+16143522588', display: '(614) 352-2588' };
   var MODAL_HTML =
     '<div class="callback-backdrop" id="callback-backdrop" role="dialog" aria-modal="true" aria-labelledby="callback-title">' +
       '<div class="callback-modal">' +
         '<button class="callback-close" type="button" aria-label="Close" id="callback-close">&times;</button>' +
         '<h2 id="callback-title">Want us to call you?</h2>' +
         '<p class="form-lede">Leave your name and number and a local team member calls you straight back with a free quote. No obligation.</p>' +
-        '<a class="call-cta" href="tel:+16143522588" style="width:100%;justify-content:center;">' +
+        '<a class="call-cta" href="' + cbPhone.href + '" style="width:100%;justify-content:center;">' +
           '<span><span class="call-cta-label">Or call now</span>' +
-          '<span class="call-cta-number">(614) 352-2588</span></span>' +
+          '<span class="call-cta-number">' + cbPhone.display + '</span></span>' +
         '</a>' +
         '<div class="leadbox-divider">or</div>' +
         '<form class="lead-form" id="callback-form" data-source="Call-back popup" novalidate>' +
