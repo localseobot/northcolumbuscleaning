@@ -520,18 +520,26 @@ SERVICES = [
     },
 ]
 
-# ============ GROVE CITY OFFICE ============
-# The Grove City office has its own Google Business Profile, and /grove-city is
-# that profile's website. Google checks the profile's name, address, phone, and
-# hours against this page, so they live here and nowhere else. Its own number
-# is used only on /grove-city; every other page keeps MAIN_PHONE.
+# ============ BRANCH OFFICES ============
+# Each branch office has its own Google Business Profile, and its page (e.g.
+# /grove-city) is that profile's website. Google checks the profile's name,
+# address, phone, and hours against the page, so they live in these blocks and
+# nowhere else. An office with its own number uses it only on its own page;
+# every other page keeps MAIN_PHONE.
 #
+# Copy strings may use {display} (the office number as text) and {call_link}
+# (a tel: link to it). Prefer {call_link} on an office that uses the tracking
+# number: script.js rewrites tel: links, not plain text.
+
 # /locations/grove-city is the service-area page for the town and stays as it
 # is; /grove-city is the office. The two link to each other.
 GROVE_CITY_OFFICE = {
     "path": "/grove-city",
     "area_slug": "grove-city",
+    "place": "Grove City",
+    "county": "Franklin County",
     "name": "North Columbus Cleaning - Grove City",
+    "title": "North Columbus Cleaning - Grove City, OH",
     "street": "3989 Broadway",
     "suite": "",  # e.g. "Suite 101" once assigned; fills in the page and schema
     "city": "Grove City",
@@ -576,7 +584,102 @@ GROVE_CITY_OFFICE = {
         ("South and west Columbus", None, None,
          "Neighborhoods on the city&rsquo;s south and west sides, a short drive up I-71 or around I-270."),
     ],
+    # The nearby entry that stands for "the rest of the area", and how the
+    # areas sentence names it.
+    "nearby_catchall": ("South and west Columbus", "the south and west sides of Columbus"),
+    # Nearby names that are not a "City" in the JSON-LD: name -> (@type, name).
+    "schema_areas": {
+        "South and west Columbus": ("City", "Columbus, OH"),
+        "Galloway": ("Place", "Galloway, OH"),
+    },
+    "copy": {
+        "desc": "House and office cleaning from our Grove City office at {address}. "
+                "Mon-Sat 7am-7pm. Call {display} or request a free quote.",
+        "lead": "Residential and commercial cleaning from our office on Broadway in Grove City, near the Town Center. Homes and businesses on the south and west side of Columbus can reach a local office directly at {display}.",
+        "hero_more": "The Grove City office covers the city and the towns around it &mdash; Urbancrest next door, Galloway to the northwest, and the villages south toward Pickaway County. Same six services, same free quotes, and a number that rings here.",
+        "hero_local_link": 'Looking for the town itself? See our <a href="/locations/grove-city">Grove City service area</a> page, or <a href="/services">all cleaning services</a>.',
+        "services_sub": "Every service is available to homes and businesses in Grove City and the nearby towns below. Each card opens that service in Grove City.",
+        "areas_from": "From Broadway",
+        "why_h2": "A local office for the south and west side",
+        "benefits": [
+            ("Right on Broadway", "The office sits on Broadway near Grove City&rsquo;s Town Center, a few minutes from I-71 and I-270."),
+            ("A number that rings here", "{display} reaches the Grove City office, Monday through Saturday, 7am to 7pm."),
+        ],
+        "scheduling_area": "Grove City and the towns around it",
+        "faq_where": "on Broadway near the Town Center",
+    },
 }
+
+# There is no /locations/easton page, so /easton has no service-area page to
+# pair with; its service cards open the general service pages instead.
+EASTON_OFFICE = {
+    "path": "/easton",
+    "area_slug": None,
+    "place": "Easton",
+    "county": "Franklin County",
+    "name": "North Columbus Cleaning - Easton",
+    "title": "North Columbus Cleaning - Easton",
+    "street": "4200 Regent St",
+    "suite": "Suite 200",
+    "city": "Columbus",
+    "region": "OH",
+    "zip": "43219",
+    # TODO: Easton office phone. Until the office has its own number this is the
+    # main/tracking number, so script.js's tracking overlay rewrites it like any
+    # other page. Once it has one, replace this with the office's own number
+    # ("e164", "display", "schema") and set "attr" to " data-location-phone",
+    # as GROVE_CITY_OFFICE does; the page then marks <body> for script.js.
+    "phone": {**MAIN_PHONE, "schema": PHONE_SCHEMA},
+    "phone_todo": "TODO: Easton office phone goes here. Set it in EASTON_OFFICE in "
+                  "scripts/generate-pages.py and regenerate; until then this is the main/tracking number.",
+    "open_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    "opens": "07:00",
+    "closes": "19:00",
+    "hours_rows": [
+        ("Monday &ndash; Saturday", "7am &ndash; 7pm"),
+        ("Sunday", "Closed"),
+    ],
+    # Google Maps embed. Swap in the profile's own "Embed a map" URL once it is
+    # verified; until then the map searches the street address.
+    "map_embed": None,
+    # (name, /locations slug or None, zip or None, line of local copy)
+    "nearby": [
+        ("Easton", None, "43219",
+         "Easton Town Center and the offices, apartments, and homes around Morse and Stelzer roads."),
+        ("Gahanna", "gahanna", "43230",
+         "The Creekside District, Olde Gahanna, and the neighborhoods just east of Easton."),
+        ("New Albany", "new-albany", "43054",
+         "Georgian homes, white fences, and newer neighborhoods off State Route 161, a short drive northeast."),
+        ("Blacklick", None, "43004",
+         "The Blacklick area east of Gahanna, along Reynoldsburg-New Albany Road."),
+        ("Northeast Columbus", None, None,
+         "Neighborhoods on the city&rsquo;s northeast side, around Morse Road and inside and just outside I-270."),
+    ],
+    "nearby_catchall": ("Northeast Columbus", "northeast Columbus"),
+    "schema_areas": {
+        "Easton": ("Place", "Easton, Columbus, OH"),
+        "Blacklick": ("Place", "Blacklick, OH"),
+        "Northeast Columbus": ("City", "Columbus, OH"),
+    },
+    "copy": {
+        "desc": "House and office cleaning from our Easton office at {address}. "
+                "Mon-Sat 7am-7pm. Call {display} or request a free quote.",
+        "lead": "Residential and commercial cleaning from our office at Office Evolution Easton, on Regent Street near Easton Town Center. Homes and businesses on the northeast side of Columbus can reach the team at {call_link}.",
+        "hero_more": "The Easton office covers Easton and the communities around it &mdash; Gahanna next door, New Albany and Blacklick to the east, and the northeast side of Columbus. Same six services, same free quotes, and a local team close by.",
+        "hero_local_link": 'Nearby towns have their own pages: <a href="/locations/gahanna">Gahanna</a> and <a href="/locations/new-albany">New Albany</a>. Or see <a href="/services">all cleaning services</a>.',
+        "services_sub": "Every service is available to homes and businesses in Easton and the nearby areas below. Each card opens that service&rsquo;s details.",
+        "areas_from": "From Regent Street",
+        "why_h2": "A local office for the northeast side",
+        "benefits": [
+            ("Near Easton Town Center", "The office is at Office Evolution on Regent Street, a few minutes from Easton Town Center and I-270."),
+            ("One call, a local team", "{call_link} reaches our team for the Easton area, Monday through Saturday, 7am to 7pm."),
+        ],
+        "scheduling_area": "Easton and the areas around it",
+        "faq_where": "inside Office Evolution Easton, near Easton Town Center",
+    },
+}
+
+OFFICES = [GROVE_CITY_OFFICE, EASTON_OFFICE]
 
 
 def office_address_line(o):
@@ -1102,11 +1205,11 @@ def location_page(n):
     cta = cta_block(where=n["name"], source=f"{n['name']} location page")
 
     office_panel = ""
-    o = GROVE_CITY_OFFICE
-    if n["slug"] == o["area_slug"]:
-        office_panel = f"""
+    for o in OFFICES:
+        if n["slug"] == o["area_slug"]:
+            office_panel += f"""
       <div class="fit-panel">
-        <h3>Our Grove City office</h3>
+        <h3>Our {o['place']} office</h3>
         <p>{o['name']} is at {office_full_address(o)}. <a href="{o['path']}">See the office&rsquo;s hours, map, and contact details</a>.</p>
       </div>"""
 
@@ -1296,7 +1399,7 @@ def service_page(s):
 {footer()}"""
 
 
-# ============ GROVE CITY OFFICE PAGE ============
+# ============ BRANCH OFFICE PAGES ============
 
 def office_jsonld(o):
     """HouseholdCleaningService for the office itself: its own NAP and hours,
@@ -1304,12 +1407,8 @@ def office_jsonld(o):
     url = f"https://northcolumbuscleaning.com{o['path']}"
     area_served = []
     for name, _slug, _zip, _line in o["nearby"]:
-        if name == "South and west Columbus":
-            area_served.append({"@type": "City", "name": "Columbus, OH"})
-        elif name == "Galloway":
-            area_served.append({"@type": "Place", "name": "Galloway, OH"})
-        else:
-            area_served.append({"@type": "City", "name": f"{name}, OH"})
+        kind, label = o["schema_areas"].get(name, ("City", f"{name}, OH"))
+        area_served.append({"@type": kind, "name": label})
     data = {
         "@context": "https://schema.org",
         "@type": "HouseholdCleaningService",
@@ -1364,14 +1463,24 @@ def office_map_embed(o):
     )
 
 
-def grove_city_office_page():
-    o = GROVE_CITY_OFFICE
+def office_page(o):
     p = o["phone"]
-    area = next(n for n in NEIGHBORHOODS if n["slug"] == o["area_slug"])
-    title = f"{o['name']}, OH"
-    desc = (
-        f"House and office cleaning from our Grove City office at {office_full_address(o)}. "
-        f"Mon-Sat 7am-7pm. Call {p['display']} or request a free quote."
+    place = o["place"]
+    area = next((n for n in NEIGHBORHOODS if n["slug"] == o["area_slug"]), None)
+    fmt = {
+        "address": office_full_address(o),
+        "display": p["display"],
+        "call_link": f'<a href="tel:{p["e164"]}"{p["attr"]}>{p["display"]}</a>',
+    }
+    c = {k: (v.format(**fmt) if isinstance(v, str) else v) for k, v in o["copy"].items()}
+    benefits = [(h, t.format(**fmt)) for h, t in c["benefits"]] + [
+        ("All six services", "House cleaning, commercial, deep, recurring, move-in/move-out, and short-term rental cleaning."),
+        ("Free, no-obligation quotes", "One short call and you know what the job involves. Nothing is booked until you say so."),
+        ("Same crew every time", "Recurring customers get the same team each visit, so they learn your space and your preferences."),
+        ("Flexible scheduling", f"Evenings, weekends, and short-notice openings across {c['scheduling_area']}."),
+    ]
+    benefit_cards = "\n".join(
+        f"        <div class=\"benefit\"><h4>{h}</h4><p>{t}</p></div>" for h, t in benefits
     )
 
     hours_rows = "\n".join(
@@ -1379,8 +1488,13 @@ def grove_city_office_page():
         for day, time in o["hours_rows"]
     )
 
-    service_cards = "\n".join(f"""        <a class="service-card service-card-link" href="/services/{s['slug']}/{area['slug']}">
-          <div class="service-img"><img src="{s['hero_img']}" alt="{s['name']} in Grove City" loading="lazy" /></div>
+    # With a service-area page, each card opens that service in the town;
+    # without one, the general service page.
+    def service_href(s):
+        return f"/services/{s['slug']}/{area['slug']}" if area else f"/services/{s['slug']}"
+
+    service_cards = "\n".join(f"""        <a class="service-card service-card-link" href="{service_href(s)}">
+          <div class="service-img"><img src="{s['hero_img']}" alt="{s['name']} in {place}" loading="lazy" /></div>
           <div class="service-body">
             <h3>{s['name']}</h3>
             <p>{s['short']}</p>
@@ -1403,32 +1517,39 @@ def grove_city_office_page():
           <p>{line}</p>
         </div>""")
     area_cards = "\n".join(area_cards)
-    nearby_names = [name for name, _s, _z, _l in o["nearby"] if name != "South and west Columbus"]
-    nearby_sentence = ", ".join(nearby_names) + ", and the south and west sides of Columbus"
+    catchall_name, catchall_phrase = o["nearby_catchall"]
+    nearby_names = [name for name, _s, _z, _l in o["nearby"] if name != catchall_name]
+    nearby_sentence = ", ".join(nearby_names) + ", and " + catchall_phrase
 
-    cta = cta_block(where="Grove City", source=f"{o['name']} page", phone=p)
-    body_attrs = f' data-location-phone="tel:{p["e164"]}" data-location-phone-display="{p["display"]}"'
+    cta = cta_block(where=place, source=f"{o['name']} page", phone=p)
+    # Only an office with its own number marks <body>; otherwise script.js
+    # treats the page like any other and applies the tracking number.
+    body_attrs = ""
+    if p["attr"]:
+        body_attrs = f' data-location-phone="tel:{p["e164"]}" data-location-phone-display="{p["display"]}"'
 
-    return f"""{head(title, desc, o['path'], body_attrs=body_attrs)}
+    phone_todo = f"        <!-- {o['phone_todo']} -->\n" if o.get("phone_todo") else ""
+
+    crumbs = [("/", "Home"), ("/locations", "Areas")]
+    if area:
+        crumbs.append((f"/locations/{area['slug']}", area["name"]))
+    crumbs.append((None, f"{place} office"))
+
+    return f"""{head(o['title'], c['desc'], o['path'], body_attrs=body_attrs)}
 {office_jsonld(o)}
 {topbar(p)}
 {header(p)}
 
-{breadcrumb([
-    ("/", "Home"),
-    ("/locations", "Areas"),
-    (f"/locations/{area['slug']}", "Grove City"),
-    (None, "Grove City office"),
-])}
+{breadcrumb(crumbs)}
 
   <section class="hero hero-compact">
     <div class="container hero-inner">
       <div class="hero-text">
-        <span class="eyebrow">Grove City office &middot; {area['county']} &middot; {o['zip']}</span>
+        <span class="eyebrow">{place} office &middot; {o['county']} &middot; {o['zip']}</span>
         <h1>{o['name']}</h1>
-        <p class="lead">Residential and commercial cleaning from our office on Broadway in Grove City, near the Town Center. Homes and businesses on the south and west side of Columbus can reach a local office directly at {p['display']}.</p>
-        <p>The Grove City office covers the city and the towns around it &mdash; Urbancrest next door, Galloway to the northwest, and the villages south toward Pickaway County. Same six services, same free quotes, and a number that rings here.</p>
-        <p class="hero-local-link">Looking for the town itself? See our <a href="/locations/{area['slug']}">Grove City service area</a> page, or <a href="/services">all cleaning services</a>.</p>
+        <p class="lead">{c['lead']}</p>
+        <p>{c['hero_more']}</p>
+        <p class="hero-local-link">{c['hero_local_link']}</p>
         <div class="hero-cta">
           <a href="tel:{p['e164']}" class="btn btn-primary"{p['attr']}>Call {p['display']}</a>
           <a href="#quote" class="btn btn-outline">Get a free quote</a>
@@ -1450,7 +1571,7 @@ def grove_city_office_page():
           {office_address_line(o)}<br />
           {o['city']}, {o['region']} {o['zip']}
         </address>
-        <p class="office-phone"><strong>Phone</strong> <a href="tel:{p['e164']}"{p['attr']}>{p['display']}</a></p>
+{phone_todo}        <p class="office-phone"><strong>Phone</strong> <a href="tel:{p['e164']}"{p['attr']}>{p['display']}</a></p>
         <table class="office-hours">
           <caption>Office hours</caption>
           <tbody>
@@ -1458,7 +1579,7 @@ def grove_city_office_page():
           </tbody>
         </table>
         <div class="office-actions">
-          <a href="tel:{p['e164']}" class="btn btn-primary"{p['attr']}>Call the Grove City office</a>
+          <a href="tel:{p['e164']}" class="btn btn-primary"{p['attr']}>Call the {place} office</a>
           <a href="{office_directions_url(o)}" class="btn btn-outline" target="_blank" rel="noopener">Get directions</a>
         </div>
       </div>
@@ -1478,8 +1599,8 @@ def grove_city_office_page():
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">What we clean</span>
-        <h2>Cleaning services from our Grove City office</h2>
-        <p class="section-sub">Every service is available to homes and businesses in Grove City and the nearby towns below. Each card opens that service in Grove City.</p>
+        <h2>Cleaning services from our {place} office</h2>
+        <p class="section-sub">{c['services_sub']}</p>
       </div>
       <div class="grid services-grid">
 {service_cards}
@@ -1491,8 +1612,8 @@ def grove_city_office_page():
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">Areas served</span>
-        <h2>Towns and neighborhoods near the Grove City office</h2>
-        <p class="section-sub">From Broadway it&rsquo;s a short drive to {nearby_sentence}. Somewhere else? See <a href="/locations">every area we serve</a>.</p>
+        <h2>Towns and neighborhoods near the {place} office</h2>
+        <p class="section-sub">{c['areas_from']} it&rsquo;s a short drive to {nearby_sentence}. Somewhere else? See <a href="/locations">every area we serve</a>.</p>
       </div>
       <div class="grid areas-grid">
 {area_cards}
@@ -1503,16 +1624,11 @@ def grove_city_office_page():
   <section class="section">
     <div class="container">
       <div class="section-head">
-        <span class="eyebrow">Why call Grove City</span>
-        <h2>A local office for the south and west side</h2>
+        <span class="eyebrow">Why call {place}</span>
+        <h2>{c['why_h2']}</h2>
       </div>
       <div class="grid benefits-grid">
-        <div class="benefit"><h4>Right on Broadway</h4><p>The office sits on Broadway near Grove City&rsquo;s Town Center, a few minutes from I-71 and I-270.</p></div>
-        <div class="benefit"><h4>A number that rings here</h4><p>{p['display']} reaches the Grove City office, Monday through Saturday, 7am to 7pm.</p></div>
-        <div class="benefit"><h4>All six services</h4><p>House cleaning, commercial, deep, recurring, move-in/move-out, and short-term rental cleaning.</p></div>
-        <div class="benefit"><h4>Free, no-obligation quotes</h4><p>One short call and you know what the job involves. Nothing is booked until you say so.</p></div>
-        <div class="benefit"><h4>Same crew every time</h4><p>Recurring customers get the same team each visit, so they learn your space and your preferences.</p></div>
-        <div class="benefit"><h4>Flexible scheduling</h4><p>Evenings, weekends, and short-notice openings across Grove City and the towns around it.</p></div>
+{benefit_cards}
       </div>
     </div>
   </section>
@@ -1521,19 +1637,19 @@ def grove_city_office_page():
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">Questions</span>
-        <h2>Grove City office questions</h2>
+        <h2>{place} office questions</h2>
       </div>
       <div class="faq">
         <details>
-          <summary>Where is the Grove City office?</summary>
-          <p>{office_full_address(o)}, on Broadway near the Town Center. <a href="{office_directions_url(o)}" target="_blank" rel="noopener">Get directions on Google Maps</a>.</p>
+          <summary>Where is the {place} office?</summary>
+          <p>{office_full_address(o)}, {c['faq_where']}. <a href="{office_directions_url(o)}" target="_blank" rel="noopener">Get directions on Google Maps</a>.</p>
         </details>
         <details>
           <summary>What are the office hours?</summary>
           <p>Monday through Saturday, 7am to 7pm. The office is closed on Sunday.</p>
         </details>
         <details>
-          <summary>Which areas does the Grove City office serve?</summary>
+          <summary>Which areas does the {place} office serve?</summary>
           <p>{nearby_sentence}.</p>
         </details>
         <details>
@@ -1542,7 +1658,7 @@ def grove_city_office_page():
         </details>
         <details>
           <summary>Is this the same company as North Columbus Cleaning?</summary>
-          <p>Yes. {o['name']} is the Grove City office of North Columbus Cleaning, with the same services. For other towns, see <a href="/locations">all service areas</a>.</p>
+          <p>Yes. {o['name']} is the {place} office of North Columbus Cleaning, with the same services. For other towns, see <a href="/locations">all service areas</a>.</p>
         </details>
       </div>
     </div>
@@ -1695,7 +1811,7 @@ def sitemap():
         (base + "/quote", "0.9", "weekly"),
         (base + "/services", "0.9", "weekly"),
         (base + "/locations", "0.9", "weekly"),
-        (base + GROVE_CITY_OFFICE["path"], "0.9", "monthly"),
+        *((base + o["path"], "0.9", "monthly") for o in OFFICES),
         (base + "/privacy", "0.3", "yearly"),
         (base + "/sms-terms", "0.3", "yearly"),
     ]
@@ -1751,8 +1867,9 @@ def main():
         write(f"services/{s['slug']}.html", service_page(s))
     write("services/index.html", services_hub())
 
-    # Grove City office (its own Google Business Profile)
-    write(GROVE_CITY_OFFICE["path"].lstrip("/") + ".html", grove_city_office_page())
+    # Branch offices (each with its own Google Business Profile)
+    for o in OFFICES:
+        write(o["path"].lstrip("/") + ".html", office_page(o))
 
     # Combo pages (service × location)
     combo_count = 0

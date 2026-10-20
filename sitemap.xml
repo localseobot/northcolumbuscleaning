@@ -26,6 +26,11 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://northcolumbuscleaning.com/easton</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://northcolumbuscleaning.com/privacy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
